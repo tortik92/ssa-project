@@ -4,8 +4,8 @@
     "description": "game description",
     "version": "1.0",
     "uid": "01012345",
-    "preferences": {
-      "numeric_preference": {
+    "preferences": [
+      {
         "preference_name": "numeric preference",
         "preference_type": "number",
         "default_value": 5,
@@ -13,13 +13,13 @@
         "max_value": 7,
         "button_preset": "normalNumeric()"
       },
-      "boolean_preference": {
+      {
         "preference_name": "boolean preference",
         "preference_type": "bool",
         "default_value": true,
         "button_preset": "normalBoolean()"
       },
-      "text_preference": {
+      {
         "preference_name": "text preference",
         "preference_type": "text",
         "default_value": "random text",
@@ -27,7 +27,7 @@
         "min_length": 4,
         "max_length": 32
       },
-      "list_preference": {
+      {
         "preference_name": "list preference",
         "preference_type": "list",
         "default_value": 0,
@@ -39,49 +39,49 @@
           "value4"
         ]
       }
-    }
+    ]
   },
   {
     "name": "gamename2",
     "description": "game2 description",
     "version": "1.1",
     "uid": "87654321",
-    "preferences": {
-      "numeric_preference": {
-        "preference_name": "numeric2 preference",
+    "preferences": [
+      {
+        "preference_name": "numeric preference",
         "preference_type": "number",
-        "default_value": 1,
+        "default_value": 5,
         "min_value": 1,
-        "max_value": 3,
+        "max_value": 7,
         "button_preset": "normalNumeric()"
       },
-      "boolean_preference": {
-        "preference_name": "boolean2 preference",
+      {
+        "preference_name": "boolean preference",
         "preference_type": "bool",
-        "default_value": false,
+        "default_value": true,
         "button_preset": "normalBoolean()"
       },
-      "text_preference": {
-        "preference_name": "text2 preference",
+      {
+        "preference_name": "text preference",
         "preference_type": "text",
-        "default_value": "hahaha",
+        "default_value": "random text",
         "button_preset": "normalText()",
-        "min_length": 1,
-        "max_length": 8
+        "min_length": 4,
+        "max_length": 32
       },
-      "list_preference": {
-        "preference_name": "list2 preference",
+      {
+        "preference_name": "list preference",
         "preference_type": "list",
-        "default_value": 1,
+        "default_value": 0,
         "button_preset": "normalList()",
         "list": [
-          "Pikachu",
-          "Squirtle",
-          "Charmander",
-          "Pikachu"
+          "value1",
+          "value2",
+          "value3",
+          "value4"
         ]
       }
-    }
+    ]
   }
 ]
 
