@@ -9,7 +9,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./server/
+        working-directory: ./server
     steps:
     - uses: actions/checkout@v2
       with:
