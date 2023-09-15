@@ -1,0 +1,31 @@
+name: Staging Deploy
+
+on:
+  push:
+    branches: [ server/* ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./server/
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+    - name: Install Composer Dependencies
+      run: composer install --prefer-dist --no-progress --no-suggest
+
+    - name: Install NPM packages
+      run: npm install
+
+    - name: Generate bundled theme with all assets
+      run: npm run bundle
+    - name: FTP Deploy to WP Engine (Staging)
+      uses: SamKirkland/FTP-Deploy-Action@3.1.1
+      with:
+        ftp-server: e142334-ftp.services.easyname.eu
+        ftp-username: 224504ftp1
+        ftp-password: ${{ secrets.STAGING_FTP_PASSWORD }}
+        local-dir: ./html/ssa-server/
