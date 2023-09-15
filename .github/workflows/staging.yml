@@ -1,29 +1,28 @@
-name: Staging Deploy
+name: 🚀 Deploy website on push
 
 on:
   push:
     branches: [ main ]
 jobs:
-  build:
+  web-deploy:
+    name: 🎉 Deploy
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./server
     steps:
-    - uses: actions/checkout@v2
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v3
+
+    - name: Use Node.js 16
+      uses: actions/setup-node@v2
       with:
-        fetch-depth: 2
-    - name: Install Composer Dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest
-
-    - name: Install NPM packages
-      run: npm install
-
-    - name: Generate bundled theme with all assets
-      run: npm run bundle
-    - name: FTP Deploy to WP Engine (Staging)
-      uses: SamKirkland/FTP-Deploy-Action@3.1.1
+        node-version: '16'
+      
+    - name: 🔨 Build Project
+      run: |
+        npm install
+        npm run build
+    
+    - name: 📂 Sync files
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         ftp-server: e142334-ftp.services.easyname.eu
         ftp-username: 224504ftp1
