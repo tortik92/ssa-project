@@ -14,7 +14,7 @@ jobs:
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
-        ftp-server: e142334-ftp.services.easyname.eu
-        ftp-username: 224504ftp1
-        ftp-password: ${{ secrets.STAGING_FTP_PASSWORD }}
-        local-dir: ./html/ssa-server/
+        server: e142334-ftp.services.easyname.eu
+        username: 224504ftp1
+        password: ${{ secrets.STAGING_FTP_PASSWORD }}
+        server-dir: ./html/ssa-server/
