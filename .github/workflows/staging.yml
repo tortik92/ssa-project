@@ -2,7 +2,7 @@ name: Staging Deploy
 
 on:
   push:
-    branches: [ server/* ]
+    branches: [ main ]
 jobs:
   build:
     runs-on: ubuntu-latest
