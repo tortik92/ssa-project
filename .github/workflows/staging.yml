@@ -18,3 +18,10 @@ jobs:
         username: 224504ftp1
         password: ${{ secrets.STAGING_FTP_PASSWORD }}
         server-dir: ./ssa-server/
+        local-dir: ./server/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/.idea/**
+          
