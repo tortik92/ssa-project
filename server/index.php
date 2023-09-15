@@ -2,7 +2,7 @@
     header('Content-Type: application/json; charset=utf-8');
 
     $uid = "";
-    if (isset($_GET['uid'])) { // check for them and set them so
+    if (isset($_GET['uid'])) {
         $uid = $_GET['uid'];
     }
 
