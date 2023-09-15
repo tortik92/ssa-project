@@ -21,7 +21,6 @@
         $outputJSON = json_encode($json_data);
         echo $outputJSON;
     }
-
 ?>
 
 
