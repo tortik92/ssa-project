@@ -1,0 +1,28 @@
+@import "mixins";
+@import "variables";
+
+button{
+  @include button-style($grey-color, 24px);
+}
+
+input{
+  @include input-style;
+}
+
+#top-buttons {
+  @include fixed-button-bar-style;
+  top: 0;
+}
+
+#bottom-buttons {
+  @include fixed-button-bar-style;
+  bottom: 0;
+}
+
+.list-element {
+  @include list-element-style;
+}
+
+.list{
+  @include list-style;
+}

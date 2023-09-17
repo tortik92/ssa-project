@@ -1,19 +1,18 @@
-<html lang="en">
+<!DOCTYPE html>
+<html lang="de">
 <head>
+    <meta charset="UTF-8">
     <title>SOUNDLEAP: Welcome!</title>
-    <link rel="stylesheet" type="text/css" href="main-style.css">
-    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="styles/css/main.css">
+    <link rel="icon" type="image/x-icon" href="logo.png">
 </head>
 <body>
-<main>
-    <h1 id="header">Please type in the Device-ID.</h1>
-    <div id="login-container">
-        <form action="#" method="post">
-            <input type="password" id="password" name="password" required>
-            <button id="login-button" type="submit">Connect</button>
-        </form>
-    </div>
-</main>
-<script src="script/script.js"></script>
+<h2>Login</h2>
+<form action="#" method="POST">
+    <label for="device-id-input">Device-ID:</label>
+    <input id="device-id-input" name="device-id" required>
+    <button onclick="checkLoginCredentials()">Connect</button>
+</form>
+<script src="scripts/app.js"></script>
 </body>
 </html>

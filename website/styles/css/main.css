@@ -1,0 +1,75 @@
+button {
+  background-color: #A9A9A9;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #767676;
+}
+
+input {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+#top-buttons {
+  background-color: #909090;
+  position: fixed;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  justify-content: space-evenly;
+  top: 0;
+}
+#top-buttons button {
+  width: 100%;
+}
+
+#bottom-buttons {
+  background-color: #909090;
+  position: fixed;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  justify-content: space-evenly;
+  bottom: 0;
+}
+#bottom-buttons button {
+  width: 100%;
+}
+
+.list-element {
+  padding: 10px;
+  background-color: #f2f2f2;
+  border-bottom: 1px solid #ddd;
+  font-size: 16px;
+  color: #333;
+}
+.list-element:last-child {
+  border-bottom: none;
+}
+.list-element:hover {
+  background-color: #e0e0e0;
+  transition: background-color 0.3s ease;
+}
+
+.list {
+  height: 300px;
+  overflow: auto;
+  border: 1px solid black;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/*# sourceMappingURL=main.css.map */
