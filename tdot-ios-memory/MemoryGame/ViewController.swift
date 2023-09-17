@@ -9,11 +9,11 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet var collectionView: UICollectionView!
     
     var colorData: [UIColor] = []
     
-    @IBOutlet weak var startBtn: UIButton!
+    @IBOutlet var startBtn: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
