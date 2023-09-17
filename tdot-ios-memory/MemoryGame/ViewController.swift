@@ -29,7 +29,7 @@ class ViewController: UIViewController {
     
     
     @IBAction func buttonClick(_ sender: UIButton) {
-        colorData.append(sender.backgroundColor!)
+        colorData.append(sender.backgroundColor ?? UIColor.red)
         collectionView.reloadData()
         
         startBtn.isEnabled = true
@@ -39,7 +39,7 @@ class ViewController: UIViewController {
     @IBAction func startRound(_ sender: Any) {
     var colorDataString: [String] = []
         colorData.forEach{color in
-            colorDataString.append(color.accessibilityName.components(separatedBy: " ").last!.lowercased())
+            colorDataString.append((color.accessibilityName.components(separatedBy: " ").last ?? "red").lowercased())
         }
         colorData.removeAll()
         collectionView.reloadData()
