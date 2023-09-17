@@ -23,6 +23,6 @@ input{
   @include list-element-style;
 }
 
-.list{
-  @include list-style;
+#game-list{
+  @include game-list-style;
 }

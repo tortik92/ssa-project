@@ -61,7 +61,7 @@ input {
   transition: background-color 0.3s ease;
 }
 
-.list {
+#game-list {
   height: 300px;
   overflow: auto;
   border: 1px solid black;

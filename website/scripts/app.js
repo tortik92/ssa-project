@@ -16,7 +16,34 @@ document.addEventListener("DOMContentLoaded", () => {
             return response.json();
         })
         .then(data => {
-            console.log(data);
+            const gameList = document.getElementById('game-list');
+            data.forEach(game => {
+                const listElement = document.createElement('li');
+                listElement.classList.add('list-element');
+
+                const gameNameTitle = document.createElement('h2');
+                gameNameTitle.classList.add('game-name');
+                gameNameTitle.innerText = game.name;
+
+                const gameInformationContainer = document.createElement('div');
+                gameInformationContainer.classList.add('game-information-container');
+
+                const gameDescription = document.createElement('p');
+                gameDescription.classList.add('game-description');
+                gameDescription.innerText = game.description;
+
+                const gameVersion = document.createElement('p');
+                gameVersion.classList.add('game-description');
+                gameVersion.innerText = game.version;
+
+                gameInformationContainer.append(gameDescription);
+                gameInformationContainer.append(gameVersion);
+
+                listElement.append(gameNameTitle);
+                listElement.append(gameInformationContainer);
+
+                gameList.append(listElement);
+            })
         })
         .catch(err => {
         console.error('Fetch error:', err);
