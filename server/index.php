@@ -10,18 +10,21 @@
     $json = file_get_contents("games.json");
     $json_data = json_decode($json, true);
 
+    $output = array();
+    $any = 0;
     if($uid != "") {
         for($i = 0; $i < sizeof($json_data); $i++) {
             if($json_data[$i]["uid"] == $uid) {
-                echo json_encode($json_data[$i]);
+                $output = $json_data[$i];
+                $any++;
             }
         }
-        echo json_encode(array());
     }
     else {
-        $outputJSON = json_encode($json_data);
-        echo $outputJSON;
+        $output = $json_data;
     }
+
+    echo json_encode($output);
 ?>
 
 
