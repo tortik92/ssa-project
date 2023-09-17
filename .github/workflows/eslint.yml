@@ -1,4 +1,4 @@
-name: ✨ Eslint Find & Fix
+name: ✨ ESLint Find & Fix
 on: 
   pull_request:
     branches: [ main ]
