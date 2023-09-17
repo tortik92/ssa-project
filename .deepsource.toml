@@ -4,10 +4,4 @@ version = 1
 name = "php"
 
 [[analyzers]]
-name = "cxx"
-
-[[analyzers]]
 name = "swift"
-
-[[analyzers]]
-name = "javascript"
