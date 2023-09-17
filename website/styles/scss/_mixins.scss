@@ -54,4 +54,7 @@
     background-color: #e0e0e0;
     transition: background-color 0.3s ease;
   }
+  &.selected {
+    background-color: darken(#f2f2f2, 20%);
+  }
 }
