@@ -14,4 +14,4 @@ jobs:
     - name: Config ESLint
       run: npm init @eslint/config -- --config semistandard
     - name: Run ESLint
-      run: npx eslint --fix **.js --no-error-on-unmatched-pattern
+      run: npx eslint --fix website/**.js --no-error-on-unmatched-pattern
