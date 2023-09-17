@@ -1,6 +1,9 @@
 <?php
     header('Content-Type: application/json; charset=utf-8');
-    header("Access-Control-Allow-Origin: *");
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: *');
+    header('Access-Control-Allow-Headers: *');
+    header('Access-Control-Max-Age: 1728000');
 
     $uid = "";
     if (isset($_GET['uid'])) {
