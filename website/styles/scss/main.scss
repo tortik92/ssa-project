@@ -26,3 +26,11 @@ input{
 #game-list{
   @include game-list-style;
 }
+
+.preference-list-element {
+  @include preference-list-element-style;
+}
+
+#preference-list {
+  @include preference-list-style;
+}

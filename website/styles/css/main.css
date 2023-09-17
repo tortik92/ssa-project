@@ -75,4 +75,17 @@ input {
   margin: 0;
 }
 
+.preference-list-element {
+  display: flex;
+}
+
+#preference-list {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 /*# sourceMappingURL=main.css.map */
