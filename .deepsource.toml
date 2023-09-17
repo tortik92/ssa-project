@@ -1,0 +1,13 @@
+version = 1
+
+[[analyzers]]
+name = "php"
+
+[[analyzers]]
+name = "cxx"
+
+[[analyzers]]
+name = "swift"
+
+[[analyzers]]
+name = "javascript"
