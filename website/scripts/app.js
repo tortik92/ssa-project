@@ -30,25 +30,41 @@ function createInput (preference) {
     }
     if (inputValue.length < preference.min_length) {
       inputElement.style.borderColor = 'red';
+      document.getElementById('next-button').disabled = true;
     } else {
       inputElement.style.borderColor = ''; // Reset to default
+      document.getElementById('next-button').disabled = false;
     }
   });
 
   return inputElement;
 }
 
-function incrementPreferenceValue (preferenceValue, maxValue) {
+function incrementPreferenceValue(preferenceValue, maxValue, incrementButton, decrementButton) {
   const currentValue = parseInt(preferenceValue.innerText);
   if (currentValue < maxValue) {
     preferenceValue.innerText = currentValue + 1;
+    if (currentValue + 1 === maxValue) {
+      // If the value reaches the maximum, disable the increment button
+      incrementButton.disabled = true;
+    } else {
+      // Reset the disabled state of the decrement button
+      decrementButton.disabled = false;
+    }
   }
 }
 
-function decrementPreferenceValue (preferenceValue, minValue) {
+function decrementPreferenceValue(preferenceValue, minValue, incrementButton, decrementButton) {
   const currentValue = parseInt(preferenceValue.innerText);
   if (currentValue > minValue) {
     preferenceValue.innerText = currentValue - 1;
+    if (currentValue - 1 === minValue) {
+      // If the value reaches the minimum, disable the decrement button
+      decrementButton.disabled = true;
+    } else {
+      // Reset the disabled state of the increment button
+      incrementButton.disabled = false;
+    }
   }
 }
 
@@ -88,9 +104,27 @@ function createPreferenceElement (preference) {
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);
-      preferenceListElement.append(createButton('-', () => decrementPreferenceValue(preferenceValue, parseInt(preference.min_value))));
+
+      const incrementButton = createButton('+', () => {
+        incrementPreferenceValue(preferenceValue, parseInt(preference.max_value), incrementButton, decrementButton);
+      });
+
+      const decrementButton = createButton('-', () => {
+        decrementPreferenceValue(preferenceValue, parseInt(preference.min_value), incrementButton, decrementButton);
+      });
+
+      preferenceListElement.append(decrementButton);
       preferenceListElement.append(preferenceNameValuePair);
-      preferenceListElement.append(createButton('+', () => incrementPreferenceValue(preferenceValue, parseInt(preference.max_value))));
+      preferenceListElement.append(incrementButton);
+
+      if (parseInt(preferenceValue.innerText) === parseInt(preference.max_value)) {
+        incrementButton.disabled = true;
+      }
+
+      if (parseInt(preferenceValue.innerText) === parseInt(preference.min_value)) {
+        decrementButton.disabled = true;
+      }
+
       break;
 
     case 'list':
@@ -100,6 +134,8 @@ function createPreferenceElement (preference) {
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);
+
+
       preferenceListElement.append(createButton('<', () => decrementListPreferenceValue(preferenceValue, preference.list)));
       preferenceListElement.append(preferenceNameValuePair);
       preferenceListElement.append(createButton('>', () => incrementListPreferenceValue(preferenceValue, preference.list)));
@@ -165,7 +201,8 @@ let selectedGameUID = 0;
 addEventListener('DOMContentLoaded', () => {
   const pathname = window.location.pathname;
   if (pathname.includes('/ssa-project/website/pages/game-selection.html')) {
-    fetch('https://cakelab.co.nl/ssa-server/')
+    const url = 'https://cakelab.co.nl/ssa-server/';
+    fetch(url)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -201,7 +238,8 @@ addEventListener('DOMContentLoaded', () => {
     const parameterValue = urlParams.get('uid');
     let preferencesArr = [];
 
-    fetch(`https://cakelab.co.nl/ssa-server/?uid=${parameterValue}`, { method: 'GET' })
+    const url = `https://cakelab.co.nl/ssa-server/?uid=${parameterValue}`
+    fetch(url, { method: 'GET' })
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -219,6 +257,24 @@ addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         console.error('Fetch error:', err);
       });
+  } else if (pathname.includes('/ssa-project/website/pages/game-status.html')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const parameterValue = urlParams.get('uid');
+    const url = `https://cakelab.co.nl/ssa-server/?uid=${parameterValue}`;
+    fetch(url, { method: 'GET' })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const headerElement = document.getElementById('header');
+          headerElement.innerText += ` "${data.name}"!`;
+        })
+        .catch(err => {
+          console.error('Fetch error:', err);
+        });
   }
 
   const nextButton = document.getElementById('next-button');
@@ -238,7 +294,9 @@ addEventListener('DOMContentLoaded', () => {
           alert('Please select a game!');
         }
       } else if (pathname.includes('/ssa-project/website/pages/game-settings.html')) {
-        window.location.href = './game-status.html';
+        const urlParams = new URLSearchParams(window.location.search);
+        const parameterValue = urlParams.get('uid');
+        window.location.href = './game-status.html?uid=' + encodeURIComponent(parameterValue);
       }
     });
   }
