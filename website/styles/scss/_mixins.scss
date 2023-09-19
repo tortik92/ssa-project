@@ -4,7 +4,7 @@
   border: none;
   border-radius: $border-radius;
   cursor: pointer;
-  &:hover {
+  &:hover:not([disabled]) {
     background-color: darken($bg-color, 20%);
   }
 }

@@ -18,7 +18,7 @@ function createInput (preference) {
   const inputElement = document.createElement('input');
   inputElement.type = 'text';
   inputElement.value = preference.default_value;
-  inputElement.placeholder = 'Type in a value!';
+  inputElement.placeholder = 'Geben Sie einen Wert ein!';
   inputElement.maxLength = preference.max_length;
   inputElement.minLength = preference.min_length;
 
@@ -143,7 +143,7 @@ function createPreferenceElement (preference) {
 
     case 'bool':
       preferenceValue = document.createElement('h2');
-      preferenceValue.innerText = preference.default_value === true ? 'true' : 'false';
+      preferenceValue.innerText = preference.default_value === true ? 'Ja' : 'Nein';
       preferenceName.innerText += preference.preference_name;
 
       preferenceNameValuePair.append(preferenceName);
@@ -200,8 +200,8 @@ let selectedGameUID = 0;
 
 addEventListener('DOMContentLoaded', () => {
   const pathname = window.location.pathname;
+  const url = 'https://cakelab.co.nl/ssa-server/';
   if (pathname.includes('/ssa-project/website/pages/game-selection.html')) {
-    const url = 'https://cakelab.co.nl/ssa-server/';
     fetch(url)
       .then(response => {
         if (!response.ok) {
@@ -237,9 +237,7 @@ addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const parameterValue = urlParams.get('uid');
     let preferencesArr = [];
-
-    const url = `https://cakelab.co.nl/ssa-server/?uid=${parameterValue}`
-    fetch(url, { method: 'GET' })
+    fetch(`${url}?uid=${parameterValue}`, { method: 'GET' })
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -260,8 +258,7 @@ addEventListener('DOMContentLoaded', () => {
   } else if (pathname.includes('/ssa-project/website/pages/game-status.html')) {
     const urlParams = new URLSearchParams(window.location.search);
     const parameterValue = urlParams.get('uid');
-    const url = `https://cakelab.co.nl/ssa-server/?uid=${parameterValue}`;
-    fetch(url, { method: 'GET' })
+    fetch(`${url}?uid=${parameterValue}`, { method: 'GET' })
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -279,6 +276,7 @@ addEventListener('DOMContentLoaded', () => {
 
   const nextButton = document.getElementById('next-button');
   const backButton = document.getElementById('back-button');
+  const closeGameButton = document.getElementById('close-game-button');
 
   if (backButton != null && nextButton != null) {
     backButton.addEventListener('click', () => {
@@ -286,7 +284,6 @@ addEventListener('DOMContentLoaded', () => {
     });
 
     nextButton.addEventListener('click', () => {
-      const pathname = window.location.pathname;
       if (pathname.includes('/ssa-project/website/pages/game-selection.html')) {
         if (document.querySelectorAll('.selected').length > 0) {
           window.location.href = './game-settings.html?uid=' + encodeURIComponent(selectedGameUID);
@@ -299,5 +296,11 @@ addEventListener('DOMContentLoaded', () => {
         window.location.href = './game-status.html?uid=' + encodeURIComponent(parameterValue);
       }
     });
+  }
+
+  if (closeGameButton != null) {
+    closeGameButton.addEventListener('click', () => {
+      window.location.href = './game-selection.html';
+    })
   }
 });
