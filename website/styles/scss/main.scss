@@ -4,24 +4,32 @@
 * {
   margin: 0;
   padding: 0;
+  font-family: 'Open Sans', sans-serif;
+}
+
+#header {
+  padding-top: 8%;
+  flex: 0 0 9%;
+  padding-bottom: 8%;
+  @include page-header;
+}
+
+label {
+  @include label-style;
 }
 
 button{
-  @include button-style($grey-color, 6px);
+  @include button-style($gray-3-color, 1rem);
 }
 
 input{
   @include input-style;
 }
 
-#top-buttons {
-  @include fixed-button-bar-style;
-  top: 0;
-}
-
 #bottom-buttons {
   @include fixed-button-bar-style;
   bottom: 0;
+  flex: 0 0 6%;
 }
 
 .list-element {
@@ -37,30 +45,42 @@ input{
 
   .preference-list-element {
     @include preference-list-element-style;
-    align-items: center;
     margin: 10px 0;
 
     .preference-key-value-pair {
-      width: 100%;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      margin: 0 10px;
 
       h2 {
-        font-size: 18px;
-        margin: 5px 0;
+        font-size: $mobile-font-size;
+        margin: 0.3rem 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
       }
 
       input[type="text"] {
         padding: 5px;
-        font-size: 16px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        width: 200px;
+        font-size: $mobile-font-size;
+        border: 0.2rem solid $gray-2-color;
+        border-radius: 1rem;
       }
     }
   }
+}
+
+.w-auto {
+  width: auto;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+#device-id-input {
+  margin: 1rem;
+  width: calc(100% - 2rem);
 }
 
 
@@ -69,8 +89,19 @@ form {
   @include form-style;
 }
 
+#box {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 1rem;
+}
+
 #content {
   display: grid;
   place-items: center;
-  height: 100vh;
+  flex-grow: 1;
+  height: 85%;
+  border: 0.2rem solid $gray-2-color;
+  border-radius: 1rem;
 }
+

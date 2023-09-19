@@ -1,3 +1,4 @@
+
 function checkLoginCredentials () { // eslint-disable-line
   const idInput = document.getElementById('device-id-input').value;
   if (idInput === '123') {
@@ -9,6 +10,7 @@ function checkLoginCredentials () { // eslint-disable-line
 
 function createButton (text, clickHandler) {
   const button = document.createElement('button');
+  button.classList.add('btn-preference')
   button.innerText = text;
   button.addEventListener('click', clickHandler);
   return button;
@@ -100,7 +102,9 @@ function createPreferenceElement (preference) {
     case 'number':
       preferenceValue = document.createElement('h2');
       preferenceValue.innerText = preference.default_value;
-      preferenceName.innerText += preference.preference_name;
+      preferenceName.innerText += (preference.preference_name + ':');
+
+      preferenceNameValuePair.classList.add('w-auto');
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);
@@ -130,11 +134,12 @@ function createPreferenceElement (preference) {
     case 'list':
       preferenceValue = document.createElement('h2');
       preferenceValue.innerText = preference.list[preference.default_value];
-      preferenceName.innerText += preference.preference_name;
+      preferenceName.innerText += (preference.preference_name + ':');
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);
 
+      preferenceNameValuePair.classList.add('w-auto');
 
       preferenceListElement.append(createButton('<', () => decrementListPreferenceValue(preferenceValue, preference.list)));
       preferenceListElement.append(preferenceNameValuePair);
@@ -144,7 +149,9 @@ function createPreferenceElement (preference) {
     case 'bool':
       preferenceValue = document.createElement('h2');
       preferenceValue.innerText = preference.default_value === true ? 'Ja' : 'Nein';
-      preferenceName.innerText += preference.preference_name;
+      preferenceName.innerText += (preference.preference_name + ':');
+
+      preferenceNameValuePair.classList.add('w-auto');
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);
@@ -155,10 +162,12 @@ function createPreferenceElement (preference) {
 
     case 'text':
       preferenceValue = createInput(preference);
-      preferenceName.innerText += preference.preference_name;
+      preferenceName.innerText += (preference.preference_name + ':');
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);
+
+      preferenceNameValuePair.classList.add('w-100');
 
       preferenceListElement.append(preferenceNameValuePair);
       break;
@@ -255,6 +264,12 @@ addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         console.error('Fetch error:', err);
       });
+  } else if(pathname.includes('/ssa-project/website/index.html')) {
+    document.getElementById('device-id-input').addEventListener("keyup", ({key}) => {
+      if (key === "Enter") {
+        checkLoginCredentials();
+      }
+    });
   } else if (pathname.includes('/ssa-project/website/pages/game-status.html')) {
     const urlParams = new URLSearchParams(window.location.search);
     const parameterValue = urlParams.get('uid');
@@ -266,8 +281,8 @@ addEventListener('DOMContentLoaded', () => {
           return response.json();
         })
         .then(data => {
-          const headerElement = document.getElementById('header');
-          headerElement.innerText += ` "${data.name}"!`;
+          const headerElement = document.getElementById('gamename');
+          headerElement.innerText += ` ${data.name}`;
         })
         .catch(err => {
           console.error('Fetch error:', err);
@@ -300,7 +315,9 @@ addEventListener('DOMContentLoaded', () => {
 
   if (closeGameButton != null) {
     closeGameButton.addEventListener('click', () => {
-      window.location.href = './game-selection.html';
+      window.history.go(-2);
     })
   }
+
+
 });

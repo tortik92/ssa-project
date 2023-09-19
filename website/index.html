@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>SOUNDLEAP: Willkommen!</title>
-    <link rel="stylesheet" type="text/css" href="styles/css/main.css">
-    <link rel="icon" type="image/x-icon" href="logo.ico">
-</head>
-<body>
-<div id="top-buttons">
-    <h1 id="header">Verbindung</h1>
-</div>
-<main id="content">
-    <form>
-        <label for="device-id-input">Device-ID:</label>
-        <input id="device-id-input" name="device-id" required>
-        <button type="button" onclick="checkLoginCredentials()">Verbinden</button>
-    </form>
-</main>
-<script src="scripts/app.js"></script>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <title>SOUNDLEAP: Willkommen!</title>
+        <link rel="stylesheet" type="text/css" href="styles/css/main.css">
+        <link href=' http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+    </head>
+    <body>
+    <div id="box">
+        <div id="header">
+            <h1>Verbindung</h1>
+        </div>
+        <main id="content" style="border: none; margin-top: 35%">
+            <label for="device-id-input">Device-ID:</label>
+            <input id="device-id-input" name="device-id" required>
+            <button type="button" class="w-100" onclick="checkLoginCredentials()">Verbinden</button>
+        </main>
+    </div>
+
+        <script src="scripts/app.js"></script>
+    </body>
 </html>
