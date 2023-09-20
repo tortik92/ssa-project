@@ -100,7 +100,7 @@ function createPreferenceElement (preference) {
     case 'number':
       preferenceValue = document.createElement('h2');
       preferenceValue.innerText = preference.default_value;
-      preferenceName.innerText += preference.preference_name;
+      preferenceName.innerText += `${preference.preference_name}:`;
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);
@@ -130,7 +130,7 @@ function createPreferenceElement (preference) {
     case 'list':
       preferenceValue = document.createElement('h2');
       preferenceValue.innerText = preference.list[preference.default_value];
-      preferenceName.innerText += preference.preference_name;
+      preferenceName.innerText += `${preference.preference_name}:`;
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);
@@ -144,7 +144,7 @@ function createPreferenceElement (preference) {
     case 'bool':
       preferenceValue = document.createElement('h2');
       preferenceValue.innerText = preference.default_value === true ? 'Ja' : 'Nein';
-      preferenceName.innerText += preference.preference_name;
+      preferenceName.innerText += `${preference.preference_name}:`;
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);
@@ -155,7 +155,7 @@ function createPreferenceElement (preference) {
 
     case 'text':
       preferenceValue = createInput(preference);
-      preferenceName.innerText += preference.preference_name;
+      preferenceName.innerText += `${preference.preference_name}:`;
 
       preferenceNameValuePair.append(preferenceName);
       preferenceNameValuePair.append(preferenceValue);

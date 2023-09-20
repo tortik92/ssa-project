@@ -6,6 +6,7 @@
   cursor: pointer;
   &:hover:not([disabled]) {
     background-color: darken($bg-color, 20%);
+    cursor: none;
   }
 }
 
