@@ -1,0 +1,80 @@
+@mixin button-style($bg-color, $border-radius) {
+  background-color: $bg-color;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  &:hover:not([disabled]) {
+    background-color: darken($bg-color, 20%);
+    cursor: none;
+  }
+}
+
+@mixin input-style{
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+@mixin fixed-button-bar-style {
+  position: fixed;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  justify-content: space-evenly;
+  button {
+    width: 300px;
+  }
+}
+
+@mixin game-list-style {
+  width: 800px;
+  height: 400px;
+  overflow: auto;
+  border: 1px solid black;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+@mixin list-element-style {
+  padding: 10px;
+  background-color: #f2f2f2;
+  border-bottom: 1px solid #ddd;
+  font-size: 16px;
+  color: #333;
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background-color: #e0e0e0;
+    transition: background-color 0.3s ease;
+  }
+  &.selected {
+    background-color: darken(#f2f2f2, 20%);
+  }
+}
+
+@mixin preference-list-style {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+@mixin preference-list-element-style {
+  display: flex;
+}
+
+@mixin form-style {
+  height: 150px;
+
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}

@@ -1,0 +1,125 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  background-color: #A9A9A9;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+button:hover:not([disabled]) {
+  background-color: #767676;
+}
+
+input {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+#top-buttons {
+  position: fixed;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  justify-content: space-evenly;
+  top: 0;
+}
+#top-buttons button {
+  width: 300px;
+}
+
+#bottom-buttons {
+  position: fixed;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  justify-content: space-evenly;
+  bottom: 0;
+}
+#bottom-buttons button {
+  width: 300px;
+}
+
+.list-element {
+  padding: 10px;
+  background-color: #f2f2f2;
+  border-bottom: 1px solid #ddd;
+  font-size: 16px;
+  color: #333;
+}
+.list-element:last-child {
+  border-bottom: none;
+}
+.list-element:hover {
+  background-color: #e0e0e0;
+  transition: background-color 0.3s ease;
+}
+.list-element.selected {
+  background-color: #bfbfbf;
+}
+
+#game-list {
+  width: 800px;
+  height: 400px;
+  overflow: auto;
+  border: 1px solid black;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#preference-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+#preference-list .preference-list-element {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+}
+#preference-list .preference-list-element .preference-key-value-pair {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 10px;
+}
+#preference-list .preference-list-element .preference-key-value-pair h2 {
+  font-size: 18px;
+  margin: 5px 0;
+}
+#preference-list .preference-list-element .preference-key-value-pair input[type=text] {
+  padding: 5px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 200px;
+}
+
+form {
+  height: 150px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#content {
+  display: grid;
+  place-items: center;
+  height: 100vh;
+}
+
+/*# sourceMappingURL=main.css.map */
