@@ -5,35 +5,41 @@ using namespace std;
 #include <string>
 #include <list>
 
+#define MAX_ARRAY_LENGTH 14
+
 int main()
 {
-    // Read from file
+    // Read filename and create a stream
     cout << "Please input a filename: ";
     string filename;
     cin >> filename;
-
-
     ifstream inputFile(filename);
-    if (!inputFile.is_open()) { // If not found return error
-        cout << "[ERROR]: No file with name \"" + filename + "\"found.";
+
+    if (!inputFile.is_open()) { 
+        cout << "[ERROR]: No file with name \"" + filename + "\"found." << endl; // File not found error
         return 1;
     }
-    else { // else turn input file to list
-        list<string> inputAsList;
-        string line;
+    else { 
+        // read data from file and store it into array
+        string input[MAX_ARRAY_LENGTH];
+        
+        int nrOfLines = 0;
+        while (!inputFile.eof()) {
+            getline(inputFile, input[nrOfLines]);
+            nrOfLines++;
 
-        while (getline(inputFile, line)) {
-            cout << line << "\n";
-            inputAsList.push_back(line);
+            if (nrOfLines > MAX_ARRAY_LENGTH) {
+                cout << "[ERROR]: Maximum amount of lines for input file \"" + filename + "\" exceeded." << endl; // file too long error
+                break;
+            }
         }
 
-        // then convert to array
-        int arrayLength = inputAsList.size();
-        string input[arrayLength];
+        for (int i = 0; i < nrOfLines; i++) {
+            cout << input[i] << endl;
+        }
 
-
+        // clean up
         inputFile.close();
     }
-
-
 }
+
