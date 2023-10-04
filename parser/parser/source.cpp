@@ -15,31 +15,44 @@ int main()
     cin >> filename;
     ifstream inputFile(filename);
 
-    if (!inputFile.is_open()) { 
-        cout << "[ERROR]: No file with name \"" + filename + "\"found." << endl; // File not found error
-        return 1;
-    }
-    else { 
-        // read data from file and store it into array
-        string input[MAX_ARRAY_LENGTH];
-        
-        int nrOfLines = 0;
-        while (!inputFile.eof()) {
-            getline(inputFile, input[nrOfLines]);
-            nrOfLines++;
+    try {
+        if (!inputFile.is_open()) {
+            throw 1; // File not found
+        }
+        else {
+            // read data from file and store it into array
+            string input[MAX_ARRAY_LENGTH];
 
-            if (nrOfLines > MAX_ARRAY_LENGTH) {
-                cout << "[ERROR]: Maximum amount of lines for input file \"" + filename + "\" exceeded." << endl; // file too long error
-                break;
+            int nrOfLines = 0;
+            while (!inputFile.eof()) {
+                getline(inputFile, input[nrOfLines]);
+                nrOfLines++;
+
+                if (nrOfLines > MAX_ARRAY_LENGTH) {             
+                    throw 2; // file too long
+                }
             }
-        }
+            inputFile.close(); // clean up
 
-        for (int i = 0; i < nrOfLines; i++) {
-            cout << input[i] << endl;
-        }
+            for (int i = 0; i < nrOfLines; i++) {
+                cout << input[i] << endl;
+            }
 
-        // clean up
-        inputFile.close();
+            
+        }
+    }
+    // --------------------------------------------------------
+    // -------------------- ERROR HANDLING --------------------
+    // --------------------------------------------------------
+    catch (int err) {
+        switch (err) {
+        case 1: // File not found
+            cout << "[ERROR]: No file with name \"" + filename + "\"found." << endl;
+            break;
+        case 2: // File too long
+            cout << "[ERROR]: Maximum amount of lines for input file \"" + filename + "\" exceeded." << endl;
+            break;
+        }
     }
 }
 
