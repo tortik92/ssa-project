@@ -1,19 +1,18 @@
-using namespace std;
-
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <list>
 
 #define MAX_ARRAY_LENGTH 14
 
 int main()
 {
     // Read filename and create a stream
-    cout << "Please input a filename: ";
-    string filename;
-    cin >> filename;
-    ifstream inputFile(filename);
+    std::string filename;
+
+    std::cout << "Please input a filename: ";
+    std::cin >> filename;
+
+    std::ifstream inputFile(filename);
 
     try {
         if (!inputFile.is_open()) {
@@ -21,7 +20,7 @@ int main()
         }
         else {
             // read data from file and store it into array
-            string input[MAX_ARRAY_LENGTH];
+            std::string input[MAX_ARRAY_LENGTH];
 
             int nrOfLines = 0;
             while (!inputFile.eof()) {
@@ -35,22 +34,19 @@ int main()
             inputFile.close(); // clean up
 
             for (int i = 0; i < nrOfLines; i++) {
-                cout << input[i] << endl;
+                std::cout << input[i] << std::endl;
             }
 
             
         }
     }
-    // --------------------------------------------------------
-    // -------------------- ERROR HANDLING --------------------
-    // --------------------------------------------------------
     catch (int err) {
         switch (err) {
         case 1: // File not found
-            cout << "[ERROR]: No file with name \"" + filename + "\"found." << endl;
+            std::cout << "[ERROR]: No file with name \"" + filename + "\"found." << std::endl;
             break;
         case 2: // File too long
-            cout << "[ERROR]: Maximum amount of lines for input file \"" + filename + "\" exceeded." << endl;
+            std::cout << "[ERROR]: Maximum amount of lines for input file \"" + filename + "\" exceeded." << std::endl;
             break;
         }
     }
