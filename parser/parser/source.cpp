@@ -2,17 +2,18 @@
 #include <fstream>
 #include <string>
 
-#define MAX_ARRAY_LENGTH 14
-
 int main()
 {
-    // Read filename and create a stream
-    std::string filename;
-
+    // Read filename
     std::cout << "Please input a filename: ";
+    std::string filename;
     std::cin >> filename;
 
-    std::ifstream inputFile(filename);
+    std::string* inputArray = readFile(filename);
+}
+
+std::string* readFile(std::string filename) {
+    std::ifstream inputFile(filename); // create stream
 
     try {
         if (!inputFile.is_open()) {
@@ -20,35 +21,29 @@ int main()
         }
         else {
             // read data from file and store it into array
-            std::string input[MAX_ARRAY_LENGTH];
-
             int nrOfLines = 0;
+
+
+            std::string* inputArray = new std::string[nrOfLines];
+
+            int arrayIndex = 0;
             while (!inputFile.eof()) {
-                getline(inputFile, input[nrOfLines]);
-                nrOfLines++;
-
-                if (nrOfLines > MAX_ARRAY_LENGTH) {             
-                    throw 2; // file too long
-                }
+                getline(inputFile, inputArray[nrOfLines]);
             }
+
             inputFile.close(); // clean up
-
-            for (int i = 0; i < nrOfLines; i++) {
-                std::cout << input[i] << std::endl;
-            }
-
-            
+            return inputArray;
         }
     }
     catch (int err) {
         switch (err) {
         case 1: // File not found
-            std::cout << "[ERROR]: No file with name \"" + filename + "\"found." << std::endl;
+            std::cout << "[ERROR]: No file \"" + filename + "\" found." << std::endl;
+            inputFile.close();
             break;
         case 2: // File too long
-            std::cout << "[ERROR]: Maximum amount of lines for input file \"" + filename + "\" exceeded." << std::endl;
-            break;
+            std::cout << "[ERROR]: The file \"" + filename + "\" is longer than stated in the first parameter of the file.";
+            inputFile.close();
         }
     }
 }
-
