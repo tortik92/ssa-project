@@ -4,14 +4,22 @@
 
 int main()
 {
-    std::string* inputString = readFile();
+    std::string fileName = getFileLocation();
+    std::string* inputString = readFile(fileName);
 }
 
-std::string* readFile() {
+std::string getFileLocation() {
     // Read filename
     std::cout << "Please input a filename: ";
     std::string fileName;
     std::cin >> fileName;
+
+    return fileName;
+}
+
+
+std::string* readFile(std::string fileName) {
+    
     std::ifstream inputFile(fileName); // create stream
 
     try {
