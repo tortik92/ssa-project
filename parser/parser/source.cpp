@@ -38,7 +38,7 @@ std::string* readFile(std::string fileName) {
                 std::stoi(firstLine.substr(4, 2), 0, 16) 
             };
 
-            if (fileSignature[0] == 72 && fileSignature[1] == 65 && fileSignature[2] == 74) {
+            if (validFileSignature(fileSignature)) {
                 // read data from file and store it into array
                 int nrOfLines = 0;
 
@@ -74,4 +74,11 @@ std::string* readFile(std::string fileName) {
             break;
         }
     }
+}
+
+bool validFileSignature(unsigned int fileSignature[3]) {
+    if (fileSignature[0] == 72 && fileSignature[1] == 65 && fileSignature[2] == 74) {
+        return true;
+    }
+    return false;
 }
