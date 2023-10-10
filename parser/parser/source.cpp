@@ -4,23 +4,24 @@
 
 int main()
 {
-    std::string fileName = getFileLocation();
-    std::string* inputString = readFile(fileName);
+    std::string filePath = getFileLocation();
+    std::string* code = readFile(filePath);
+
 }
 
-std::string getFileLocation() {
-    // Read filename
+std::string getFileLocation() { // May be changed later on
+    // read filename
     std::cout << "Please input a filename: ";
-    std::string fileName;
-    std::cin >> fileName;
+    std::string filePath;
+    std::cin >> filePath;
 
-    return fileName;
+    return filePath;
 }
 
 
-std::string* readFile(std::string fileName) {
+std::string* readFile(std::string filePath) {
     
-    std::ifstream inputFile(fileName); // create stream
+    std::ifstream inputFile(filePath); // create stream
 
     try {
         if (!inputFile.is_open()) {
@@ -31,14 +32,13 @@ std::string* readFile(std::string fileName) {
             std::string firstLine;
             getline(inputFile, firstLine);
 
-            // First three bytes should be 72, 65 and 74 (HAJ) when decoded to uints
-            unsigned int fileSignature[3] = { 
+            unsigned short fileSignature[3] = { 
                 std::stoi(firstLine.substr(0, 2), 0, 16), 
                 std::stoi(firstLine.substr(2, 2), 0, 16), 
                 std::stoi(firstLine.substr(4, 2), 0, 16) 
             };
 
-            if (validFileSignature(fileSignature)) {
+            if (validateFileSignature(fileSignature)) {
                 // read data from file and store it into array
                 int nrOfLines = 0;
 
@@ -61,24 +61,29 @@ std::string* readFile(std::string fileName) {
     catch (int err) {
         switch (err) {
         case 1: // File not found
-            std::cout << "[ERROR]: No file \"" + fileName + "\" found." << std::endl;
+            std::cout << "[ERROR]: No file \"" + filePath + "\" found." << std::endl;
             inputFile.close();
             break;
         case 2: // File too long
-            std::cout << "[ERROR]: The file \"" + fileName + "\" is longer than stated in the first parameter of the file.";
+            std::cout << "[ERROR]: The file \"" + filePath + "\" is longer than stated in the first parameter of the file.";
             inputFile.close();
             break;
         case 3: // Invalid File signature
-            std::cout << "[ERROR]: The file \"" + fileName + "\" does not have the correct signature.";
+            std::cout << "[ERROR]: The file \"" + filePath + "\" does not have the correct signature.";
             inputFile.close();
             break;
         }
     }
 }
 
-bool validFileSignature(unsigned int fileSignature[3]) {
+bool validateFileSignature(unsigned short fileSignature[3]) {
+    // first three bytes should be 72, 65 and 74 (HAJ in ASCII) when decoded to uints
     if (fileSignature[0] == 72 && fileSignature[1] == 65 && fileSignature[2] == 74) {
         return true;
     }
     return false;
+}
+
+bool compileCode(std::string &code) {
+
 }
