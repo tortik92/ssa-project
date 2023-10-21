@@ -1,15 +1,8 @@
-#include <iostream>
-#include <fstream>
-#include <string>
+#include "InputStream.h"
 
-int main()
-{
-    std::string filePath = getFileLocation();
-    std::string* code = readFile(filePath);
 
-}
 
-std::string getFileLocation() { // May be changed later on
+std::string InputStream::getFileLocation() { // May be changed later on
     // read filename
     std::cout << "Please input a filename: ";
     std::string filePath;
@@ -19,8 +12,8 @@ std::string getFileLocation() { // May be changed later on
 }
 
 
-std::string* readFile(std::string filePath) {
-    
+std::string* InputStream::readFile(std::string filePath) {
+
     std::ifstream inputFile(filePath); // create stream
 
     try {
@@ -32,30 +25,44 @@ std::string* readFile(std::string filePath) {
             std::string firstLine;
             getline(inputFile, firstLine);
 
-            unsigned short fileSignature[3] = { 
-                std::stoi(firstLine.substr(0, 2), 0, 16), 
-                std::stoi(firstLine.substr(2, 2), 0, 16), 
-                std::stoi(firstLine.substr(4, 2), 0, 16) 
+            const char* firstLineCharArray = firstLine.c_str();
+            for (int i = 0; i < firstLine.length(); i++) {
+                if (!std::isxdigit(firstLineCharArray[i])) {
+                    throw 3;
+                }
+            }
+            delete[] firstLineCharArray;
+
+
+            unsigned short fileSignature[3] = {
+                (short)std::stoi(firstLine.substr(0, 2), 0, 16),
+                (short)std::stoi(firstLine.substr(2, 2), 0, 16),
+                (short)std::stoi(firstLine.substr(4, 2), 0, 16)
             };
 
             if (validateFileSignature(fileSignature)) {
-                // read data from file and store it into array
+                // determine length of file
                 int nrOfLines = 0;
+                while (!inputFile.eof()) {
+                    nrOfLines++;
+                }
+                inputFile.close();
 
+                // read data from file and store it into array
+                inputFile.open(filePath);
                 std::string* inputArray = new std::string[nrOfLines];
 
-                int arrayindex = 0;
                 while (!inputFile.eof()) {
                     getline(inputFile, inputArray[nrOfLines]);
                 }
 
                 inputFile.close(); // clean up
                 return inputArray;
-            } 
+            }
             else {
+                inputFile.close();
                 throw 3;
             }
-            
         }
     }
     catch (int err) {
@@ -72,18 +79,21 @@ std::string* readFile(std::string filePath) {
             std::cout << "[ERROR]: The file \"" + filePath + "\" does not have the correct signature.";
             inputFile.close();
             break;
+
+        default:
+            std::cout << "[ERROR]: An unknown error occurred.";
+            inputFile.close();
+            break;
         }
     }
+
+    return new std::string[0];
 }
 
-bool validateFileSignature(unsigned short fileSignature[3]) {
+bool InputStream::validateFileSignature(unsigned short fileSignature[3]) {
     // first three bytes should be 72, 65 and 74 (HAJ in ASCII) when decoded to uints
     if (fileSignature[0] == 72 && fileSignature[1] == 65 && fileSignature[2] == 74) {
         return true;
     }
     return false;
-}
-
-bool compileCode(std::string &code) {
-
 }
