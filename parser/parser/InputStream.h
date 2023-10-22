@@ -4,10 +4,13 @@
 #include <fstream>
 #include <string>
 
+#include "Parser.h"
+
 class InputStream {
 private:
-public:
-	std::string getFileLocation();
-	std::string* readFile(std::string);
+	void getFileLocation(); // calls readFile afterwards
+	void readFile(std::string); // calls 
 	bool validateFileSignature(unsigned short[3]);
+public:
+	void read();
 };
