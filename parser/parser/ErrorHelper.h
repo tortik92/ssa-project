@@ -6,6 +6,6 @@ class ErrorHelper
 {
 private:
 public:
-	void reportError(const char[]);
+	void throwError(const char[]);
 };
 

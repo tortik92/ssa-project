@@ -18,7 +18,7 @@ void InputStream::readFile() {
 
     try {
         if (!inputFile.is_open()) {
-            throw 1; // File not found
+            throw "No file with specified file name found."; // File not found
         }
         else {
             // read first line and check for data
@@ -28,7 +28,7 @@ void InputStream::readFile() {
             const char* firstLineCharArray = firstLine.c_str();
             for (int i = 0; i < firstLine.length(); i++) {
                 if (!std::isxdigit(firstLineCharArray[i])) {
-                    throw 2;
+                    throw "The gameplay procedure file does not have the correct signature.";
                 }
             }
 
@@ -71,27 +71,19 @@ void InputStream::readFile() {
             }
             else {
                 inputFile.close();
-                throw 2;
+                throw "The gameplay procedure file does not have the correct signature.";
             }
         }
     }
-    catch (int err) {
+    catch (char errMsg[]) {
         ErrorHelper errorHelper;
 
-        switch (err) {
-        case 1: // File not found 
-            errorHelper.reportError("No file with specified file name found.");
+        if (errMsg != NULL) {
+            errorHelper.throwFileError(errMsg);
+        }
+        else {
+            errorHelper.throwFileError("An unknown error occurred.");
             inputFile.close();
-            break;
-        case 2: // Invalid File signature
-            errorHelper.reportError("The gameplay procedure file does not have the correct signature.");
-            inputFile.close();
-            break;
-
-        default:
-            errorHelper.reportError("An unknown error occurred.");
-            inputFile.close();
-            break;
         }
     }
 }

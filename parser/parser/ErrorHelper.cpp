@@ -1,5 +1,5 @@
 #include "ErrorHelper.h"
 
-void ErrorHelper::reportError(const char errorMessage[]) {
+void ErrorHelper::throwError(const char errorMessage[]) {
 	std::cerr << "[ERROR]: " << errorMessage << "\n";
 }

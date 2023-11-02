@@ -3,6 +3,8 @@
 #include <string>
 #include <iostream>
 
+#include "ErrorHelper.h"
+
 class Parser
 {
 private:
