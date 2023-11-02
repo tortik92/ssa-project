@@ -1,6 +1,6 @@
 #include "InputStream.h"
 
-std::string InputStream::getFileLocation() { // May be changed later on
+const char* InputStream::getFileLocation() { // May be changed later on
     /* read filename
     std::cout << "Please input a filename: ";
     std::string filePath;
@@ -13,7 +13,7 @@ std::string InputStream::getFileLocation() { // May be changed later on
 
 
 void InputStream::readFile() {
-    std::string filePath = getFileLocation();
+    const char* filePath = getFileLocation();
     std::ifstream inputFile(filePath); // create stream
 
     try {
@@ -28,15 +28,15 @@ void InputStream::readFile() {
             const char* firstLineCharArray = firstLine.c_str();
             for (int i = 0; i < firstLine.length(); i++) {
                 if (!std::isxdigit(firstLineCharArray[i])) {
-                    throw 3;
+                    throw 2;
                 }
             }
 
 
             unsigned short fileSignature[3] = {
-                (short)std::stoi(firstLine.substr(0, 2), 0, 16),
-                (short)std::stoi(firstLine.substr(2, 2), 0, 16),
-                (short)std::stoi(firstLine.substr(4, 2), 0, 16)
+                (unsigned short)std::stoi(firstLine.substr(0, 2), 0, 16),
+                (unsigned short)std::stoi(firstLine.substr(2, 2), 0, 16),
+                (unsigned short)std::stoi(firstLine.substr(4, 2), 0, 16)
             };
 
             if (validateFileSignature(fileSignature)) {
@@ -58,7 +58,7 @@ void InputStream::readFile() {
                 // read data from file and store it into array
                 std::string* inputArray = new std::string[nrOfLines];
                 int index = 0;
-                while (getline(inputFile, inputArray[index])) {
+                while (getline(inputFile, inputArray[index]) && index < nrOfLines) {
                     index++;
                 }
                 inputFile.close(); // clean up
@@ -71,33 +71,29 @@ void InputStream::readFile() {
             }
             else {
                 inputFile.close();
-                throw 3;
+                throw 2;
             }
         }
     }
     catch (int err) {
+        ErrorHelper errorHelper;
+
         switch (err) {
-        case 1: // File not found
-            std::cerr << "[ERROR]: No file \"" + filePath + "\" found.";
+        case 1: // File not found 
+            errorHelper.reportError("No file with specified file name found.");
             inputFile.close();
             break;
-        case 2: // File too long
-            std::cerr << "[ERROR]: The file \"" + filePath + "\" is longer than stated in the first parameter of the file.";
-            inputFile.close();
-            break;
-        case 3: // Invalid File signature
-            std::cerr << "[ERROR]: The file \"" + filePath + "\" does not have the correct signature.";
+        case 2: // Invalid File signature
+            errorHelper.reportError("The gameplay procedure file does not have the correct signature.");
             inputFile.close();
             break;
 
         default:
-            std::cerr << "[ERROR]: An unknown error occurred.";
+            errorHelper.reportError("An unknown error occurred.");
             inputFile.close();
             break;
         }
     }
-
-    std::cout << "Successfully read the file!";
 }
 
 bool InputStream::validateFileSignature(unsigned short fileSignature[3]) {

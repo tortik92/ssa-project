@@ -5,10 +5,11 @@
 #include <string>
 
 #include "Parser.h"
+#include "ErrorHelper.h"
 
 class InputStream {
 private:
-	std::string getFileLocation(); // gets called by readFile
+	const char* getFileLocation(); // gets called by readFile
 	bool validateFileSignature(unsigned short[3]);
 public:
 	void readFile();
