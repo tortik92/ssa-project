@@ -33,7 +33,6 @@ void InputStream::readFile(std::string filePath) {
                     throw 3;
                 }
             }
-            delete[] firstLineCharArray;
 
 
             unsigned short fileSignature[3] = {
@@ -44,25 +43,34 @@ void InputStream::readFile(std::string filePath) {
 
             if (validateFileSignature(fileSignature)) {
                 // determine length of file
+                std::string line;
                 int nrOfLines = 0;
-                while (!inputFile.eof()) {
+                while (getline(inputFile, line)) {
+                    
                     nrOfLines++;
                 }
-                inputFile.close();
+
+                // Reset the file parameters to read the file again
+                inputFile.clear();
+                inputFile.seekg(0);
+
+                // Skip first line (file signature)
+                getline(inputFile, firstLine);
 
                 // read data from file and store it into array
-                inputFile.open(filePath);
                 std::string* inputArray = new std::string[nrOfLines];
-
-                while (!inputFile.eof()) {
-                    getline(inputFile, inputArray[nrOfLines]);
+                int index = 0;
+                while (getline(inputFile, inputArray[index])) {
+                    index++;
                 }
-
                 inputFile.close(); // clean up
+
 
                 // call interpret
                 Parser parser;
                 parser.interpret(inputArray->size(), inputArray);
+
+                delete[] inputArray; // always remember to clean up afterwards!
             }
             else {
                 inputFile.close();
@@ -73,20 +81,20 @@ void InputStream::readFile(std::string filePath) {
     catch (int err) {
         switch (err) {
         case 1: // File not found
-            std::cout << "[ERROR]: No file \"" + filePath + "\" found.";
+            std::cerr << "[ERROR]: No file \"" + filePath + "\" found.";
             inputFile.close();
             break;
         case 2: // File too long
-            std::cout << "[ERROR]: The file \"" + filePath + "\" is longer than stated in the first parameter of the file.";
+            std::cerr << "[ERROR]: The file \"" + filePath + "\" is longer than stated in the first parameter of the file.";
             inputFile.close();
             break;
         case 3: // Invalid File signature
-            std::cout << "[ERROR]: The file \"" + filePath + "\" does not have the correct signature.";
+            std::cerr << "[ERROR]: The file \"" + filePath + "\" does not have the correct signature.";
             inputFile.close();
             break;
 
         default:
-            std::cout << "[ERROR]: An unknown error occurred.";
+            std::cerr << "[ERROR]: An unknown error occurred.";
             inputFile.close();
             break;
         }
