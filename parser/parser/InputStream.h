@@ -8,9 +8,8 @@
 
 class InputStream {
 private:
-	void getFileLocation(); // calls readFile afterwards
-	void readFile(std::string); // calls 
+	std::string getFileLocation(); // gets called by readFile
 	bool validateFileSignature(unsigned short[3]);
 public:
-	void read();
+	void readFile();
 };

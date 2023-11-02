@@ -3,5 +3,5 @@
 int main()
 {
     InputStream inputStream;
-    inputStream.read();
+    inputStream.readFile();
 }

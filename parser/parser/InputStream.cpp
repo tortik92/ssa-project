@@ -1,21 +1,19 @@
 #include "InputStream.h"
 
-void InputStream::read() {
-    getFileLocation();
-}
-
-void InputStream::getFileLocation() { // May be changed later on
-    // read filename
+std::string InputStream::getFileLocation() { // May be changed later on
+    /* read filename
     std::cout << "Please input a filename: ";
     std::string filePath;
     std::cin >> filePath;
 
-    readFile(filePath);
+    return filePath;
+    */
+    return "Reise_nach_Jerusalem.txt";
 }
 
 
-void InputStream::readFile(std::string filePath) {
-
+void InputStream::readFile() {
+    std::string filePath = getFileLocation();
     std::ifstream inputFile(filePath); // create stream
 
     try {
@@ -65,10 +63,9 @@ void InputStream::readFile(std::string filePath) {
                 }
                 inputFile.close(); // clean up
 
-
                 // call interpret
                 Parser parser;
-                parser.interpret(inputArray->size(), inputArray);
+                parser.interpret(nrOfLines, inputArray);
 
                 delete[] inputArray; // always remember to clean up afterwards!
             }
@@ -99,6 +96,8 @@ void InputStream::readFile(std::string filePath) {
             break;
         }
     }
+
+    std::cout << "Successfully read the file!";
 }
 
 bool InputStream::validateFileSignature(unsigned short fileSignature[3]) {
