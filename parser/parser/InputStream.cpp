@@ -8,7 +8,7 @@ const char* InputStream::getFileLocation() { // May be changed later on
 
     return filePath;
     */
-    return "Reise_nach_Jerusalem.txt";
+    return "test.txt";
 }
 
 
@@ -48,7 +48,7 @@ void InputStream::readFile() {
                     nrOfLines++;
                 }
 
-                // Reset the file parameters to read the file again
+                // Reset the file line[1] to read the file again
                 inputFile.clear();
                 inputFile.seekg(0);
 
@@ -79,10 +79,10 @@ void InputStream::readFile() {
         ErrorHelper errorHelper;
 
         if (errMsg != NULL) {
-            errorHelper.throwFileError(errMsg);
+            errorHelper.throwError(errMsg);
         }
         else {
-            errorHelper.throwFileError("An unknown error occurred.");
+            errorHelper.throwError("An unknown error occurred.");
             inputFile.close();
         }
     }

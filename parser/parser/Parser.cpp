@@ -4,60 +4,53 @@
 int Parser::interpret(size_t len, std::string* code) {
     try {
         for (short i = 0; i < len; i++) {
-            
-            char* line;
-            strcpy(line, code[i].c_str());
-            char* openParenthesis = std::strchr(line, '('); // find '(' in the codeline 
+            std::string* tokenizedLine = tokenize(code[i]);
 
-            if (openParenthesis != nullptr) {
-                // '(' found
-                *openParenthesis = '\0'; // Null-terminate the second part
-                char* parameters = openParenthesis + 1; // parameters is anything after '('
-                
-                // --- KEYWORDS ---
-                if(std::strcmp(line, "if") == 0) {
-
+            // --- KEYWORDS ---
+            if (tokenizedLine[0] == "if") {
+                std::cout << "if keyword detected." << "\n";
+            }
+            else if (tokenizedLine[0] == "goto") {
+                try {
+                    int lineNr = std::stoi(tokenizedLine[1]);
                 }
-                else if (std::strcmp(line, "goto") == 0) {
-
-                }
-                else if (std::strcmp(line, "reset") == 0) {
-
-                }
-
-                // --- FUNCTIONS ---
-                // *SPEAKER*
-                else if (std::strcmp(line, "say") == 0) {
-
-                }
-                else if (std::strcmp(line, "playmusic_for_milliseconds") == 0) {
-
-                }
-                else if (std::strcmp(line, "alarm_all_active") == 0) {
-
-                }
-                // *WAIT*
-                else if (std::strcmp(line, "wait") == 0) {
-
-                }
-                else if (std::strcmp(line, "wait_until_mats_occupied") == 0) {
-
-                }
-                // *MISC*
-                else if (std::strcmp(line, "deactivate_random_active") == 0) {
-
+                catch (const std::invalid_argument& ia) {
+                    throw std::invalid_argument("Expression must be a valid line number (line" + std::to_string(i) + ")");
                 }
             }
-            else {
-                char* equalSign = std::strchr(line, '=');
-                if (equalSign != nullptr) {
-                    // '=' found
-                    *equalSign = '\0';  // Null-terminate the second part
-                    std::cout << "Keyword: " << line << "\n";
-                    std::cout << "Parameters: " << equalSign + 1 << "\n";
-                }
+            else if (tokenizedLine[0] == "reset") {
+                std::cout << "resetting program." << "\n";
+                std::cin.get();
 
-                throw "Expected '(' or '=' in line " + i;
+                i = -1;
+                continue;
+            }
+
+            // --- FUNCTIONS ---
+            // *SPEAKER*
+            else if (tokenizedLine[0] == "say") {
+
+            }
+            else if (tokenizedLine[0] == "playmusic_for_milliseconds") {
+
+            }
+            else if (tokenizedLine[0] == "alarm_all_active") {
+
+            }
+            // *WAIT*
+            else if (tokenizedLine[0] == "wait") {
+
+            }
+            else if (tokenizedLine[0] == "wait_until_mats_occupied") {
+
+            }
+            // *MISC*
+            else if (tokenizedLine[0] == "deactivate_random_active") {
+
+            }
+            // *EXPRESSION*
+            else {
+
             }
         }
     }
@@ -66,5 +59,35 @@ int Parser::interpret(size_t len, std::string* code) {
         errorHelper.throwError(errMsg);
     }
     return 0;
+}
+
+std::string* Parser::tokenize(std::string line) {
+    // check for '('
+    size_t openParentLoc = line.find('(');
+    if (openParentLoc != std::string::npos) {
+        // '(' found
+        // 
+        // check for ')'
+        size_t closeParentLoc = line.find(')');
+        if (closeParentLoc == std::string::npos) {
+            throw "Missing \')\'";
+        }
+        else {
+            std::string tmp[] = { line.substr(0, openParentLoc), line.substr(openParentLoc, closeParentLoc) };
+            return tmp;
+        }
+    }
+    else {
+        // '(' not found, try '='
+        size_t equalSignPos = line.find('=');
+        if (equalSignPos != std::string::npos) {
+            // '=' found
+
+            std::string tmp[] = {line.substr(0, equalSignPos), line.substr(equalSignPos)};
+            return tmp;
+        }
+
+        throw "Expected '(' or '='";
+    }
 }
 
