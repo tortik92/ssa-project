@@ -26,12 +26,12 @@ int Parser::interpret(size_t len, std::string* code) {
             // --- FUNCTIONS ---
             // *SPEAKER*
             else if (tokenizedLine[0] == "say") {
+                
+            }
+            else if (tokenizedLine[0] == "play_music") {
 
             }
-            else if (tokenizedLine[0] == "playmusic_for_milliseconds") {
-
-            }
-            else if (tokenizedLine[0] == "alarm_all_active") {
+            else if (tokenizedLine[0] == "alarm") {
 
             }
             // *WAIT*
