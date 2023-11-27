@@ -2,8 +2,8 @@
 
 
 int Parser::interpret(size_t len, std::string* code) {
-    try {
-        for (short i = 0; i < len; i++) {
+    for (short i = 0; i < len; i++) {
+        try {
             std::string* tokenizedLine = tokenize(code[i]);
 
             // --- KEYWORDS ---
@@ -11,23 +11,7 @@ int Parser::interpret(size_t len, std::string* code) {
                 std::cout << "if keyword detected." << "\n";
             }
             else if (tokenizedLine[0] == "goto") {
-                short lineNr = 0;
-
-                // validate jump
-                try {
-                    lineNr = std::stoi(tokenizedLine[1]);
-                }
-                catch (const std::invalid_argument& ia) {
-                    throw std::invalid_argument("Expression must be a number (line " + std::to_string(i + 1) + ")");
-                }
-                if (lineNr < 0) {
-                    throw std::invalid_argument("Expression must be a positive number (line " + std::to_string(i + 1) + ")");
-                }
-                else if (lineNr > len) {
-                    throw std::invalid_argument("Expression must be a number smaller than the length of the file (line " + std::to_string(i + 1) + ")");
-                }
-
-                // actually jump
+                short lineNr = parseNumber(tokenizedLine[1], true, len);
                 i = lineNr - 2;
                 continue;
             }
@@ -42,7 +26,7 @@ int Parser::interpret(size_t len, std::string* code) {
             // --- FUNCTIONS ---
             // *SPEAKER*
             else if (tokenizedLine[0] == "say") {
-                
+
             }
             else if (tokenizedLine[0] == "playmusic_for_milliseconds") {
 
@@ -66,10 +50,11 @@ int Parser::interpret(size_t len, std::string* code) {
 
             }
         }
-    }
-    catch (char errMsg[]) {
-        ErrorHelper errorHelper;
-        errorHelper.throwError(errMsg);
+        catch (const std::exception &e) {
+            // Add line number to exception, then rethrow with new error message
+            std::string errMsg = std::string(e.what()) + " (line " + std::to_string(i + 1) + ")";
+            throw std::exception(errMsg.c_str());
+        }
     }
     return 0;
 }
@@ -122,3 +107,29 @@ std::string Parser::stripComments(std::string line) {
     return line;
 }
 
+int Parser::parseNumber(std::string number, bool requiredPositive) {
+    int parsedNumber = 0;
+
+    try {
+        parsedNumber = std::stoi(number);
+    }
+    catch (const std::invalid_argument& ia) {
+        throw std::invalid_argument("Expression must be a number");
+    }
+
+    if (requiredPositive && parsedNumber < 0) {
+        throw std::invalid_argument("Expression must be a positive number");
+    }
+
+    return parsedNumber;
+}
+
+int Parser::parseNumber(std::string number, bool requiredPositive, int maxValue) {
+    int parsedNumber = parseNumber(number, requiredPositive);
+    
+    if (parsedNumber > maxValue) {
+        throw std::invalid_argument("Expression must be a number smaller than the maximum value");
+    }
+
+    return parsedNumber;
+}
