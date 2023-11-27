@@ -42,7 +42,7 @@ int Parser::interpret(size_t len, std::string* code) {
             // --- FUNCTIONS ---
             // *SPEAKER*
             else if (tokenizedLine[0] == "say") {
-
+                
             }
             else if (tokenizedLine[0] == "playmusic_for_milliseconds") {
 
@@ -75,20 +75,25 @@ int Parser::interpret(size_t len, std::string* code) {
 }
 
 std::string* Parser::tokenize(std::string line) {
-    std::string* tokenizedLine = new std::string[2];
+    std::string* tokenizedLine = new std::string[3];
+    line = stripComments(line);
+    
     // check for '('
     size_t openParentLoc = line.find('(');
     if (openParentLoc != std::string::npos) {
         // '(' found
-        
         // check for ')'
         size_t closeParentLoc = line.find(')');
         if (closeParentLoc == std::string::npos) {
             throw std::invalid_argument("Missing ')'");
         }
+        else if (openParentLoc > closeParentLoc) {
+            throw std::invalid_argument("Expected '('");
+        }
         else {
             tokenizedLine[0] = line.substr(0, openParentLoc);
             tokenizedLine[1] = line.substr(openParentLoc + 1, closeParentLoc - openParentLoc - 1);
+            tokenizedLine[2] = line.substr(closeParentLoc + 1);
             return tokenizedLine;
         }
     }
@@ -104,5 +109,16 @@ std::string* Parser::tokenize(std::string line) {
 
         throw std::invalid_argument("Expected '(' or '='");
     }
+}
+
+std::string Parser::stripComments(std::string line) {
+    // check for '#'
+    size_t hashtagLoc = line.find('#');
+    if (hashtagLoc != std::string::npos) {
+        return line.substr(0, hashtagLoc);
+    }
+
+    // if no comment found, return line
+    return line;
 }
 

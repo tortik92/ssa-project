@@ -1,2 +1,2 @@
 48414A
-goto(1)
+if(ACTIVE_COUNT > 0) 1 else 2
