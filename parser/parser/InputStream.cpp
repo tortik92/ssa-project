@@ -65,7 +65,15 @@ void InputStream::readFile() {
 
                 // call interpret
                 Parser parser;
-                parser.interpret(nrOfLines, inputArray);
+                try {
+                    parser.interpret(nrOfLines, inputArray);
+                }
+                catch (const std::invalid_argument& ia) {
+                    std::cerr << ia.what() << "\n";
+                }
+                catch (const std::exception& e) {
+                    std::cerr << "An unexpected error occurred: " << e.what() << "\n";
+                }
 
                 delete[] inputArray; // always remember to clean up afterwards!
             }

@@ -11,16 +11,29 @@ int Parser::interpret(size_t len, std::string* code) {
                 std::cout << "if keyword detected." << "\n";
             }
             else if (tokenizedLine[0] == "goto") {
+                short lineNr = 0;
+
+                // validate jump
                 try {
-                    int lineNr = std::stoi(tokenizedLine[1]);
+                    lineNr = std::stoi(tokenizedLine[1]);
                 }
                 catch (const std::invalid_argument& ia) {
-                    throw std::invalid_argument("Expression must be a valid line number (line" + std::to_string(i) + ")");
+                    throw std::invalid_argument("Expression must be a number (line " + std::to_string(i + 1) + ")");
                 }
+                if (lineNr < 0) {
+                    throw std::invalid_argument("Expression must be a positive number (line " + std::to_string(i + 1) + ")");
+                }
+                else if (lineNr > len) {
+                    throw std::invalid_argument("Expression must be a number smaller than the length of the file (line " + std::to_string(i + 1) + ")");
+                }
+
+                // actually jump
+                i = lineNr - 2;
+                continue;
             }
             else if (tokenizedLine[0] == "reset") {
                 std::cout << "resetting program." << "\n";
-                std::cin.get();
+                std::cin.get(); // wait for user input
 
                 i = -1;
                 continue;
@@ -62,19 +75,21 @@ int Parser::interpret(size_t len, std::string* code) {
 }
 
 std::string* Parser::tokenize(std::string line) {
+    std::string* tokenizedLine = new std::string[2];
     // check for '('
     size_t openParentLoc = line.find('(');
     if (openParentLoc != std::string::npos) {
         // '(' found
-        // 
+        
         // check for ')'
         size_t closeParentLoc = line.find(')');
         if (closeParentLoc == std::string::npos) {
-            throw "Missing \')\'";
+            throw std::invalid_argument("Missing ')'");
         }
         else {
-            std::string tmp[] = { line.substr(0, openParentLoc), line.substr(openParentLoc, closeParentLoc) };
-            return tmp;
+            tokenizedLine[0] = line.substr(0, openParentLoc);
+            tokenizedLine[1] = line.substr(openParentLoc + 1, closeParentLoc - openParentLoc - 1);
+            return tokenizedLine;
         }
     }
     else {
@@ -87,7 +102,7 @@ std::string* Parser::tokenize(std::string line) {
             return tmp;
         }
 
-        throw "Expected '(' or '='";
+        throw std::invalid_argument("Expected '(' or '='");
     }
 }
 

@@ -1,3 +1,2 @@
 48414A
-goto(x)
-reset();
+goto(1)
