@@ -5,10 +5,13 @@
 #include <string>
 
 #include "Parser.h"
-#include "ErrorHelper.h"
+#include "GameVariables.h"
 
 class InputStream {
 private:
+	unsigned short FILE_SIGNATURE_LENGTH = 6;
+	unsigned short FIRST_LINE_LENGTH = 7;
+
 	const char* getFileLocation(); // gets called by readFile
 	bool validateFileSignature(unsigned short[3]);
 public:

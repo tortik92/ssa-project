@@ -18,26 +18,24 @@ void InputStream::readFile() {
 
     try {
         if (!inputFile.is_open()) {
-            throw "No file with specified file name found."; // File not found
+            throw "No file with specified file name found"; // File not found
         }
         else {
             // read first line and check for data
             std::string firstLine;
             getline(inputFile, firstLine);
 
-            const char* firstLineCharArray = firstLine.c_str();
-            for (int i = 0; i < firstLine.length(); i++) {
-                if (!std::isxdigit(firstLineCharArray[i])) {
-                    throw "The gameplay procedure file does not have the correct signature.";
-                }
+            if (firstLine.length() != FIRST_LINE_LENGTH) {
+                throw std::invalid_argument("Invalid first line length");
             }
-
 
             unsigned short fileSignature[3] = {
                 (unsigned short)std::stoi(firstLine.substr(0, 2), 0, 16),
                 (unsigned short)std::stoi(firstLine.substr(2, 2), 0, 16),
                 (unsigned short)std::stoi(firstLine.substr(4, 2), 0, 16)
             };
+
+            unsigned short padsCount = std::stoi(firstLine.substr(6, 1));
 
             if (validateFileSignature(fileSignature)) {
                 // determine length of file
@@ -63,36 +61,28 @@ void InputStream::readFile() {
                 }
                 inputFile.close(); // clean up
 
-                // call interpret
-                Parser parser;
+                // call the parser
+                Parser parser(padsCount);
                 try {
                     parser.interpret(nrOfLines, inputArray);
                 }
                 catch (const std::invalid_argument& ia) {
-                    std::cerr << ia.what() << "\n";
-                }
-                catch (const std::exception& e) {
-                    std::cerr << "An unexpected error occurred: " << e.what() << "\n";
+                    throw ia;
                 }
 
                 delete[] inputArray; // always remember to clean up afterwards!
             }
             else {
                 inputFile.close();
-                throw "The gameplay procedure file does not have the correct signature.";
+                throw std::invalid_argument("Invalid file signature.");
             }
         }
     }
-    catch (char errMsg[]) {
-        ErrorHelper errorHelper;
-
-        if (errMsg != NULL) {
-            errorHelper.throwError(errMsg);
-        }
-        else {
-            errorHelper.throwError("An unknown error occurred.");
-            inputFile.close();
-        }
+    catch (std::invalid_argument &ia) {
+        throw ia;
+    }
+    catch (std::exception& e) {
+        throw e;
     }
 }
 
