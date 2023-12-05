@@ -15,7 +15,7 @@ int Parser::interpret(size_t len, std::string* code) {
                 }
                 else if (tokenizedLine[0] == "goto") {
                     short lineNr = parseNumber(tokenizedLine[1], true, (int)len);
-                    i = lineNr - 2;
+                    i = lineNr - 1;
                     continue;
                 }
                 else if (tokenizedLine[0] == "reset") {
@@ -29,18 +29,18 @@ int Parser::interpret(size_t len, std::string* code) {
                 // --- FUNCTIONS ---
                 // *SPEAKER*
                 else if (tokenizedLine[0] == "say") {
-                    for (int i = 0; i < activePads; i++) {
-                        pads[i].say(tokenizedLine[1]);
+                    for (int i = 0; i < activePadsCount; i++) {
+                        activePads[i].say(tokenizedLine[1]);
                     }
                 }
                 else if (tokenizedLine[0] == "play_music") {
-                    for (int i = 0; i < activePads; i++) {
-                        pads[i].say(tokenizedLine[1]);
+                    for (int i = 0; i < activePadsCount; i++) {
+                        activePads[i].say(tokenizedLine[1]);
                     }
                 }
                 else if (tokenizedLine[0] == "alarm") {
-                    for (int i = 0; i < activePads; i++) {
-                        pads[i].alarm();
+                    for (int i = 0; i < activePadsCount; i++) {
+                        activePads[i].alarm();
                     }
                 }
                 // *WAIT*
@@ -122,23 +122,23 @@ std::string Parser::stripComments(std::string line) {
     return line;
 }
 
-int Parser::parseNumber(std::string number, bool requiredPositive) {
+int Parser::parseNumber(std::string numberAsString, bool requiredPositive) {
     int parsedNumber = 0;
     
     // return macro
-    if (number == "ACTIVE_COUNT"){
-        return activePads;
+    if (numberAsString == "ACTIVE_COUNT"){
+        return activePadsCount;
     }
     // return random number
-    size_t randomPos = number.find("random(");
+    size_t randomPos = numberAsString.find("random(");
     if (randomPos != std::string::npos) {
-        size_t closeParentPos = number.rfind(")");
+        size_t closeParentPos = numberAsString.rfind(")");
         if (closeParentPos != std::string::npos) {
             // extract number from random method
-            std::string numberInRandomPar = number.substr(randomPos + 7, closeParentPos - randomPos - 7);
+            std::string numberInRandomPar = numberAsString.substr(randomPos + 7, closeParentPos - randomPos - 7);
 
             // make random number
-            parsedNumber = std::rand() % parseNumber(numberInRandomPar, true); 
+            parsedNumber = std::rand() % parseNumber(numberInRandomPar, true);
         }
         else {
             throw std::invalid_argument("Missing ')'");
@@ -146,7 +146,7 @@ int Parser::parseNumber(std::string number, bool requiredPositive) {
     }
     else {
         try {
-            parsedNumber = std::stoi(number);
+            parsedNumber = std::stoi(numberAsString);
         }
         catch (const std::invalid_argument& ia) {
             throw std::invalid_argument("Expression must be a number");
