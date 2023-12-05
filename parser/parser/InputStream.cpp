@@ -18,7 +18,7 @@ void InputStream::readFile() {
 
     try {
         if (!inputFile.is_open()) {
-            throw "No file with specified file name found"; // File not found
+            throw std::invalid_argument("Invalid file name"); // File not found
         }
         else {
             // read first line and check for data
@@ -69,6 +69,9 @@ void InputStream::readFile() {
                 catch (const std::invalid_argument& ia) {
                     throw ia;
                 }
+                catch (const std::exception& e) {
+                    std::cout << e.what() << "\n";
+                }
 
                 delete[] inputArray; // always remember to clean up afterwards!
             }
@@ -79,10 +82,10 @@ void InputStream::readFile() {
         }
     }
     catch (std::invalid_argument &ia) {
-        throw ia;
+        throw;
     }
     catch (std::exception& e) {
-        throw e;
+        throw;
     }
 }
 

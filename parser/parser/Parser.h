@@ -4,9 +4,9 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <random>
 
 #include "Pad.h"
-#include "GameVariables.h"
 
 class Parser
 {
@@ -23,7 +23,7 @@ private:
 public:
 	Parser(unsigned short connectedPads) {
 		this->connectedPads = connectedPads;
-		this->activePads = activePads; // per default, all pads are active
+		this->activePads = connectedPads; // per default, all pads are active
 		this->pads = new Pad[connectedPads];
 	}
 	int interpret(size_t len, std::string* code);

@@ -1,2 +1,11 @@
-48414A
-if(ACTIVE_COUNT > 0) 1 else 2
+48414A6
+goto(random(10))
+goto(random(10))
+goto(random(10)
+goto(random(10)
+goto(random(10)
+goto(random(10)
+goto(random(10)
+goto(random(10)
+goto(random(10)
+goto(random(10)

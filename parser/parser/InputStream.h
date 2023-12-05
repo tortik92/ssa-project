@@ -5,7 +5,6 @@
 #include <string>
 
 #include "Parser.h"
-#include "GameVariables.h"
 
 class InputStream {
 private:

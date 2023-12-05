@@ -82,9 +82,9 @@ std::string* Parser::tokenize(std::string line) {
         if (openParentLoc != std::string::npos) {
             // '(' found
             // check for ')'
-            size_t closeParentLoc = line.find(')');
+            size_t closeParentLoc = line.rfind(')');
             if (closeParentLoc == std::string::npos) {
-                throw std::invalid_argument("Missing ')'");
+                throw std::invalid_argument("Expected ')'");
             }
             else if (openParentLoc > closeParentLoc) {
                 throw std::invalid_argument("Expected '('");
@@ -124,16 +124,37 @@ std::string Parser::stripComments(std::string line) {
 
 int Parser::parseNumber(std::string number, bool requiredPositive) {
     int parsedNumber = 0;
-
-    try {
-        parsedNumber = std::stoi(number);
+    
+    // return macro
+    if (number == "ACTIVE_COUNT"){
+        return activePads;
     }
-    catch (const std::invalid_argument& ia) {
-        throw std::invalid_argument("Expression must be a number");
-    }
+    // return random number
+    size_t randomPos = number.find("random(");
+    if (randomPos != std::string::npos) {
+        size_t closeParentPos = number.rfind(")");
+        if (closeParentPos != std::string::npos) {
+            // extract number from random method
+            std::string numberInRandomPar = number.substr(randomPos + 7, closeParentPos - randomPos - 7);
 
-    if (requiredPositive && parsedNumber < 0) {
-        throw std::invalid_argument("Expression must be a positive number");
+            // make random number
+            parsedNumber = std::rand() % parseNumber(numberInRandomPar, true); 
+        }
+        else {
+            throw std::invalid_argument("Missing ')'");
+        }
+    }
+    else {
+        try {
+            parsedNumber = std::stoi(number);
+        }
+        catch (const std::invalid_argument& ia) {
+            throw std::invalid_argument("Expression must be a number");
+        }
+
+        if (requiredPositive && parsedNumber < 0) {
+            throw std::invalid_argument("Expression must be a positive number");
+        }
     }
 
     return parsedNumber;
