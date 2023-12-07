@@ -21,8 +21,10 @@ private:
 	std::string stripComments(std::string line); // gets called by tokenize
 	int parseNumber(std::string number, bool requiredPositive);
 	int parseNumber(std::string number, bool requiredPositive, int maxValue); // calls parseNumber with 2 params (above)
-	bool parseIf(std::string condition);
 	std::string* parseOperator(std::string line, std::string operatorToken);
+
+	bool parseIfStatement(std::string condition);
+	short parseGotoStatement(std::string jmpTo, short fileLength);
 
 	// other
 	void deactivateActivePad(short index);

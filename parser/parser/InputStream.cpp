@@ -82,10 +82,10 @@ void InputStream::readFile() {
         }
     }
     catch (std::invalid_argument &ia) {
-        throw;
+        throw ia;
     }
     catch (std::exception& e) {
-        throw;
+        throw e;
     }
 }
 

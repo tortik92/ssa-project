@@ -9,17 +9,33 @@ int Parser::interpret(size_t len, std::string* code) {
             else {
                 // --- KEYWORDS ---
                 if (tokenizedLine[0] == "if") {
-                    std::cout << "if keyword detected." << "\n";
-                    parseIf(tokenizedLine[1], tokenizedLine[2]);
+                    std::string jmpTo, elseJmpTo;
+                    size_t elsePos = tokenizedLine[2].find(" else ");
+
+                    if (elsePos != std::string::npos) { // 'else' exists
+                        jmpTo = tokenizedLine[2].substr(0, elsePos);
+                        elseJmpTo = tokenizedLine[2].substr(elsePos + 6, tokenizedLine[2].length() - elsePos - 6);
+                    }
+                    else { // else does not exist
+                        jmpTo = tokenizedLine[2];
+                        elseJmpTo = std::to_string(i + 1); // go to next line
+                    }
+
+                    if (parseIfStatement(tokenizedLine[1])) // if the statement in tokenizedLine[1] is true
+                    {
+                        i = parseGotoStatement(jmpTo, (short)len);
+                        continue;
+                    }
+                    else {
+                        i = parseGotoStatement(elseJmpTo, (short)len);
+                        continue;
+                    }
                 }
                 else if (tokenizedLine[0] == "goto") {
-                    short lineNr = parseNumber(tokenizedLine[1], true, (int)len);
-                    std::cout << "going to line" << lineNr << "\n";
-                    i = lineNr - 1;
+                    i = parseGotoStatement(tokenizedLine[1], (int)len);
                     continue;
                 }
                 else if (tokenizedLine[0] == "reset") {
-                    std::cout << "resetting program." << "\n";
                     i = -1;
                     continue;
                 }
@@ -169,7 +185,7 @@ int Parser::parseNumber(std::string number, bool requiredPositive, int maxValue)
     return parsedNumber;
 }
 
-bool Parser::parseIf(std::string condition) {
+bool Parser::parseIfStatement(std::string condition) {
     if (condition.find(" == ") != std::string::npos) {
         std::string* args = parseOperator(condition, " == ");
         return parseNumber(args[0]) == parseNumber(args[1]);
@@ -197,6 +213,10 @@ bool Parser::parseIf(std::string condition) {
     else{
         throw std::invalid_argument("Invalid comparison operator in if-statement (missing spaces before or after operator?)");
     }
+}
+
+short Parser::parseGotoStatement(std::string jmpTo, short fileLength) {
+    return parseNumber(jmpTo, true, fileLength) - 1;
 }
 
 std::string* Parser::parseOperator(std::string statement, std::string operatorToken) {
