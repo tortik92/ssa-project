@@ -1,11 +1,2 @@
 48414A6
-goto(random(10))
-goto(random(10))
-goto(random(10)
-goto(random(10)
-goto(random(10)
-goto(random(10)
-goto(random(10)
-goto(random(10)
-goto(random(10)
-goto(random(10)
+if(ACTIVE_COUNT == 100)
