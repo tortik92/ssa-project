@@ -1,7 +1,7 @@
 #include "Parser.h"
 
 
-int Parser::interpret(size_t len, std::string* code) {
+float Parser::floaterpret(size_t len, std::string* code) {
     for (short i = 0; i < len; i++) {
         try {
             std::string* tokenizedLine = tokenize(code[i]);
@@ -34,7 +34,7 @@ int Parser::interpret(size_t len, std::string* code) {
                     }
                 }
                 else if (tokenizedLine[0] == "goto") {
-                    i = parseGotoStatement(tokenizedLine[1], (int)len);
+                    i = parseGotoStatement(tokenizedLine[1], (short)len);
                     std::cout << "Going to line " + i;
                     continue;
                 }
@@ -53,7 +53,7 @@ int Parser::interpret(size_t len, std::string* code) {
                 }
                 else if (tokenizedLine[0] == "play_music") {
                     for (int i = 0; i < padsCount; i++) {
-                        pads[i].play_music(parseNumber(tokenizedLine[1]));
+                        pads[i].play_music(expression.parseNumber(tokenizedLine[1]));
                     }
                 }
                 else if (tokenizedLine[0] == "alarm") {
@@ -64,14 +64,14 @@ int Parser::interpret(size_t len, std::string* code) {
                 // *WAIT*
                 else if (tokenizedLine[0] == "wait") {
                     std::cout << "Waiting for " << tokenizedLine[1] << " ms";
-                    std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(parseNumber(tokenizedLine[1], true)));
+                    std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds((int)expression.parseNumber(tokenizedLine[1], true)));
                 }
                 else if (tokenizedLine[0] == "wait_until_pads_occupied") {
                     std::cout << "All pads occupied";
                 }
                 // *MISC*
                 else if (tokenizedLine[0] == "deactivate") {
-                    short padToDeactivate = parseNumber(tokenizedLine[1], true, padsCount);
+                    short padToDeactivate = (short)expression.parseNumber(tokenizedLine[1], true, padsCount);
                     deactivateActivePad(padToDeactivate);
                     std::cout << "Deactivated pad " << padToDeactivate;
                 }
@@ -143,83 +143,32 @@ std::string Parser::stripComments(std::string line) {
     return line;
 }
 
-int Parser::parseNumber(std::string numberAsString, bool requiredPositive = false) {
-    int parsedNumber = 0;
 
-    // remove leading and trailing spaces/unwanted characters
-    const char notLikedInNumbers[] = " \t\n\r\f\v";
-    numberAsString.erase(0, numberAsString.find_first_not_of(notLikedInNumbers)); 
-    numberAsString.erase(numberAsString.find_last_not_of(notLikedInNumbers) + 1);
-    
-    // return macro
-    if (numberAsString == "ACTIVE_COUNT"){
-        return padsCount;
-    }
-    // return random number
-    size_t randomPos = numberAsString.find("random(");
-    if (randomPos != std::string::npos) {
-        size_t closeParentPos = numberAsString.rfind(")");
-        if (closeParentPos != std::string::npos) {
-            // extract number from random method
-            std::string numberInRandomPar = numberAsString.substr(randomPos + 7, closeParentPos - randomPos - 7);
-
-            // make random number
-            parsedNumber = std::rand() % parseNumber(numberInRandomPar, true);
-        }
-        else {
-            throw std::invalid_argument("Missing ')'");
-        }
-    }
-    else {
-        try {
-            parsedNumber = std::stoi(numberAsString);
-        }
-        catch (const std::invalid_argument) {
-            throw std::invalid_argument("Expression must be a number");
-        }
-
-        if (requiredPositive && parsedNumber < 0) {
-            throw std::invalid_argument("Expression must be a positive number");
-        }
-    }
-
-    return parsedNumber;
-}
-
-int Parser::parseNumber(std::string number, bool requiredPositive, int maxValue) {
-    int parsedNumber = parseNumber(number, requiredPositive);
-    
-    if (parsedNumber > maxValue) {
-        throw std::invalid_argument(std::string("Expression must be a number smaller than " + maxValue).c_str());
-    }
-
-    return parsedNumber;
-}
 
 bool Parser::parseIfStatement(std::string condition) {
     if (condition.find(" == ") != std::string::npos) {
         std::string* args = parseOperator(condition, " == ");
-        return parseNumber(args[0]) == parseNumber(args[1]);
+        return expression.parseNumber(args[0]) == expression.parseNumber(args[1]);
     }
     else if (condition.find(" < ") != std::string::npos) {
         std::string* args = parseOperator(condition, " < ");
-        return parseNumber(args[0]) < parseNumber(args[1]);
+        return expression.parseNumber(args[0]) < expression.parseNumber(args[1]);
     }
     else if (condition.find(" <= ") != std::string::npos) {
         std::string* args = parseOperator(condition, " <= ");
-        return parseNumber(args[0]) <= parseNumber(args[1]);
+        return expression.parseNumber(args[0]) <= expression.parseNumber(args[1]);
     }
     else if (condition.find(" > ") != std::string::npos) {
         std::string* args = parseOperator(condition, " > ");
-        return parseNumber(args[0]) > parseNumber(args[1]);
+        return expression.parseNumber(args[0]) > expression.parseNumber(args[1]);
     }
     else if (condition.find(" >= ") != std::string::npos) {
         std::string* args = parseOperator(condition, " >= ");
-        return parseNumber(args[0]) >= parseNumber(args[1]);
+        return expression.parseNumber(args[0]) >= expression.parseNumber(args[1]);
     }
     else if (condition.find(" != ") != std::string::npos) {
         std::string* args = parseOperator(condition, " != ");
-        return parseNumber(args[0]) != parseNumber(args[1]);
+        return expression.parseNumber(args[0]) != expression.parseNumber(args[1]);
     }
     else{
         throw std::invalid_argument("Invalid comparison operator in if-statement (missing spaces before or after operator?)");
@@ -227,7 +176,7 @@ bool Parser::parseIfStatement(std::string condition) {
 }
 
 short Parser::parseGotoStatement(std::string jmpTo, short fileLength) {
-    return parseNumber(jmpTo, true, fileLength) - 1;
+    return expression.parseNumber(jmpTo, true, fileLength) - 1;
 }
 
 std::string* Parser::parseOperator(std::string statement, std::string operatorToken) {

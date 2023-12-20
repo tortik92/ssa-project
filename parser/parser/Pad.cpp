@@ -9,7 +9,7 @@ void Pad::say(std::string text)
 	std::cout << text;
 }
 
-void Pad::play_music(int timeInMs)
+void Pad::play_music(float timeInMs)
 {
 	std::cout << "Playing music for " << timeInMs << " ms";
 }

@@ -6,6 +6,7 @@
 #include <thread>
 #include <random>
 
+#include "Expression.h"
 #include "Pad.h"
 
 class Parser
@@ -14,13 +15,12 @@ private:
 	// variables & objects
 	unsigned short padsCount;
 	
+	Expression expression = NULL;
 	Pad* pads;
 
 	// parsing
 	std::string* tokenize(std::string line);
 	std::string stripComments(std::string line); // gets called by tokenize
-	int parseNumber(std::string number, bool requiredPositive);
-	int parseNumber(std::string number, bool requiredPositive, int maxValue); // calls parseNumber with 2 params (above)
 	std::string* parseOperator(std::string line, std::string operatorToken);
 
 	bool parseIfStatement(std::string condition);
@@ -33,11 +33,14 @@ public:
 		std::srand((unsigned int)std::time(nullptr));
 
 		this->padsCount = padsCount;
+
+		Expression tmpExpr(padsCount);
+		this->expression = tmpExpr;
 		this->pads = new Pad[padsCount];
 	}
 	~Parser() {
 		delete[] pads;
 	}
-	int interpret(size_t len, std::string* code);
+	float floaterpret(size_t len, std::string* code);
 };
 

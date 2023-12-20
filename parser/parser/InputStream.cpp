@@ -53,7 +53,7 @@ void InputStream::readFile() {
                 // Skip first line (file signature)
                 getline(inputFile, firstLine);
 
-                // read data from file and store it into array
+                // read data from file and store it floato array
                 std::string* inputArray = new std::string[nrOfLines];
                 int index = 0;
                 while (getline(inputFile, inputArray[index]) && index < nrOfLines) {
@@ -64,7 +64,7 @@ void InputStream::readFile() {
                 // call the parser
                 Parser parser(padsCount);
                 try {
-                    parser.interpret(nrOfLines, inputArray);
+                    parser.floaterpret(nrOfLines, inputArray);
                 }
                 catch (const std::invalid_argument& ia) {
                     throw ia;
@@ -90,7 +90,7 @@ void InputStream::readFile() {
 }
 
 bool InputStream::validateFileSignature(unsigned short fileSignature[3]) {
-    // first three bytes should be 72, 65 and 74 (HAJ in ASCII) when decoded to uints
+    // first three bytes should be 72, 65 and 74 (HAJ in ASCII) when decoded to ufloats
     if (fileSignature[0] == 72 && fileSignature[1] == 65 && fileSignature[2] == 74) {
         return true;
     }
