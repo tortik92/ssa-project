@@ -24,19 +24,23 @@ int Parser::interpret(size_t len, std::string* code) {
                     if (parseIfStatement(tokenizedLine[1])) // if the statement in tokenizedLine[1] is true
                     {
                         i = parseGotoStatement(jmpTo, (short)len);
+                        std::cout << "Going to line " + i;
                         continue;
                     }
                     else {
                         i = parseGotoStatement(elseJmpTo, (short)len);
+                        std::cout << "Going to line " + i;
                         continue;
                     }
                 }
                 else if (tokenizedLine[0] == "goto") {
                     i = parseGotoStatement(tokenizedLine[1], (int)len);
+                    std::cout << "Going to line " + i;
                     continue;
                 }
                 else if (tokenizedLine[0] == "reset") {
                     i = -1;
+                    std::cout << "Resetting program";
                     continue;
                 }
 
@@ -49,7 +53,7 @@ int Parser::interpret(size_t len, std::string* code) {
                 }
                 else if (tokenizedLine[0] == "play_music") {
                     for (int i = 0; i < padsCount; i++) {
-                        pads[i].say(tokenizedLine[1]);
+                        pads[i].play_music(parseNumber(tokenizedLine[1]));
                     }
                 }
                 else if (tokenizedLine[0] == "alarm") {
@@ -59,15 +63,17 @@ int Parser::interpret(size_t len, std::string* code) {
                 }
                 // *WAIT*
                 else if (tokenizedLine[0] == "wait") {
-                    std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(parseNumber(tokenizedLine[1], true)));
+                    std::cout << "Waiting for " << tokenizedLine[1] << " ms";
+                    std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(parseNumber(tokenizedLine[1], true)));
                 }
-                else if (tokenizedLine[0] == "wait_until_mats_occupied") {
-
+                else if (tokenizedLine[0] == "wait_until_pads_occupied") {
+                    std::cout << "All pads occupied";
                 }
                 // *MISC*
                 else if (tokenizedLine[0] == "deactivate") {
                     short padToDeactivate = parseNumber(tokenizedLine[1], true, padsCount);
                     deactivateActivePad(padToDeactivate);
+                    std::cout << "Deactivated pad " << padToDeactivate;
                 }
                 // *EXPRESSION*
                 else {
@@ -139,6 +145,11 @@ std::string Parser::stripComments(std::string line) {
 
 int Parser::parseNumber(std::string numberAsString, bool requiredPositive = false) {
     int parsedNumber = 0;
+
+    // remove leading and trailing spaces/unwanted characters
+    const char notLikedInNumbers[] = " \t\n\r\f\v";
+    numberAsString.erase(0, numberAsString.find_first_not_of(notLikedInNumbers)); 
+    numberAsString.erase(numberAsString.find_last_not_of(notLikedInNumbers) + 1);
     
     // return macro
     if (numberAsString == "ACTIVE_COUNT"){

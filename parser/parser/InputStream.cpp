@@ -8,7 +8,7 @@ const char* InputStream::getFileLocation() { // May be changed later on
 
     return filePath;
     */
-    return "test.txt";
+    return "Reise_nach_Jerusalem.txt";
 }
 
 

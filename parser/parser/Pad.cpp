@@ -6,15 +6,15 @@ bool Pad::isPadOccupied() {
 
 void Pad::say(std::string text)
 {
-	throw std::exception("Not implemented");
+	std::cout << text;
 }
 
 void Pad::play_music(int timeInMs)
 {
-	throw std::exception("Not implemented");
+	std::cout << "Playing music for " << timeInMs << " ms";
 }
 
 void Pad::alarm()
 {
-	throw std::exception("Not implemented");
+	std::cout << "alarm";
 }
