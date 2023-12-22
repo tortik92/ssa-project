@@ -64,7 +64,7 @@ void Parser::interpret(size_t len, std::string* code) {
                 // *WAIT*
                 else if (tokenizedLine[0] == "wait") {
                     std::cout << "Waiting for " << tokenizedLine[1] << " ms";
-                    std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds((int)expression.parseNumber(tokenizedLine[1], true)));
+                    std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(expression.parseNumber(tokenizedLine[1], true)));
                 }
                 else if (tokenizedLine[0] == "wait_until_pads_occupied") {
                     std::cout << "All pads occupied";
@@ -134,7 +134,7 @@ std::string* Parser::tokenize(std::string line) {
                         throw std::invalid_argument("Invalid variable name");
                     }
 
-                    expression.setVariable(accessIndex, (int)expression.parseExpression(line.substr(equalSignPos + 1, line.length() - equalSignPos)));
+                    expression.setVariable(accessIndex, expression.parseExpression(line.substr(equalSignPos + 1, line.length() - equalSignPos)));
 
                     std::cout << expression.getVariable(accessIndex) << "\n";
 

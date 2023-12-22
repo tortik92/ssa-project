@@ -1,19 +1,17 @@
 #include "InputStream.h"
 
-const char* InputStream::getFileLocation() { // May be changed later on
-    /* read filename
+std::string InputStream::getFileLocation() { // May be changed later on
+    // read filename
     std::cout << "Please input a filename: ";
     std::string filePath;
     std::cin >> filePath;
 
     return filePath;
-    */
-    return "test.txt";
 }
 
 
 void InputStream::readFile() {
-    const char* filePath = getFileLocation();
+    std::string filePath = getFileLocation();
     std::ifstream inputFile(filePath); // create stream
 
     try {
@@ -53,7 +51,7 @@ void InputStream::readFile() {
                 // Skip first line (file signature)
                 getline(inputFile, firstLine);
 
-                // read data from file and store it floato array
+                // read data from file and store it into array
                 std::string* inputArray = new std::string[nrOfLines];
                 int index = 0;
                 while (getline(inputFile, inputArray[index]) && index < nrOfLines) {
@@ -77,7 +75,7 @@ void InputStream::readFile() {
             }
             else {
                 inputFile.close();
-                throw std::invalid_argument("Invalid file signature.");
+                throw std::invalid_argument("Invalid file signature");
             }
         }
     }
@@ -90,7 +88,7 @@ void InputStream::readFile() {
 }
 
 bool InputStream::validateFileSignature(unsigned short fileSignature[3]) {
-    // first three bytes should be 72, 65 and 74 (HAJ in ASCII) when decoded to ufloats
+    // first three bytes should be 72, 65 and 74 (HAJ in ASCII) when decoded to uints
     if (fileSignature[0] == 72 && fileSignature[1] == 65 && fileSignature[2] == 74) {
         return true;
     }
