@@ -113,6 +113,18 @@ float Expression::parseNumber(std::string numberAsString, bool requiredPositive)
 	if (numberAsString == "ACTIVE_COUNT") {
 		return padsCount;
 	}
+	size_t dollarPos = numberAsString.find("$");
+	if (dollarPos != std::string::npos) {
+		try
+		{
+			short accessIndex = (short)parseNumber(numberAsString.substr(dollarPos + 1, 1), true, variablesLength);
+			return variables[accessIndex];
+		}
+		catch (std::invalid_argument)
+		{
+			throw std::invalid_argument("Invalid variable name " + numberAsString);
+		}
+	}
 	// return random number
 	size_t randomPos = numberAsString.find("random(");
 	if (randomPos != std::string::npos) {

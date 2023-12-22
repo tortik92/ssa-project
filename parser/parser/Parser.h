@@ -41,6 +41,6 @@ public:
 	~Parser() {
 		delete[] pads;
 	}
-	float floaterpret(size_t len, std::string* code);
+	void interpret(size_t len, std::string* code);
 };
 

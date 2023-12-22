@@ -8,7 +8,7 @@ const char* InputStream::getFileLocation() { // May be changed later on
 
     return filePath;
     */
-    return "Reise_nach_Jerusalem.txt";
+    return "test.txt";
 }
 
 
@@ -64,7 +64,7 @@ void InputStream::readFile() {
                 // call the parser
                 Parser parser(padsCount);
                 try {
-                    parser.floaterpret(nrOfLines, inputArray);
+                    parser.interpret(nrOfLines, inputArray);
                 }
                 catch (const std::invalid_argument& ia) {
                     throw ia;

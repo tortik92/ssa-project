@@ -1,7 +1,7 @@
 #include "Parser.h"
 
 
-float Parser::floaterpret(size_t len, std::string* code) {
+void Parser::interpret(size_t len, std::string* code) {
     for (short i = 0; i < len; i++) {
         try {
             std::string* tokenizedLine = tokenize(code[i]);
@@ -35,7 +35,7 @@ float Parser::floaterpret(size_t len, std::string* code) {
                 }
                 else if (tokenizedLine[0] == "goto") {
                     i = parseGotoStatement(tokenizedLine[1], (short)len);
-                    std::cout << "Going to line " + i;
+                    std::cout << "Going to line " << i << "\n";
                     continue;
                 }
                 else if (tokenizedLine[0] == "reset") {
@@ -75,9 +75,8 @@ float Parser::floaterpret(size_t len, std::string* code) {
                     deactivateActivePad(padToDeactivate);
                     std::cout << "Deactivated pad " << padToDeactivate;
                 }
-                // *EXPRESSION*
                 else {
-
+                    throw std::invalid_argument("Unknown keyword " + tokenizedLine[0]);
                 }
             }
         }
@@ -87,7 +86,6 @@ float Parser::floaterpret(size_t len, std::string* code) {
             throw std::exception(errMsg.c_str());
         }
     }
-    return 0;
 }
 
 std::string* Parser::tokenize(std::string line) {
@@ -122,9 +120,30 @@ std::string* Parser::tokenize(std::string line) {
             size_t equalSignPos = line.find('=');
             if (equalSignPos != std::string::npos) {
                 // '=' found
+                // --- EXPRESSION ---
 
-                std::string tmp[] = { line.substr(0, equalSignPos), line.substr(equalSignPos) };
-                return tmp;
+                size_t variableDeclarationPos = line.rfind('$', equalSignPos);
+                if (variableDeclarationPos != std::string::npos) {
+                    short accessIndex = 0;
+                    try
+                    {
+                        accessIndex = (short)expression.parseNumber(line.substr(variableDeclarationPos + 1, 1), true, expression.getVariablesLength());
+                    }
+                    catch (const std::invalid_argument)
+                    {
+                        throw std::invalid_argument("Invalid variable name");
+                    }
+
+                    expression.setVariable(accessIndex, (int)expression.parseExpression(line.substr(equalSignPos + 1, line.length() - equalSignPos)));
+
+                    std::cout << expression.getVariable(accessIndex) << "\n";
+
+                    return nullptr; // make it ignore the line
+
+                }
+                else {
+                    throw std::invalid_argument("Missing variable to assign to");
+                }
             }
 
             throw std::invalid_argument("Invalid statement (perhaps missing '(' or '=')");
@@ -176,11 +195,16 @@ bool Parser::parseIfStatement(std::string condition) {
 }
 
 short Parser::parseGotoStatement(std::string jmpTo, short fileLength) {
-    return expression.parseNumber(jmpTo, true, fileLength) - 1;
+    try {
+        return (short)expression.parseNumber(jmpTo, true, fileLength) ;
+    }
+    catch (const std::invalid_argument) {
+        throw std::invalid_argument("Invalid goto location");
+    }
 }
 
 std::string* Parser::parseOperator(std::string statement, std::string operatorToken) {
-    std::string args[2];
+    std::string* args = new std::string[2];
 
     size_t operatorPos = statement.find(operatorToken);
     if (operatorPos == std::string::npos) {
@@ -207,4 +231,5 @@ void Parser::deactivateActivePad(short index) {
     pads = tmpArray;
     
     padsCount--;
+    expression.setPadsCount(expression.getPadsCount() - 1);
 }
