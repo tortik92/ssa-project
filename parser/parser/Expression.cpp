@@ -3,17 +3,31 @@
 
 int Expression::parseExpression(std::string input) {
 	input.erase(remove(input.begin(), input.end(), ' '), input.end()); // remove all whitespaces in expression
+
+	// set a '+' before each '-' to make the calculations easier
+	int offset = 0;
+	while (true) {
+		size_t minusPos = input.find('-', offset);
+
+		if (minusPos != std::string::npos) {
+			if (minusPos > 0 && input[minusPos - 1] != '+') {
+				input.insert(minusPos, 1, '+');
+				offset = minusPos + 2;
+			}
+		}
+		else break;
+	}
+
 	return expression(input);
 }
 
 int Expression::expression(std::string input, size_t offset) {
 	size_t plusLoc = input.find('+', offset);
-	size_t minusLoc = input.find('-', offset);
 	size_t openParentLoc = input.find('(', offset);
 	size_t closeParentLoc = input.rfind(')'); // no offset for rfind, as it searches backwards (so beginning from offset 0 it will try to search at index -1 and return npos)
 
-	if (plusLoc != std::string::npos && plusLoc < minusLoc) {
-		if ((plusLoc < openParentLoc || plusLoc > closeParentLoc)) { // if '+' is before '(' or after ')' and '+' is before '-'
+	if (plusLoc != std::string::npos) {
+		if ((plusLoc < openParentLoc || plusLoc > closeParentLoc)) { // if '+' is before '(' or after ')'
 			int t = term(input.substr(0, plusLoc));
 			int e = expression(input.substr(plusLoc + 1, input.length() - plusLoc - 1));
 
@@ -30,25 +44,7 @@ int Expression::expression(std::string input, size_t offset) {
 			}
 		}
 	}
-	if (minusLoc != std::string::npos) { // if there is no '+'
-		if (minusLoc < openParentLoc || minusLoc > closeParentLoc) { // if '-' is before '(' or after ')'
-			int t = term(input.substr(0, minusLoc));
-			int e = expression(input.substr(minusLoc + 1, input.length() - minusLoc - 1));
-
-			std::cout << "Expression: " << t << " - " << e << "\n";
-
-			return t - e;
-		}
-		else {
-			if (closeParentLoc != std::string::npos) { // find operators after ')'
-				return expression(input, closeParentLoc);
-			}
-			else { // else there is no '-' outside of parentheses
-				return term(input);
-			}
-		}
-	}
-	else { // if there is no '+' or '-'
+	else { // if there is no '+'
 		return term(input, offset);
 	}
 
