@@ -28,12 +28,9 @@ int Expression::expression(std::string input, size_t offset) {
 
 	if (plusLoc != std::string::npos) {
 		if ((plusLoc < openParentLoc || plusLoc > closeParentLoc)) { // if '+' is before '(' or after ')'
-			int t = term(input.substr(0, plusLoc));
-			int e = expression(input.substr(plusLoc + 1, input.length() - plusLoc - 1));
-
-			std::cout << "Expression: " << t << " + " << e << "\n";
-
-			return t + e;
+			return 
+				term(input.substr(0, plusLoc));
+				+ expression(input.substr(plusLoc + 1, input.length() - plusLoc - 1));
 		}
 		else {
 			if (closeParentLoc != std::string::npos) { // find operators after ')'
@@ -54,24 +51,17 @@ int Expression::term(std::string input, size_t offset) {
 	size_t multiplyLoc = input.find('*', offset);
 
 	if (multiplyLoc != std::string::npos) {
-		int f = factor(input.substr(0, multiplyLoc));
-		int t = term(input.substr(multiplyLoc + 1, input.length() - multiplyLoc - 1));
-
-		std::cout << "Term: " << f << " * " << t << "\n";
-
-		return f * t;
+		return 
+			factor(input.substr(0, multiplyLoc)) 
+			* term(input.substr(multiplyLoc + 1, input.length() - multiplyLoc - 1));
 	}
 	else {
 		size_t divideLoc = input.find('/', offset);
 
 		if (divideLoc != std::string::npos) {
-			int f = factor(input.substr(0, divideLoc));
-			int t = term(input.substr(divideLoc + 1, input.length() - divideLoc - 1));
-
-			std::cout << "Term: " << f << " / " << t << "\n";
-
-			return f / t;
-
+			return 
+				factor(input.substr(0, divideLoc))
+				/ term(input.substr(divideLoc + 1, input.length() - divideLoc - 1));
 		}
 		else {
 			return factor(input);
