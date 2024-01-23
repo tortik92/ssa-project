@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
+        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21679"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -119,6 +120,12 @@
                                     <action selector="startRound:" destination="BYZ-38-t0r" eventType="touchUpInside" id="eHT-dh-eFA"/>
                                 </connections>
                             </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="BLEStatusLabel" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hcT-Nt-oEr">
+                                <rect key="frame" x="50" y="69" width="293" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -128,6 +135,7 @@
                             <constraint firstItem="oCb-TW-CpI" firstAttribute="top" secondItem="zPe-1q-J2r" secondAttribute="bottom" constant="25" id="DP9-hb-8fs"/>
                             <constraint firstItem="oCb-TW-CpI" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" constant="-75" id="Hfx-Nz-BLO"/>
                             <constraint firstItem="z0m-GZ-ATx" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" constant="75" id="LcQ-Oz-hsb"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="hcT-Nt-oEr" secondAttribute="trailing" constant="50" id="NyF-Qa-lXe"/>
                             <constraint firstItem="xJw-bt-bD4" firstAttribute="top" secondItem="z0m-GZ-ATx" secondAttribute="bottom" constant="25" id="Qcu-fS-JPS"/>
                             <constraint firstItem="z0m-GZ-ATx" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="200" id="T1K-qr-88h"/>
                             <constraint firstItem="zS8-W6-hGl" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="bcQ-07-r7D"/>
@@ -135,6 +143,8 @@
                             <constraint firstItem="zPe-1q-J2r" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" constant="-75" id="g9C-ST-FLi"/>
                             <constraint firstItem="5ra-sx-ycP" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="lks-qq-U5D"/>
                             <constraint firstItem="zPe-1q-J2r" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="200" id="lyK-Eh-6Nb"/>
+                            <constraint firstItem="hcT-Nt-oEr" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="50" id="m2n-lc-NEm"/>
+                            <constraint firstItem="hcT-Nt-oEr" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="10" id="pi6-Hq-sAg"/>
                             <constraint firstItem="zS8-W6-hGl" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="75" id="rLQ-lQ-ON7"/>
                             <constraint firstItem="O0u-cR-XGR" firstAttribute="top" secondItem="oCb-TW-CpI" secondAttribute="bottom" constant="25" id="v91-EZ-bJp"/>
                         </constraints>
@@ -142,6 +152,7 @@
                     <connections>
                         <outlet property="collectionView" destination="O0u-cR-XGR" id="6WJ-N6-il2"/>
                         <outlet property="startBtn" destination="5ra-sx-ycP" id="zDL-23-VQj"/>
+                        <outlet property="statusLabel" destination="hcT-Nt-oEr" id="4rH-EX-K8c"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
