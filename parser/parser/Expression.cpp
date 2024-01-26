@@ -2,9 +2,10 @@
 
 
 int Expression::parseExpression(std::string input) {
-	input.erase(remove(input.begin(), input.end(), ' '), input.end()); // remove all whitespaces in expression
+	// remove all whitespaces in expression
+	input.erase(remove(input.begin(), input.end(), ' '), input.end()); 
 
-	// set a '+' before each '-' to make the calculations easier
+	// insert a '+' before each '-' to make the calculations easier
 	int offset = 0;
 	while (true) {
 		size_t minusPos = input.find('-', offset);
@@ -33,7 +34,8 @@ int Expression::expression(std::string input, size_t offset) {
 				+ expression(input.substr(plusLoc + 1, input.length() - plusLoc - 1));
 		}
 		else {
-			if (closeParentLoc != std::string::npos) { // find operators after ')'
+			// find operators after ')'
+			if (closeParentLoc != std::string::npos) { 
 				return expression(input, closeParentLoc);
 			}
 			else { // else there is no '+' outside of parentheses

@@ -10,11 +10,11 @@ void Parser::interpret(size_t len, std::string* code) {
                 // --- KEYWORDS ---
                 if (tokenizedLine[0] == "if") {
                     std::string jmpTo, elseJmpTo;
-                    size_t elsePos = tokenizedLine[2].find(" else ");
+                    size_t elsePos = tokenizedLine[2].find("else");
 
                     if (elsePos != std::string::npos) { // 'else' exists
                         jmpTo = tokenizedLine[2].substr(0, elsePos);
-                        elseJmpTo = tokenizedLine[2].substr(elsePos + 6, tokenizedLine[2].length() - elsePos - 6);
+                        elseJmpTo = tokenizedLine[2].substr(elsePos + 4, tokenizedLine[2].length() - elsePos - 4);
                     }
                     else { // else does not exist
                         jmpTo = tokenizedLine[2];
@@ -165,28 +165,28 @@ std::string Parser::stripComments(std::string line) {
 
 
 bool Parser::parseIfStatement(std::string condition) {
-    if (condition.find(" == ") != std::string::npos) {
-        std::string* args = parseOperator(condition, " == ");
+    if (condition.find("==") != std::string::npos) {
+        std::string* args = parseOperator(condition, "==");
         return expression.parseNumber(args[0]) == expression.parseNumber(args[1]);
     }
-    else if (condition.find(" < ") != std::string::npos) {
-        std::string* args = parseOperator(condition, " < ");
+    else if (condition.find("!<") != std::string::npos) {
+        std::string* args = parseOperator(condition, "!<");
         return expression.parseNumber(args[0]) < expression.parseNumber(args[1]);
     }
     else if (condition.find(" <= ") != std::string::npos) {
-        std::string* args = parseOperator(condition, " <= ");
+        std::string* args = parseOperator(condition, "<=");
         return expression.parseNumber(args[0]) <= expression.parseNumber(args[1]);
     }
     else if (condition.find(" > ") != std::string::npos) {
-        std::string* args = parseOperator(condition, " > ");
+        std::string* args = parseOperator(condition, "!>");
         return expression.parseNumber(args[0]) > expression.parseNumber(args[1]);
     }
     else if (condition.find(" >= ") != std::string::npos) {
-        std::string* args = parseOperator(condition, " >= ");
+        std::string* args = parseOperator(condition, ">=");
         return expression.parseNumber(args[0]) >= expression.parseNumber(args[1]);
     }
     else if (condition.find(" != ") != std::string::npos) {
-        std::string* args = parseOperator(condition, " != ");
+        std::string* args = parseOperator(condition, "!=");
         return expression.parseNumber(args[0]) != expression.parseNumber(args[1]);
     }
     else{
