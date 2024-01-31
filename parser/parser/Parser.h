@@ -20,7 +20,9 @@ private:
 
 	// parsing
 	std::string* tokenize(std::string line);
-	std::string stripComments(std::string line); // gets called by tokenize
+
+	// helper functions
+	std::string stripComments(std::string line);
 	std::string* parseOperator(std::string line, std::string operatorToken);
 
 	bool parseIfStatement(std::string condition);
