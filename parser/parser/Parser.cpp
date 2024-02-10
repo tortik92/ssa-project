@@ -1,8 +1,8 @@
 #include "Parser.h"
 
 
-void Parser::interpret(size_t len, std::string* code) {
-    for (short i = 0; i < len; i++) {
+void Parser::interpret(std::vector<std::string> code) {
+    for (int i = 0; i < code.size(); i++) {
         try {
             std::string* tokenizedLine = tokenize(code[i]);
             if (tokenizedLine == nullptr) continue; // ignore lines that are commented out
@@ -23,18 +23,18 @@ void Parser::interpret(size_t len, std::string* code) {
 
                     if (parseIfStatement(tokenizedLine[1])) // if the statement in tokenizedLine[1] is true
                     {
-                        i = parseGotoStatement(jmpTo, (short)len);
+                        i = parseGotoStatement(jmpTo, (short)code.size());
                         std::cout << "Going to line " + i;
                         continue;
                     }
                     else {
-                        i = parseGotoStatement(elseJmpTo, (short)len);
+                        i = parseGotoStatement(elseJmpTo, (short)code.size());
                         std::cout << "Going to line " + i;
                         continue;
                     }
                 }
                 else if (tokenizedLine[0] == "goto") {
-                    i = parseGotoStatement(tokenizedLine[1], (short)len);
+                    i = parseGotoStatement(tokenizedLine[1], (short)code.size());
                     std::cout << "Going to line " << i << "\n";
                     continue;
                 }
@@ -86,6 +86,8 @@ void Parser::interpret(size_t len, std::string* code) {
             throw std::exception(errMsg.c_str());
         }
     }
+
+    std::cout << "Successfully parsed everything\n";
 }
 
 std::string* Parser::tokenize(std::string line) {
@@ -166,27 +168,27 @@ std::string Parser::stripComments(std::string line) {
 
 bool Parser::parseIfStatement(std::string condition) {
     if (condition.find("==") != std::string::npos) {
-        std::string* args = parseOperator(condition, "==");
+        std::unique_ptr<std::string[]> args = parseOperator(condition, "==");
         return expression.parseNumber(args[0]) == expression.parseNumber(args[1]);
     }
     else if (condition.find("!<") != std::string::npos) {
-        std::string* args = parseOperator(condition, "!<");
+        std::unique_ptr<std::string[]> args = parseOperator(condition, "!<");
         return expression.parseNumber(args[0]) < expression.parseNumber(args[1]);
     }
-    else if (condition.find(" <= ") != std::string::npos) {
-        std::string* args = parseOperator(condition, "<=");
+    else if (condition.find("<=") != std::string::npos) {
+        std::unique_ptr<std::string[]> args = parseOperator(condition, "<=");
         return expression.parseNumber(args[0]) <= expression.parseNumber(args[1]);
     }
-    else if (condition.find(" > ") != std::string::npos) {
-        std::string* args = parseOperator(condition, "!>");
+    else if (condition.find(">") != std::string::npos) {
+        std::unique_ptr<std::string[]> args = parseOperator(condition, "!>");
         return expression.parseNumber(args[0]) > expression.parseNumber(args[1]);
     }
-    else if (condition.find(" >= ") != std::string::npos) {
-        std::string* args = parseOperator(condition, ">=");
+    else if (condition.find(">=") != std::string::npos) {
+        std::unique_ptr<std::string[]> args = parseOperator(condition, ">=");
         return expression.parseNumber(args[0]) >= expression.parseNumber(args[1]);
     }
-    else if (condition.find(" != ") != std::string::npos) {
-        std::string* args = parseOperator(condition, "!=");
+    else if (condition.find("!=") != std::string::npos) {
+        std::unique_ptr<std::string[]> args = parseOperator(condition, "!=");
         return expression.parseNumber(args[0]) != expression.parseNumber(args[1]);
     }
     else{
@@ -203,8 +205,8 @@ short Parser::parseGotoStatement(std::string jmpTo, short fileLength) {
     }
 }
 
-std::string* Parser::parseOperator(std::string statement, std::string operatorToken) {
-    std::string* args = new std::string[2];
+std::unique_ptr<std::string[]> Parser::parseOperator(std::string statement, const char operatorToken[2]) {
+    std::unique_ptr<std::string[]> args(new std::string[2]);
 
     size_t operatorPos = statement.find(operatorToken);
     if (operatorPos == std::string::npos) {
@@ -212,7 +214,7 @@ std::string* Parser::parseOperator(std::string statement, std::string operatorTo
     }
     else {
         args[0] = statement.substr(0, operatorPos);
-        args[1] = statement.substr(operatorPos + operatorToken.length(), statement.length() - operatorPos - operatorToken.length());
+        args[1] = statement.substr(operatorPos + 2, statement.length() - operatorPos - 2);
 
         return args;
     }

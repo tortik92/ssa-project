@@ -1,15 +1,41 @@
 #include "Initializer.h"
 
-void Initializer::onDataRecv(const unsigned int* mac, const unsigned char* incomingData, int len){
-	// copy data into struct
-    std::memcpy(&msg, incomingData, len);
+void Initializer::onDataRecv(const unsigned int* mac, const char incomingData[CODE_BUFFER_LENGTH], int len) {
+    // Copy signature
+    strncpy_s(reinterpret_cast<char*>(msg.signature), SIGNATURE_LENGTH + 1, incomingData, SIGNATURE_LENGTH);
+    msg.signature[SIGNATURE_LENGTH] = '\0';  // Null-terminate the signature
 
     // validate file signature
     if (validateSignature(msg.signature)) {
-        // call parser
+        // Extract padsCount
+        sscanf_s(incomingData + SIGNATURE_LENGTH, "%2d", &msg.padsCount);
+
+        // Extract code
+        const char* codePos = std::strchr(incomingData, '\n');
+        if (codePos != nullptr) {
+            strcpy_s(msg.code, CODE_BUFFER_LENGTH, codePos + 1);  // +1 to skip the '\n'
+        }
+        else {
+            // Handle error: code not found
+            strcpy_s(msg.code, CODE_BUFFER_LENGTH, "");
+        }
+
         Parser parser(msg.padsCount);
         try {
-            parser.interpret(CODE_BUFFER_LENGTH, msg.code);
+            // parse char[] to vector<string>
+            std::string codeAsString(msg.code);
+            std::vector<std::string> codeLines;
+
+            size_t newLinePos = 0;
+            while ((newLinePos = codeAsString.find("\n")) != std::string::npos) {
+                codeLines.push_back(codeAsString.substr(0, newLinePos));
+                codeAsString.erase(0, newLinePos + 1);
+            }
+
+            // add last line
+            codeLines.push_back(codeAsString);
+
+            parser.interpret(codeLines);
         }
         catch (const std::invalid_argument& ia) {
             throw ia;
@@ -23,8 +49,7 @@ void Initializer::onDataRecv(const unsigned int* mac, const unsigned char* incom
     }
 }
 
-bool Initializer::validateSignature(unsigned char fileSignature[3]) {
-    // first three bytes should be 72, 65 and 74 (HAJ in ASCII) when decoded to uints
+bool Initializer::validateSignature(unsigned char fileSignature[SIGNATURE_LENGTH]) {
     if (fileSignature[0] == 'S' && 
         fileSignature[1] == 'D' && 
         fileSignature[2] == 'L' && 

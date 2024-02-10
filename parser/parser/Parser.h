@@ -1,10 +1,12 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <iostream>
 #include <chrono>
 #include <thread>
 #include <random>
+#include <memory>
 
 #include "Expression.h"
 #include "Pad.h"
@@ -23,7 +25,7 @@ private:
 
 	// helper functions
 	std::string stripComments(std::string line);
-	std::string* parseOperator(std::string line, std::string operatorToken);
+	std::unique_ptr<std::string[]> parseOperator(std::string line, const char operatorToken[2]);
 
 	bool parseIfStatement(std::string condition);
 	short parseGotoStatement(std::string jmpTo, short fileLength);
@@ -43,6 +45,6 @@ public:
 	~Parser() {
 		delete[] pads;
 	}
-	void interpret(size_t len, std::string* code);
+	void interpret(std::vector<std::string> code);
 };
 
