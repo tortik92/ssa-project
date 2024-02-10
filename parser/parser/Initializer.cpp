@@ -37,11 +37,8 @@ void Initializer::onDataRecv(const unsigned int* mac, const char incomingData[CO
 
             parser.interpret(codeLines);
         }
-        catch (const std::invalid_argument& ia) {
-            throw ia;
-        }
         catch (const std::exception& e) {
-            std::cout << e.what() << "\n";
+            throw e;
         }
     }
     else {

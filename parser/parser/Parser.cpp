@@ -1,6 +1,5 @@
 #include "Parser.h"
 
-
 void Parser::interpret(std::vector<std::string> code) {
     for (int i = 0; i < code.size(); i++) {
         try {
@@ -24,23 +23,19 @@ void Parser::interpret(std::vector<std::string> code) {
                     if (parseIfStatement(tokenizedLine[1])) // if the statement in tokenizedLine[1] is true
                     {
                         i = parseGotoStatement(jmpTo, (short)code.size());
-                        std::cout << "Going to line " + i;
                         continue;
                     }
                     else {
                         i = parseGotoStatement(elseJmpTo, (short)code.size());
-                        std::cout << "Going to line " + i;
                         continue;
                     }
                 }
                 else if (tokenizedLine[0] == "goto") {
                     i = parseGotoStatement(tokenizedLine[1], (short)code.size());
-                    std::cout << "Going to line " << i << "\n";
                     continue;
                 }
                 else if (tokenizedLine[0] == "reset") {
                     i = -1;
-                    std::cout << "Resetting program";
                     continue;
                 }
 
@@ -63,7 +58,6 @@ void Parser::interpret(std::vector<std::string> code) {
                 }
                 // *WAIT*
                 else if (tokenizedLine[0] == "wait") {
-                    std::cout << "Waiting for " << tokenizedLine[1] << " ms";
                     std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(expression.parseNumber(tokenizedLine[1], true)));
                 }
                 else if (tokenizedLine[0] == "wait_until_pads_occupied") {
@@ -73,10 +67,9 @@ void Parser::interpret(std::vector<std::string> code) {
                 else if (tokenizedLine[0] == "deactivate") {
                     short padToDeactivate = (short)expression.parseNumber(tokenizedLine[1], true, padsCount);
                     deactivateActivePad(padToDeactivate);
-                    std::cout << "Deactivated pad " << padToDeactivate;
                 }
                 else {
-                    throw std::invalid_argument("Unknown keyword " + tokenizedLine[0]);
+                    throw std::invalid_argument("Unknown keyword \"" + tokenizedLine[0] + "\"");
                 }
             }
         }
@@ -86,8 +79,6 @@ void Parser::interpret(std::vector<std::string> code) {
             throw std::exception(errMsg.c_str());
         }
     }
-
-    std::cout << "Successfully parsed everything\n";
 }
 
 std::string* Parser::tokenize(std::string line) {
@@ -137,8 +128,6 @@ std::string* Parser::tokenize(std::string line) {
                     }
 
                     expression.setVariable(accessIndex, expression.parseExpression(line.substr(equalSignPos + 1, line.length() - equalSignPos)));
-
-                    std::cout << expression.getVariable(accessIndex) << "\n";
 
                     return nullptr; // make it ignore the line
 
@@ -192,7 +181,7 @@ bool Parser::parseIfStatement(std::string condition) {
         return expression.parseNumber(args[0]) != expression.parseNumber(args[1]);
     }
     else{
-        throw std::invalid_argument("Invalid comparison operator in if-statement (missing spaces before or after operator?)");
+        throw std::invalid_argument("Invalid comparison operator in if-statement");
     }
 }
 
