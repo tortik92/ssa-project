@@ -3,8 +3,8 @@
 void Parser::interpret(std::vector<std::string> code) {
     for (int i = 0; i < code.size(); i++) {
         try {
-            std::string* tokenizedLine = tokenize(code[i]);
-            if (tokenizedLine == nullptr) continue; // ignore lines that are commented out
+            std::array<std::string, 3> tokenizedLine = tokenize(code[i]);
+            if (tokenizedLine[0] == "") continue; // ignore lines that are commented out
             else {
                 // --- KEYWORDS ---
                 if (tokenizedLine[0] == "if") {
@@ -81,12 +81,13 @@ void Parser::interpret(std::vector<std::string> code) {
     }
 }
 
-std::string* Parser::tokenize(std::string line) {
-    std::string* tokenizedLine = new std::string[3];
+std::array<std::string, 3> Parser::tokenize(std::string line) {
+    std::array<std::string, 3> tokenizedLine;
     line = stripComments(line);
 
     if (line == "") {
-        return nullptr;
+        tokenizedLine.fill("");
+        return tokenizedLine;
     }
     else {
         // check for '('
@@ -129,8 +130,8 @@ std::string* Parser::tokenize(std::string line) {
 
                     expression.setVariable(accessIndex, expression.parseExpression(line.substr(equalSignPos + 1, line.length() - equalSignPos)));
 
-                    return nullptr; // make it ignore the line
-
+                    tokenizedLine.fill("");
+                    return tokenizedLine; // ignore line
                 }
                 else {
                     throw std::invalid_argument("Missing variable to assign to");

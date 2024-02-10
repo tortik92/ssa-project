@@ -6,15 +6,15 @@ bool Pad::isPadOccupied() {
 
 void Pad::say(std::string text)
 {
-	std::cout << text;
+	std::cout << text << "\n";
 }
 
 void Pad::play_music(int timeInMs)
 {
-	std::cout << "Playing music for " << timeInMs << " ms";
+	std::cout << "Playing music for " << timeInMs << " ms\n";
 }
 
 void Pad::alarm()
 {
-	std::cout << "alarm";
+	std::cout << "alarm" << "\n";
 }

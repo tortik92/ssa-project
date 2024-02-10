@@ -90,8 +90,6 @@ int Expression::factor(std::string input, size_t offset) {
 }
 
 int Expression::parseNumber(std::string numberAsString, bool requiredPositive) {
-	int parsedNumber = 0;
-
 	// remove leading and trailing spaces/unwanted characters
 	const char notLikedInNumbers[] = " \t\n\r\f\v";
 	numberAsString.erase(0, numberAsString.find_first_not_of(notLikedInNumbers));
@@ -122,13 +120,16 @@ int Expression::parseNumber(std::string numberAsString, bool requiredPositive) {
 			std::string numberInRandomPar = numberAsString.substr(randomPos + 7, closeParentPos - randomPos - 7);
 
 			// make random number
-			parsedNumber = std::rand() % parseNumber(numberInRandomPar, true);
+			int num = parseNumber(numberInRandomPar, true);
+			if (num != 0) return std::rand() % num;
+			else return 0;
 		}
 		else {
 			throw std::invalid_argument("Missing ')'");
 		}
 	}
 	else {
+		int parsedNumber = 0;
 		try {
 			parsedNumber = std::stof(numberAsString);
 		}
@@ -139,9 +140,8 @@ int Expression::parseNumber(std::string numberAsString, bool requiredPositive) {
 		if (requiredPositive && parsedNumber < 0) {
 			throw std::invalid_argument("Expression must be a positive number");
 		}
+		return parsedNumber;
 	}
-
-	return parsedNumber;
 }
 
 int Expression::parseNumber(std::string number, bool requiredPositive, int maxValue) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <array>
 #include <vector>
 #include <iostream>
 #include <chrono>
@@ -21,7 +22,7 @@ private:
 	Pad* pads;
 
 	// parsing
-	std::string* tokenize(std::string line);
+	std::array<std::string, 3> tokenize(std::string line);
 
 	// helper functions
 	std::string stripComments(std::string line);
