@@ -4,7 +4,7 @@ bool Pad::isPadOccupied() {
 	return isOccupied;
 }
 
-void Pad::say(std::string text)
+void Pad::say(char* text)
 {
 	std::cout << text << "\n";
 }

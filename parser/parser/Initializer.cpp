@@ -1,17 +1,16 @@
 #include "Initializer.h"
 
-void Initializer::onDataRecv(const unsigned int* mac, const char incomingData[CODE_BUFFER_LENGTH], int len) {
+void Initializer::onDataRecv(const unsigned int* mac, char incomingData[CODE_BUFFER_LENGTH], int len) {
     // Copy signature
-    strncpy_s(reinterpret_cast<char*>(msg.signature), SIGNATURE_LENGTH + 1, incomingData, SIGNATURE_LENGTH);
+    strncpy_s(msg.signature, SIGNATURE_LENGTH + 1, incomingData, SIGNATURE_LENGTH);
     msg.signature[SIGNATURE_LENGTH] = '\0';  // Null-terminate the signature
 
-    // validate file signature
     if (validateSignature(msg.signature)) {
         // Extract padsCount
         sscanf_s(incomingData + SIGNATURE_LENGTH, "%2d", &msg.padsCount);
 
         // Extract code
-        const char* codePos = std::strchr(incomingData, '\n');
+        const char* codePos = strchr(incomingData, '\n');
         if (codePos != nullptr) {
             strcpy_s(msg.code, CODE_BUFFER_LENGTH, codePos + 1);  // +1 to skip the '\n'
         }
@@ -21,32 +20,29 @@ void Initializer::onDataRecv(const unsigned int* mac, const char incomingData[CO
         }
 
         Parser parser(msg.padsCount);
-        try {
-            // parse char[] to vector<string>
-            std::string codeAsString(msg.code);
-            std::vector<std::string> codeLines;
 
-            size_t newLinePos = 0;
-            while ((newLinePos = codeAsString.find("\n")) != std::string::npos) {
-                codeLines.push_back(codeAsString.substr(0, newLinePos));
-                codeAsString.erase(0, newLinePos + 1);
-            }
+        char** codeLines;
 
-            // add last line
-            codeLines.push_back(codeAsString);
+        // split the code based on newline characters
+        const char* delim = "\n";
+        char* next_token;
+        char* token = strtok_s(incomingData, delim, &next_token);
 
-            parser.interpret(codeLines);
+        while (token != NULL) {
+            std::cout << token;
+
+            token = strtok_s(NULL, delim, &next_token);
         }
-        catch (const std::exception& e) {
-            throw e;
-        }
+
+
+        // parser.interpret(codeLines);
     }
     else {
         throw std::invalid_argument("Invalid signature");
     }
 }
 
-bool Initializer::validateSignature(unsigned char fileSignature[SIGNATURE_LENGTH]) {
+bool Initializer::validateSignature(char fileSignature[SIGNATURE_LENGTH]) {
     if (fileSignature[0] == 'S' && 
         fileSignature[1] == 'D' && 
         fileSignature[2] == 'L' && 

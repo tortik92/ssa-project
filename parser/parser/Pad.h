@@ -12,7 +12,7 @@ public:
 		isOccupied = false;
 	}
 	bool isPadOccupied();
-	void say(std::string text);
+	void say(char* text);
 	void play_music(int timeInMs);
 	void alarm();
 };
