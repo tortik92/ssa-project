@@ -25,7 +25,7 @@ void Initializer::onDataRecv(const unsigned int* mac, char incomingData[CODE_BUF
 
         // split the code based on newline characters
         const char* delim = "\n";
-        char* next_token;
+        char* next_token = NULL;
         char* token = strtok_s(incomingData, delim, &next_token);
 
         while (token != NULL) {
@@ -34,6 +34,7 @@ void Initializer::onDataRecv(const unsigned int* mac, char incomingData[CODE_BUF
             token = strtok_s(NULL, delim, &next_token);
         }
 
+        
 
         // parser.interpret(codeLines);
     }

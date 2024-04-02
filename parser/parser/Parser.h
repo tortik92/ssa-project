@@ -10,75 +10,85 @@
 #include "Pad.h"
 
 // array lengths
-#define CODE_LINES 25
-#define CODE_LINE_LEN 50
+constexpr int codeLines = 25;
+constexpr int codeLineLen = 50;
 
-#define VARIABLES_COUNT 8
+constexpr int variablesCount = 8;
 
-#define TOKENIZER_SPLITS 3
-#define TOKEN_LENGTH 40
+constexpr int tokenizerSplits = 3;
+constexpr int tokenLength = 40;
 
-#define IF_ARG_COUNT 2
-#define IF_ARG_LEN 30
+constexpr int ifArgCount = 2;
+constexpr int ifArgLen = 30;
+constexpr int comparisonOperatorLength = 3;
+
+constexpr int numberAsStrLen = 25;
+
+constexpr int errmsgLen = 40;
+
 
 // ---error codes---
 // no errors occurred
-#define NO_ERRORS 0
-#define NO_VALUE_RETURNED 1
+constexpr int noErrors = 109;
+constexpr int noValueReturned = 110;
 
 // number value errors
-#define ERR_NOT_A_NUMBER -1
-#define ERR_VALUE_NEGATIVE -2
-#define ERR_VALUE_OUT_OF_RANGE -3
+constexpr int notANumber = -111;
+constexpr int valueNegative = -112;
+constexpr int valueOutOfRange = -113;
 
 // things not not found
-#define ERR_INVALID_COMPARISON_OPERATOR -4
-#define ERR_NO_OPEN_PARENTHESIS -5
-#define ERR_NO_CLOSE_PARENTHESIS -6
-#define ERR_INVALID_VARIABLE_ACCESS -666
+constexpr int invalidComparisonOperator = -114;
+constexpr int noOpenParenthesis = -115;
+constexpr int noCloseParenthesis = -116;
+constexpr int invalidVariableAccess = -117;
+
+constexpr int errmsgTooBig = -118;
+constexpr int invalidStatement = -119;
+constexpr int unknownKeyword = -120;
 
 class Parser
 {
 private:
 	// variables & objects
 	unsigned short padsCount;
-	int variables[VARIABLES_COUNT];
+	int variables[variablesCount];
 	
 	Expression expr;
 	Pad* pads;
 
 	// helper functions
-	short tokenize(char* line, char tokenizedLine[TOKENIZER_SPLITS][TOKEN_LENGTH]);
-	char* stripComments(char line[CODE_LINE_LEN]);
-	short parseOperator(char* line, const char operatorToken[2], char args[IF_ARG_COUNT][IF_ARG_LEN]);
-	short parseIfStatement(char* condition);
-	short parseGotoStatement(char* jmpTo, short fileLength);
-	int parseNumber(char* numberAsString);
+	int tokenize(char line[codeLineLen], char tokenizedLine[tokenizerSplits][tokenLength]);
+	char* stripComments(char line[codeLineLen]);
+	int parseOperator(char line[codeLineLen], const char operatorToken[comparisonOperatorLength], char args[ifArgCount][ifArgLen]);
+	int evaluateIfStatement(char condition[codeLineLen], short lineNr);
+	int parseNumber(char numberAsString[numberAsStrLen], bool mustBePositive, int maxAllowedValue);
+	float parseExpression(char expression[codeLineLen]);
 
 	// pads interaction
-	short activatePad(short index);
-	short activateAllPads();
-	short deactivatePad(short index);
-	short deactivateAllPads();
+	int activatePad(short index);
+	int activateAllPads();
+	int deactivatePad(short index);
+	int deactivateAllPads();
 
-	void buildErrorMsg(char* errmsg, char* error, int insertPos, int line);
+	bool errorOccurred(char errmsg[errmsgLen], int errCode, short line);
 
 	// numbers
 	int getVariableContents(short accessIndex) {
-		if (accessIndex < 0 || accessIndex > VARIABLES_COUNT) {
-			return ERR_INVALID_VARIABLE_ACCESS;
+		if (accessIndex < 0 || accessIndex > variablesCount) {
+			return invalidVariableAccess;
 		}
 		else {
 			return variables[accessIndex];
 		}
 	}
 	int setVariableContents(short accessIndex, int value) {
-		if (accessIndex < 0 || accessIndex > VARIABLES_COUNT) {
-			return ERR_INVALID_VARIABLE_ACCESS;
+		if (accessIndex < 0 || accessIndex > variablesCount) {
+			return invalidVariableAccess;
 		}
 		else {
 			variables[accessIndex] = value;
-			return NO_ERRORS;
+			return noErrors;
 		}
 	}
 public:
@@ -87,6 +97,11 @@ public:
 		std::srand((unsigned int)std::time(nullptr));
 
 		this->padsCount = padsCount;
+		
+		for (int i = 0; i < variablesCount; i++) {
+			this->variables[i] = 0;
+		}
+
 		this->pads = new Pad[padsCount];
 	}
 	~Parser() {
@@ -94,6 +109,6 @@ public:
 	}
 
 	// entry/main function
-	const char* interpret(char code[CODE_LINES][CODE_LINE_LEN], int linesCount);
+	const char* interpret(char code[codeLines][codeLineLen], int linesCount);
 };
 

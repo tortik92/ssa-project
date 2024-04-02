@@ -5,8 +5,8 @@
 
 #include "Parser.h"
 
-#define SIGNATURE_LENGTH 4
-#define CODE_BUFFER_LENGTH 400
+constexpr int SIGNATURE_LENGTH = 4;
+constexpr int CODE_BUFFER_LENGTH = 400;
 
 class Initializer
 {
