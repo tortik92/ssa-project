@@ -6,12 +6,13 @@
 class Pad
 {
 private:
-	bool isOccupied;
+	bool occupied;
 public:
 	Pad() {
-		isOccupied = false;
+		occupied = false;
 	}
-	bool isPadOccupied();
+
+	bool isOccupied();
 	void say(char* text);
 	void play_music(int timeInMs);
 	void alarm();

@@ -6,13 +6,13 @@
 #include <thread>
 #include <random>
 
-#include "Expression.h"
+#include "StringHelper.h"
 #include "Pad.h"
 
 // array lengths
-constexpr int codeLines = 25;
+constexpr int linesCount = 25;
 constexpr int codeLineLen = 50;
-
+ 
 constexpr int variablesCount = 8;
 
 constexpr int tokenizerSplits = 3;
@@ -22,14 +22,15 @@ constexpr int ifArgCount = 2;
 constexpr int ifArgLen = 30;
 constexpr int comparisonOperatorLength = 3;
 
-constexpr int numberAsStrLen = 25;
+constexpr int shortAsStrLen = 5;
+constexpr int intAsStrLen = 12;
 
 constexpr int errmsgLen = 40;
 
 
 // ---error codes---
 // no errors occurred
-constexpr int noErrors = 109;
+constexpr int success = 109;
 constexpr int noValueReturned = 110;
 
 // number value errors
@@ -43,7 +44,7 @@ constexpr int noOpenParenthesis = -115;
 constexpr int noCloseParenthesis = -116;
 constexpr int invalidVariableAccess = -117;
 
-constexpr int errmsgTooBig = -118;
+constexpr int valueTooLarge = -118;
 constexpr int invalidStatement = -119;
 constexpr int unknownKeyword = -120;
 
@@ -54,16 +55,16 @@ private:
 	unsigned short padsCount;
 	int variables[variablesCount];
 	
-	Expression expr;
+	StringHelper strh;
 	Pad* pads;
 
 	// helper functions
 	int tokenize(char line[codeLineLen], char tokenizedLine[tokenizerSplits][tokenLength]);
-	char* stripComments(char line[codeLineLen]);
+	void stripComments(char line[codeLineLen]);
 	int parseOperator(char line[codeLineLen], const char operatorToken[comparisonOperatorLength], char args[ifArgCount][ifArgLen]);
 	int evaluateIfStatement(char condition[codeLineLen], short lineNr);
-	int parseNumber(char numberAsString[numberAsStrLen], bool mustBePositive, int maxAllowedValue);
-	float parseExpression(char expression[codeLineLen]);
+	int parseNumber(char numberAsString[intAsStrLen], bool mustBePositive, int maxAllowedValue);
+	int parseExpression(char expression[codeLineLen], bool mustBePositive, int maxAllowedValue);
 
 	// pads interaction
 	int activatePad(short index);
@@ -73,8 +74,8 @@ private:
 
 	bool errorOccurred(char errmsg[errmsgLen], int errCode, short line);
 
-	// numbers
-	int getVariableContents(short accessIndex) {
+	// variables
+	int getVariableContents(const short accessIndex) {
 		if (accessIndex < 0 || accessIndex > variablesCount) {
 			return invalidVariableAccess;
 		}
@@ -82,13 +83,13 @@ private:
 			return variables[accessIndex];
 		}
 	}
-	int setVariableContents(short accessIndex, int value) {
+	int setVariableContents(const short accessIndex, const int value) {
 		if (accessIndex < 0 || accessIndex > variablesCount) {
 			return invalidVariableAccess;
 		}
 		else {
 			variables[accessIndex] = value;
-			return noErrors;
+			return success;
 		}
 	}
 public:
@@ -109,6 +110,6 @@ public:
 	}
 
 	// entry/main function
-	const char* interpret(char code[codeLines][codeLineLen], int linesCount);
+	const char* interpret(char code[linesCount][codeLineLen], char errmsg[errmsgLen]);
 };
 

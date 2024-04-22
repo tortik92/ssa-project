@@ -5,7 +5,7 @@
 
 #include "Parser.h"
 
-constexpr int SIGNATURE_LENGTH = 4;
+constexpr int SIGNATURE_LENGTH = 5;
 constexpr int CODE_BUFFER_LENGTH = 400;
 
 class Initializer
@@ -21,6 +21,6 @@ public:
 private:
 	msg_struct msg;
 
-	bool validateSignature(char signature[SIGNATURE_LENGTH]);
+	bool validSignature(char signature[SIGNATURE_LENGTH]);
 };
 

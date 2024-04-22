@@ -1,7 +1,7 @@
 #include "Pad.h"
 
-bool Pad::isPadOccupied() {
-	return isOccupied;
+bool Pad::isOccupied() {
+	return occupied;
 }
 
 void Pad::say(char* text)

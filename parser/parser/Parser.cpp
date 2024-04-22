@@ -1,25 +1,30 @@
 #include "Parser.h"
 
-const char* Parser::interpret(char code[codeLines][codeLineLen], int linesCount) {
-    char errmsg[errmsgLen] = "";
-
+/**
+ * Interprets the code.
+ * 
+ * \param code The code that should be executed
+ * \return How the debugging of the program went
+ */
+const char* Parser::interpret(char code[linesCount][codeLineLen], char errmsg[errmsgLen]) {
     for (int i = 0; i < linesCount; i++) {
         char tokenizedLine[tokenizerSplits][tokenLength];
 
-        if (tokenize(code[i], tokenizedLine) == noValueReturned) continue; // ignore lines that only have a comment in them
+        int tokenizerReturnCode = tokenize(code[i], tokenizedLine);
+        if (errorOccurred(errmsg, tokenizerReturnCode, i + 1)) return errmsg;
+        if (tokenizerReturnCode == noValueReturned) continue; // ignore lines that only have a comment in them
         else {
             // --- KEYWORDS ---
-            if (tokenizedLine[0] == "if") { // IF
+            if (strcmp(tokenizedLine[0], "if") == 0) { // IF
                 char jmpTo[3] = "";
-                char elseJmpTo[3] = "";
-                strcpy_s(elseJmpTo, strstr(tokenizedLine[2], "else"));
+                char* elseJmpTo = strstr(tokenizedLine[2], "else");
 
                 if (elseJmpTo != NULL) {
                     strncpy_s(jmpTo, tokenizedLine[2], strlen(tokenizedLine[2]) - strlen(elseJmpTo));
                 }
                 else {
                     strcpy_s(jmpTo, tokenizedLine[2]);
-                    _itoa_s(i + 1, elseJmpTo, 10); // default: go to next line
+                    strh.toString(i + 1, elseJmpTo, 3); // default: go to next line
                 }
 
                 short ifStatementResult = evaluateIfStatement(tokenizedLine[1], i + 1);
@@ -29,7 +34,7 @@ const char* Parser::interpret(char code[codeLines][codeLineLen], int linesCount)
                 } 
                 else if (ifStatementResult) // if the statement in tokenizedLine[1] is true
                 {
-                    int newIndex = parseNumber(jmpTo, true, linesCount);
+                    int newIndex = (int)parseExpression(jmpTo, true, linesCount);
 
                     if (!errorOccurred(errmsg, newIndex, i + 1)) {
                         i = newIndex;
@@ -41,7 +46,7 @@ const char* Parser::interpret(char code[codeLines][codeLineLen], int linesCount)
                     continue;
                 }
                 else {
-                    int newIndex = parseNumber(elseJmpTo, true, linesCount);
+                    int newIndex = (int)parseExpression(elseJmpTo, true, linesCount);
 
                     if (!errorOccurred(errmsg, newIndex, i + 1)) {
                         i = newIndex;
@@ -52,8 +57,8 @@ const char* Parser::interpret(char code[codeLines][codeLineLen], int linesCount)
                     continue;
                 }
             }
-            else if (tokenizedLine[0] == "goto") { // GOTO
-                int newIndex = parseNumber(tokenizedLine[1], true, linesCount);
+            else if (strcmp(tokenizedLine[0], "goto") == 0) { // GOTO
+                int newIndex = (int)parseExpression(tokenizedLine[1], true, linesCount);
 
                 if (!errorOccurred(errmsg, newIndex, i + 1)) {
                     i = newIndex;
@@ -63,22 +68,16 @@ const char* Parser::interpret(char code[codeLines][codeLineLen], int linesCount)
                 }
                 continue;
             }
-            else if (tokenizedLine[0] == "reset") { // RESET
-                i = -1;
-                continue;
-            }
-
             // --- FUNCTIONS ---
             // *SPEAKER*
-            else if (tokenizedLine[0] == "say") { // SAY
+            else if (strcmp(tokenizedLine[0], "say") == 0) { // SAY
                 for (int i = 0; i < padsCount; i++) {
                     pads[i].say(tokenizedLine[1]);
                 }
             }
-            else if (tokenizedLine[0] == "play_music") { // PLAY MUSIC
+            else if (strcmp(tokenizedLine[0], "play_music") == 0) { // PLAY MUSIC
                 for (int i = 0; i < padsCount; i++) {
-                    bool mustBePositive = true;
-                    int milliSeconds = parseNumber(tokenizedLine[1], mustBePositive, INT32_MAX);
+                    int milliSeconds = (int)parseExpression(tokenizedLine[1], true, INT32_MAX);
 
                     if (errorOccurred(errmsg, milliSeconds, i + 1)) {
                         return errmsg;
@@ -88,15 +87,14 @@ const char* Parser::interpret(char code[codeLines][codeLineLen], int linesCount)
                     }
                 }
             }
-            else if (tokenizedLine[0] == "alarm") { // ALARM
+            else if (strcmp(tokenizedLine[0], "alarm") == 0) { // ALARM
                 for (int i = 0; i < padsCount; i++) {
                     pads[i].alarm();
                 }
             }
             // *WAIT*
-            else if (tokenizedLine[0] == "wait") { // WAIT
-                bool mustBePositive = true;
-                int millis = parseNumber(tokenizedLine[1], mustBePositive, INT32_MAX);
+            else if (strcmp(tokenizedLine[0], "wait") == 0) { // WAIT
+                int millis = (int)parseExpression(tokenizedLine[1], true, INT32_MAX);
                 if (errorOccurred(errmsg, millis, i + 1)) {
                     return errmsg;
                 }
@@ -104,19 +102,19 @@ const char* Parser::interpret(char code[codeLines][codeLineLen], int linesCount)
                     std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(millis));
                 }
             }
-            else if (tokenizedLine[0] == "wait_until") { // WAIT UNTIL
+            else if (strcmp(tokenizedLine[0], "wait_until") == 0) { // WAIT UNTIL
                 std::cout << "All pads occupied";
             }
             // *MISC*
-            else if (tokenizedLine[0] == "activate") { // ACTIVATE
+            else if (strcmp(tokenizedLine[0], "activate") == 0) { // ACTIVATE
             
             }
-            else if (tokenizedLine[0] == "activate_all") { // ACTIVATE ALL
+            else if (strcmp(tokenizedLine[0], "activate_all") == 0) { // ACTIVATE ALL
                 activateAllPads();
             }
-            else if (tokenizedLine[0] == "deactivate") { // DEACTIVATE
+            else if (strcmp(tokenizedLine[0], "deactivate") == 0) { // DEACTIVATE
                 bool mustBePositive = true;
-                short padToDeactivate = (short)parseNumber(tokenizedLine[1], mustBePositive, padsCount);
+                short padToDeactivate = (short)parseExpression(tokenizedLine[1], mustBePositive, padsCount);
 
                 if (!errorOccurred(errmsg, padToDeactivate, i + 1)) {
                     deactivatePad(padToDeactivate);
@@ -126,7 +124,7 @@ const char* Parser::interpret(char code[codeLines][codeLineLen], int linesCount)
                     return errmsg;
                 }
             }
-            else if (tokenizedLine[0] == "deactivate_all") { // DEACTIVATE ALL
+            else if (strcmp(tokenizedLine[0], "deactivate_all") == 0) { // DEACTIVATE ALL
                 deactivateAllPads();
             }
             else {
@@ -148,32 +146,31 @@ const char* Parser::interpret(char code[codeLines][codeLineLen], int linesCount)
  * \throw noCloseParenthesis, noOpenParenthesis, invalidVariableAccess and invalidStatement
  */
 int Parser::tokenize(char line[codeLineLen], char tokenizedLine[tokenizerSplits][tokenLength]) {
-    line = stripComments(line);
+    stripComments(line);
 
     if (strcmp(line, "") == 0) 
     {
         for (int i = 0; i < tokenizerSplits; i++) {
             strncpy_s(tokenizedLine[i], " ", tokenLength);
-            tokenizedLine[i][tokenLength] = '\0';
         }
 
         return noValueReturned;
     }
     else {
-        char* lineAfterOpenParent = strchr(line, '(');
-        if (lineAfterOpenParent != NULL) {
-            char* lineAfterCloseParent = strchr(line, ')');
-            if (lineAfterCloseParent == NULL) {
+        char* openParentLoc = strchr(line, '(');
+        if (openParentLoc != NULL) {
+            char* closeParentLoc = strchr(line, ')');
+            if (closeParentLoc == NULL) {
                 return noCloseParenthesis;
             }
-            else if (&lineAfterOpenParent > &lineAfterCloseParent) { // if '(' comes after ')'
+            else if (&openParentLoc > &closeParentLoc) { // if '(' comes after ')'
                 return noOpenParenthesis;
             }
             else {
-                strncpy_s(tokenizedLine[0], line, strlen(line) - strlen(lineAfterOpenParent) - 1);
-                strcpy_s(tokenizedLine[1], lineAfterOpenParent);
-                strcpy_s(tokenizedLine[2], lineAfterCloseParent);
-                return noErrors;
+                strncpy_s(tokenizedLine[0], line, strlen(line) - strlen(openParentLoc));
+                strncpy_s(tokenizedLine[1], openParentLoc + 1, strlen(openParentLoc) - strlen(closeParentLoc) - 1);
+                strcpy_s(tokenizedLine[2], closeParentLoc + 1);
+                return success;
             }
         }
         else {
@@ -184,19 +181,14 @@ int Parser::tokenize(char line[codeLineLen], char tokenizedLine[tokenizerSplits]
 
                 char* lineAfterVariableDeclaration = strchr(line, '$');
                 if (lineAfterVariableDeclaration != NULL) {
-                    int accessIndex = parseNumber(&lineAfterVariableDeclaration[1], true, SHRT_MAX);
+                    int accessIndex = (int)parseNumber(&lineAfterVariableDeclaration[1], true, SHRT_MAX);
 
-                    setVariableContents(accessIndex, parseExpression(lineAfterEqualSign));
+                    setVariableContents(accessIndex, parseExpression(lineAfterEqualSign, false, INT32_MAX));
 
                     return noValueReturned;
                 }
-                else {
-                    return invalidVariableAccess;
-                }
+                else return invalidVariableAccess;
             }
-
-
-            // throw std::invalid_argument("Invalid statement (perhaps missing '(' or '=')");
         }
 
         return invalidStatement;
@@ -208,20 +200,14 @@ int Parser::tokenize(char line[codeLineLen], char tokenizedLine[tokenizerSplits]
  * Removes comments from a code line.
  * 
  * \param line to search for comments
- * \return line with comments removed
  */
-char* Parser::stripComments(char line[codeLineLen]) {
-    char* nextToken;
-    char* lineAfterHashtag = strtok_s(line, "#", &nextToken);
+void Parser::stripComments(char line[codeLineLen]) {
+    char* hashtagLoc = strchr(line, '#');
 
-    if (lineAfterHashtag != NULL) {
-        char lineBeforeHashtag[codeLineLen - 1];
-        strncpy_s(lineBeforeHashtag, line, strlen(line) - strlen(lineAfterHashtag));
-
-        return lineBeforeHashtag;
+    while (hashtagLoc != NULL && *hashtagLoc != '\0') {
+        *hashtagLoc = '\0';
+        hashtagLoc++;
     }
-
-    return line;
 }
 
 /**
@@ -248,10 +234,10 @@ int Parser::evaluateIfStatement(char condition[codeLineLen], short lineNr) {
 
 
     for (int j = 0; j < ifArgCount; j++) {
-        parsedArgs[j] = parseExpression(args[j]);
+        parsedArgs[j] = parseExpression(args[j], false, INT32_MAX);
 
-        if (errorOccurred(errmsg, parsedArgs[i], lineNr)) {
-            return parsedArgs[i];
+        if (errorOccurred(errmsg, (int)parsedArgs[i], lineNr)) {
+            return (int)parsedArgs[i];
         }
     }
 
@@ -274,28 +260,39 @@ int Parser::evaluateIfStatement(char condition[codeLineLen], short lineNr) {
 }
 
 int Parser::parseOperator(char statement[codeLineLen], const char operatorToken[comparisonOperatorLength], char args[ifArgCount][ifArgLen]) {
-    char* lineAfterOperator = strstr(statement, operatorToken);
-    if (lineAfterOperator == NULL) { // operator not found
+    char* operatorPos = strstr(statement, operatorToken);
+    if (operatorPos == NULL) { // operator not found
         return invalidComparisonOperator;
     }
     else {
-        strncpy_s(args[0], strlen(statement) - strlen(lineAfterOperator - 1), lineAfterOperator, ifArgLen);
-        strcpy_s(args[1], lineAfterOperator);
+        int beforeOperatorLen = strlen(statement) - strlen(operatorPos);
+        if (beforeOperatorLen > ifArgLen) {
+            return valueTooLarge;
+        }
+        else {
+            strncpy_s(args[0], ifArgLen, statement, beforeOperatorLen);
+            strcpy_s(args[1], operatorPos + strlen(operatorToken));
+            return success;
+        }
     }
 }
 
+// TODO: implement
 int Parser::activatePad(short index) {
     throw std::exception("Not implemented");
 }
 
+// TODO: implement
 int Parser::activateAllPads() {
     throw std::exception("Not implemented");
 }
 
+// TODO: implement
 int Parser::deactivatePad(short index) {
     throw std::exception("Not implemented");
 }
 
+// TODO: implement
 int Parser::deactivateAllPads() {
     throw std::exception("Not implemented");
 }
@@ -323,24 +320,20 @@ bool Parser::errorOccurred(char errmsg[errmsgLen], int errCode, short lineNr) {
         "Unknown keyword"
     };
     
-    if (errCode >= notANumber && errCode <= unknownKeyword) {
+    if (errCode >= unknownKeyword && errCode <= notANumber) {
         foundAnError = true;
 
-        strcpy_s(errmsg, errmsgLen, errorMessages[errCode + (notANumber * -1)]);
-        char lineNote[11] = " (line )";
+        int accessIndex = errCode * -1 + notANumber;
+        strcpy_s(errmsg, errmsgLen, errorMessages[accessIndex]);
+
+        const short lineNoteLen = 11;
         const short numInsertPos = 7;
-        char lineNrAsStr[3] = "";
+        char lineNote[lineNoteLen] = " (line )";
+        char lineNrAsStr[5] = { 0 };
 
-        _itoa_s(lineNr, lineNrAsStr, 10);
-        short lineNoteLen = (short)strlen(lineNote);
-        short lineNrAsStrLen = (short)strlen(lineNrAsStr);
+        strh.toString(lineNr, lineNrAsStr, 3);
+        strh.insert(lineNote, lineNoteLen, numInsertPos, lineNrAsStr);
 
-        for (short i = lineNoteLen; i >= numInsertPos; i--) {
-            lineNote[i + lineNrAsStrLen] = lineNote[i];
-        }
-        for (short i = 0; i < lineNrAsStrLen; i++) {
-            lineNote[numInsertPos + i] = lineNrAsStr[i];
-        }
         strcat_s(errmsg, errmsgLen, (const char*)lineNote);
     }
 
@@ -356,118 +349,132 @@ bool Parser::errorOccurred(char errmsg[errmsgLen], int errCode, short lineNr) {
  * \return parsed number if everything went fine
  * \throw valueNegative, noCloseParenthesis (for randoms), valueOutOfRange, notANumber
  */
-int Parser::parseNumber(char numberAsString[numberAsStrLen], bool mustBePositive, int maxAllowedValue) {
-    // remove leading and trailing spaces/unwanted characters
-    const char notLikedInNumbers[] = " \t\n\r\f\v";
-    char strippedString[numberAsStrLen] = "";
+int Parser::parseNumber(char numberAsString[intAsStrLen], bool mustBePositive, int maxAllowedValue) {
+    int parsedNumber = 0;
+    while (*numberAsString)
+    {
+        if ((*numberAsString >= '0') && (*numberAsString <= '9'))
+            return notANumber;
+        numberAsString++;
+        parsedNumber++;
+    }
 
-    int stripStrIndex = 0;
-    for (int i = 0; i < strlen(numberAsString); i++) {
-        for (int j = 0; j < strlen(notLikedInNumbers); j++) {
-            if (numberAsString[i] != notLikedInNumbers[j]) {
-                strippedString[stripStrIndex] = numberAsString[i];
-                stripStrIndex++;
-            }
+    try {
+        parsedNumber = std::stoi(numberAsString);
+
+        if (mustBePositive && parsedNumber < 0) {
+            return valueNegative;
+        }
+        if (parsedNumber > maxAllowedValue) {
+            return valueOutOfRange;
         }
     }
-
-    // return macro
-    if (numberAsString == "ACTIVE_COUNT") {
-        return padsCount;
+    catch (const std::invalid_argument) {
+        return notANumber;
     }
 
-    // return variable contents
-    char* lineAfterDollarSign = strchr(numberAsString, '$');
-    if (lineAfterDollarSign != NULL) {
-        return getVariableContents((short)parseNumber(&lineAfterDollarSign[0], mustBePositive, maxAllowedValue));
+    return parsedNumber;
+}
+
+int Parser::parseExpression(char expression[codeLineLen], bool mustBePositive, int maxAllowedValue) {
+    // remove leading and trailing spaces/unwanted characters
+    const char notLikedInNumbers[] = " \t\n\r\f\v";
+    char strippedString[codeLineLen] = "";
+
+    int stripStrIndex = 0;
+    bool faultyCharacterFound = false;
+    for (int i = 0; i < strlen(expression); i++) {
+        for (int j = 0; j < strlen(notLikedInNumbers); j++) {
+            if (expression[i] == notLikedInNumbers[j]) {
+                faultyCharacterFound = true;
+            }
+        }
+
+        if (!faultyCharacterFound) {
+            strippedString[stripStrIndex] = expression[i];
+            stripStrIndex++;
+        } // else continue with next
     }
 
-    // return random number
-    char* lineAfterRandom = strstr(numberAsString, "random(");
-    if (lineAfterRandom != NULL) {
-        char* lineAfterCloseParent = strrchr(numberAsString, ')');
+    // macro
+    strh.replaceNum(strippedString, codeLineLen, "PADS_COUNT", padsCount);
+
+    // variable contents
+    char* dollarPos = strchr(strippedString, '$');
+    while (dollarPos != NULL && *dollarPos + 1 != '\0') {
+        int variableContent = getVariableContents((short)parseNumber(&dollarPos[1], true, variablesCount));
+        char toReplace[] = { *dollarPos, *dollarPos + 1, '\0'};
+        strh.replaceNum(dollarPos, codeLineLen - (strippedString - dollarPos), toReplace, variableContent);
+    }
+
+    // random number
+    char* randomPos = strstr(strippedString, "random(");
+    if (randomPos != NULL) {
+        char* lineAfterCloseParent = strrchr(strippedString, ')');
         if (lineAfterCloseParent != NULL) {
-            char numberInPar[6] = "";
-            strncpy_s(numberInPar, lineAfterRandom, &lineAfterRandom[0] - &lineAfterCloseParent[0]);
+            char numberInPar[shortAsStrLen] = "";
+            strncpy_s(numberInPar, randomPos + 7, &randomPos[0] - &lineAfterCloseParent[0]);
 
-            int num = parseNumber(numberInPar, mustBePositive, maxAllowedValue);
+            int num = parseExpression(numberInPar, mustBePositive, maxAllowedValue);
             if (num < 0) {
                 return valueNegative;
             }
 
-            return num != 0 ? std::rand() % num : 0;
+            char toReplace[9 + shortAsStrLen] = "random()";
+            strh.insert(toReplace, 9 + shortAsStrLen, 7, numberInPar);
+
+            strh.replaceNum(strippedString, codeLineLen, toReplace, (int)(num != 0 ? std::rand() % num : 0));
         }
         else {
             return noCloseParenthesis;
         }
     }
 
-    // return parsed number
-    else {
-        int parsedNumber = 0;
-        try {
-            parsedNumber = std::stoi(numberAsString);
-
-            if (mustBePositive && parsedNumber < 0) {
-                return valueNegative;
-            }
-            if (parsedNumber > maxAllowedValue) {
-                return valueOutOfRange;
-            }
-        }
-        catch (const std::invalid_argument) {
-            return notANumber;
-        }
-
-        return parsedNumber;
-    }
-}
-
-float parseExpression(char expression[codeLineLen]) {
-    float numbers[100];
-    char operators[100];
+    // parse the expression
+    int numbers[100] = { 0 };
+    char operators[100] = { 0 };
     int numIndex = 0, opIndex = 0;
 
     for (int i = 0; i < codeLineLen; i++) {
-        if (isdigit(expression[i])) {
-            float num = 0;
-            while (isdigit(expression[i])) {
-                num = num * 10 + (expression[i] - '0');
+        if (isdigit(strippedString[i])) {
+            int num = 0;
+            while (isdigit(strippedString[i])) {
+                num = num * 10 + (strippedString[i] - '0');
                 i++;
             }
             i--;
             numbers[numIndex++] = num;
         }
-        else if (expression[i] == '+' || expression[i] == '-') {
+        else if (strippedString[i] == '+' || strippedString[i] == '-') {
             while (opIndex > 0 && (operators[opIndex - 1] == '*' || operators[opIndex - 1] == '/')) {
                 char op = operators[--opIndex];
-                float b = numbers[--numIndex];
-                float a = numbers[--numIndex];
+                int b = numbers[--numIndex];
+                int a = numbers[--numIndex];
                 if (op == '*')
                     numbers[numIndex++] = a * b;
                 else
                     numbers[numIndex++] = a / b;
             }
-            operators[opIndex++] = expression[i];
+            operators[opIndex++] = strippedString[i];
         }
-        else if (expression[i] == '*' || expression[i] == '/') {
+        else if (strippedString[i] == '*' || strippedString[i] == '/') {
             while (opIndex > 0 && (operators[opIndex - 1] == '*' || operators[opIndex - 1] == '/')) {
                 char op = operators[--opIndex];
-                float b = numbers[--numIndex];
-                float a = numbers[--numIndex];
+                int b = numbers[--numIndex];
+                int a = numbers[--numIndex];
                 if (op == '*')
                     numbers[numIndex++] = a * b;
                 else
                     numbers[numIndex++] = a / b;
             }
-            operators[opIndex++] = expression[i];
+            operators[opIndex++] = strippedString[i];
         }
     }
 
     while (opIndex > 0) {
         char op = operators[--opIndex];
-        float b = numbers[--numIndex];
-        float a = numbers[--numIndex];
+        int b = numbers[--numIndex];
+        int a = numbers[--numIndex];
         if (op == '+')
             numbers[numIndex++] = a + b;
         else
