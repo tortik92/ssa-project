@@ -12,6 +12,6 @@ jobs:
     - name: Install modules
       run: npm i --save-dev eslint
     - name: Config ESLint
-      run: npm init @eslint/config -- --config semistandard
+      run: npm init @eslint/config -- --config semistandard -y
     - name: Run ESLint
       run: npx eslint --fix website/**.js --no-error-on-unmatched-pattern
