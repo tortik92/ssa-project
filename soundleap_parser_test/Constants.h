@@ -30,7 +30,7 @@ constexpr size_t maxSupportedPads = 8;
 constexpr size_t maxAllowedTextToSpeechLen = 128;
 
 
-// ---error codes---
+// ---error codes----
 // no errors occurred
 constexpr int success = 109;
 constexpr int noValueReturned = 110;
