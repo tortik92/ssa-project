@@ -13,30 +13,48 @@ const uint8_t phoneInput_gameSelection_Memory = 0x10;
 const uint8_t phoneInput_gameSelection_Reaktion = 0x11;
 const uint8_t phoneInput_cancelGame = 0xFF;
 
-const uint8_t padOutput_isPlayerOnPad = 0x10;
 const uint8_t padOutput_playSound8Val = 0x20;
 const uint8_t padOutput_waitForPlayerOnPad = 0x30;
+const uint8_t padOutput_cancelOperation = 0x30;
+
+const uint8_t padInput_padOccupied = 0x11;
 
 // other constants
 const uint8_t maxAllowedPads = 4;
 const uint8_t reaktionPlayerCount = 2;
 const uint8_t paramLen = 8;
 const uint8_t chordAMajorLen = 4;
+const unsigned long defaultDelay = 10000;  // 10 seconds
+
+// music
+const int gameActionTones[paramLen] = { 440, 550, 660, 880, 0, 0, 0, 0 };
+const int gameActionDurations[paramLen] = { 100, 100, 100, 200, 0, 0, 0, 0 };
+
+const int gameConclusionTones[paramLen] = { 440, 550, 660, 550, 660, 880, 0, 0 };
+const int gameConclusionDurations[paramLen] = { 125, 125, 125, 125, 125, 125, 0, 0 };
 
 const int chordAMajor[paramLen] = { 440, 550, 660, 880, 0, 0, 0, 0 };  // tone values in Hz, 4 times zero to make array length of 8
-const int defaultBeat[paramLen] = {};
+const int defaultBeat[paramLen] = { 200, 200, 400, 400, 200, 200, 0, 0 };
+
+// --------FUNCTION PROTOTYPE DEFINITONS----------
+// Due to default value assignment, these functions have to be defined before the implementation
+uint8_t playSingleSound(const int soundVal, const int soundLenMs, uint8_t padIndex = UINT8_MAX);
+uint8_t play8Sounds(const int soundVal[paramLen], const int soundLenMs[paramLen], uint8_t padIndex = UINT8_MAX);
+uint8_t playCorrectActionJingle(uint8_t padIndex = UINT8_MAX);
+uint8_t playWrongActionJingle(uint8_t padIndex = UINT8_MAX);
+uint8_t playWinnerJingle(uint8_t padIndex = UINT8_MAX);
+uint8_t playLoserJingle(uint8_t padIndex = UINT8_MAX);
 
 // ------------------VARIABLES---------------------
+// MAC Addresses
+uint8_t broadcastAddress[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 uint8_t myMACAddr[] = { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x00 };
-
 uint8_t padMACAddrs[maxAllowedPads][6] = {
   { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x01 },
   { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x02 },
   { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x03 },
   { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x04 }
 };
-
-uint8_t broadcastAddress[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
 SoftwareSerial BTserial(D6, D7);  // RX - TX
 
@@ -56,17 +74,25 @@ struct_recv_msg toRecvMsg;
 struct_send_msg toSendMsg;
 
 typedef struct pad {
-  uint8_t MACAddress[6];
+  uint8_t macAddr[6];
   bool isOccupied;
   bool isActive;
 } pad;
 
 pad padsArray[maxAllowedPads];
-uint8_t eventOrder[maxAllowedPads] = { 0 };
 
 uint8_t activePadCount = 0;
-bool isTrackingEvents = false;
-bool isAnyPadOccupied = false;
+
+// event tracking & flags
+uint8_t eventOrder[maxAllowedPads] = { 0 };
+bool eventTrackingFlag = false;
+uint8_t waitingForSpecificPadOccupied = UINT8_MAX;
+bool waitingForAnyPadOccupied = false;
+bool waitingForAllPadsOccupied = false;
+bool anyPadOccupied = false;
+bool allPadsOccupied = false;
+
+bool cancelFlag = false;
 
 // ----------------MAIN FUNCTIONS-----------------
 void setup() {
@@ -92,9 +118,8 @@ void setup() {
   uint8_t keylen = 0;
 
   for (int i = 0; i < maxAllowedPads; i++) {
-    // channel key keylen
     esp_now_add_peer(padMACAddrs[i], ESP_NOW_ROLE_COMBO, channel, key, keylen);
-    memcpy(&padsArray[i].MACAddress, &padMACAddrs[i], sizeof(padsArray[i].MACAddress));
+    memcpy(&padsArray[i].macAddr, &padMACAddrs[i], sizeof(padsArray[i].macAddr));
     padsArray[i].isOccupied = false;
     padsArray[i].isActive = false;
   }
@@ -110,22 +135,22 @@ void loop() {
     gameSelection = BTserial.read();
     switch (gameSelection) {
       case phoneInput_makeSound_pad1:
-        playSingleSoundOnPad(padsArray[0].MACAddress, chordAMajor[0], 1000);
+        playSingleSound(chordAMajor[0], 1000, 0);
         break;
       case phoneInput_makeSound_pad2:
-        playSingleSoundOnPad(padsArray[1].MACAddress, chordAMajor[1], 1000);
+        playSingleSound(chordAMajor[1], 1000, 1);
         break;
       case phoneInput_makeSound_pad3:
-        playSingleSoundOnPad(padsArray[2].MACAddress, chordAMajor[2], 1000);
+        playSingleSound(chordAMajor[2], 1000, 2);
         break;
       case phoneInput_makeSound_pad4:
-        playSingleSoundOnPad(padsArray[3].MACAddress, chordAMajor[3], 1000);
+        playSingleSound(chordAMajor[3], 1000, 3);
         break;
       case phoneInput_gameSelection_Memory:
         {
           Serial.println("Memory selected");
 
-          const uint8_t padSeqLen = 128;
+          const uint8_t padSeqLen = 32;
           uint8_t correctSelectionsCount = 0;
           uint8_t padSeq[padSeqLen] = { 0 };
           uint8_t padNotSelectable = UINT8_MAX;
@@ -141,19 +166,20 @@ void loop() {
             padNotSelectable = selectedPad;
 
             // play tone on pad
-            playSingleSoundOnPad(padsArray[selectedPad].MACAddress, chordAMajor[selectedPad], 1000);
+            playSingleSound(chordAMajor[selectedPad], 1000, selectedPad);
 
             // check if player jumps on correct pad
-            waitForPlayerOnAnyPad();
+            if (waitForPlayerOnAnyPad() == phoneInput_cancelGame) return;
+
             if (padsArray[selectedPad].isOccupied == false) {
-              playWrongActionJingle();
-              break;
-            } else if (correctSelectionsCount >= padSeqLen) {
-              playWinnerJingle();
+              if (playWrongActionJingle() == phoneInput_cancelGame) return;
+              else break;
             } else {
-              playCorrectActionJingle();
               padSeq[correctSelectionsCount] = selectedPad;
               correctSelectionsCount++;
+
+              if (correctSelectionsCount >= padSeqLen && playWinnerJingle() == phoneInput_cancelGame) return;
+              else if (playCorrectActionJingle() == phoneInput_cancelGame) return;
             }
           }
 
@@ -163,13 +189,6 @@ void loop() {
       case phoneInput_gameSelection_Reaktion:
         {
           Serial.println("Reaktion selected");
-          /*
-          1. Zu Beginn des Spiels wird ein richtiger Ton abgespielt. 
-          2. Danach werden Töne in zufälliger Frequenz abgespielt. 
-          3. Ziel des Spiels ist es, beim richtigen Ton so schnell wie möglich auf die Matte zu steigen, 
-             wobei der langsamste Spieler ausscheidet. 
-          4. Es werden so viele Runden gespielt, bis ein/e Gewinner/in feststeht.
-          */
 
           activePadCount = 2;
           int shuffledToneOrder[chordAMajorLen] = { 0 };
@@ -181,30 +200,33 @@ void loop() {
             // play correct sound
             shuffle(shuffledToneOrder, chordAMajorLen);
             memcpy(&correctToneOrder, &shuffledToneOrder, sizeof(correctToneOrder));
-            play8Sounds(correctToneOrder, soundLenArray);
+            if (play8Sounds(correctToneOrder, soundLenArray) == phoneInput_cancelGame) return;
             shuffle(shuffledToneOrder, chordAMajorLen);
 
             while (memcmp(shuffledToneOrder, correctToneOrder, sizeof(chordAMajor)) != 0) {
               shuffle(shuffledToneOrder, chordAMajorLen);
-              play8Sounds(shuffledToneOrder, soundLenArray);
+              if (play8Sounds(shuffledToneOrder, soundLenArray) == phoneInput_cancelGame) return;
             }
 
-            waitForPlayersOnAllActivePads();
+
+            uint8_t ret = waitForPlayersOnAllActivePads();
+            if (ret == phoneInput_cancelGame || ret == 0) return;  // end game if somebody didn't get on the pads in time
 
             // play correct for all except winner and loser
             for (int i = 1; i < activePadCount - 1; i++) {
-              playCorrectActionJingleOnPad(eventOrder[i]);
+              uint8_t padIndex = eventOrder[i];
+              if (playCorrectActionJingle(padIndex) == phoneInput_cancelGame) return;
             }
 
             // play winner and loser hingle
-            uint8_t winner = eventOrder[0];
-            uint8_t loser = eventOrder[activePadCount - 1];
+            uint8_t winnerPad = eventOrder[0];
+            uint8_t loserPad = eventOrder[activePadCount - 1];
 
-            playWinnerJingleOnPad(winner);
-            playWrongActionJingleOnPad(loser);
+            if (playWinnerJingle(winnerPad) == phoneInput_cancelGame) return;
+            if (playWrongActionJingle(loserPad) == phoneInput_cancelGame) return;
 
             // remove loser from round
-            padsArray[loser].isActive = false;
+            padsArray[loserPad].isActive = false;
             activePadCount--;
           }
 
@@ -238,80 +260,164 @@ int findFirstEmptySlot(uint8_t *arr, size_t n) {
   return -1;
 }
 
-void prepareSend() {
-  toSendMsg.function = 0;
-
-  for (int i = 0; i < paramLen; i++) {
-    memset(&toSendMsg.param1[i], 0, sizeof(toSendMsg.param1));
-    memset(&toSendMsg.param2[i], 0, sizeof(toSendMsg.param2));
-    memset(&toSendMsg.param3[i], 0, sizeof(toSendMsg.param3));
-    memset(&toSendMsg.param4[i], 0, sizeof(toSendMsg.param4));
-  }
+void prepareWait() {
+  waitingForAnyPadOccupied = false;
+  anyPadOccupied = false;
+  waitingForAllPadsOccupied = false;
+  allPadsOccupied = false;
+  waitingForSpecificPadOccupied = UINT8_MAX;
+  memset(eventOrder, 0, sizeof(maxAllowedPads));
 }
 
-bool waitWithAbortCheck(unsigned long millisecs) {
+void prepareSend() {
+  // set toSendMsg struct to 0
+  toSendMsg.function = 0;
+
+  memset(toSendMsg.param1, 0, sizeof(toSendMsg.param1));
+  memset(toSendMsg.param2, 0, sizeof(toSendMsg.param2));
+  memset(toSendMsg.param3, 0, sizeof(toSendMsg.param3));
+  memset(toSendMsg.param4, 0, sizeof(toSendMsg.param4));
+
+  // set toRecvMsg struct to 0
+  toRecvMsg.returnValue = 0xFF;
+}
+
+uint8_t waitWithEventChecks(unsigned long ms) {
   unsigned long time_now = millis();
 
-  while (millis() - time_now < millisecs) {  // equivalent to millis() < time_now + millisecs but with overflow security
+  while (millis() - time_now < ms) {
     if (BTserial.available()) {
       uint8_t incomingByte = BTserial.read();
 
-      if (incomingByte == phoneInput_cancelGame) return true;
+      if (incomingByte == phoneInput_cancelGame) {
+        cancelOperation();
+        return phoneInput_cancelGame;
+      }
+    }
+
+    if (waitingForAnyPadOccupied) {
+      if (anyPadOccupied) {
+        cancelOperation();
+        return padInput_padOccupied;
+      }
+    } else if (waitingForAllPadsOccupied) {
+      if (allPadsOccupied) {
+        cancelOperation();
+        return padInput_padOccupied;
+      }
+    } else if (waitingForSpecificPadOccupied != UINT8_MAX) {
+      if (padsArray[waitingForSpecificPadOccupied].isOccupied) {
+        cancelOperation();
+        return padInput_padOccupied;
+      }
     }
   }
 
-  return false;
+  return 0;
 }
 
-// ----------ABSTRACTED PAD CALL FUNCTIONS-----------
-void waitForPlayerOnPad(unsigned char padIndex) {
-  padsArray[padIndex].isOccupied = false;
+void cancelOperation() {
+  waitingForAnyPadOccupied = false;
+  waitingForAllPadsOccupied = false;
+  waitingForSpecificPadOccupied = UINT8_MAX;
+
   prepareSend();
-}
-
-void waitForPlayerOnAnyPad() {
-  for (int i = 0; i < activePadCount; i++) {
-    padsArray[i].isOccupied = false;
+  toSendMsg.function = padOutput_cancelOperation;
+  for (uint8_t i = 0; i < maxAllowedPads; i++) {
+    esp_now_send(padsArray[i].macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
   }
 }
 
-void waitForPlayersOnAllActivePads() {
-  isTrackingEvents = true;
+// ----------ABSTRACTED PAD CALL FUNCTIONS-----------
+uint8_t waitForPlayerOnPad(int padIndex) {
+  padsArray[padIndex].isOccupied = false;
+  prepareSend();
+  toSendMsg.function = padOutput_waitForPlayerOnPad;
+
+  prepareWait();
+  waitingForSpecificPadOccupied = padIndex;
+  esp_now_send(padsArray[padIndex].macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
+
+  return waitWithEventChecks(defaultDelay);
 }
 
-void playSingleSoundOnPad(uint8_t macAddr[6], int soundVal, int soundLenMs) {
+uint8_t waitForPlayerOnAnyPad() {
+  prepareSend();
+  toSendMsg.function = padOutput_waitForPlayerOnPad;
+
+  prepareWait();
+  waitingForAnyPadOccupied = true;
+  // send wait signal to all active pads
+  for (int i = 0; i < maxAllowedPads; i++) {
+    padsArray[i].isOccupied = false;
+    if (padsArray[i].isActive) {
+      esp_now_send(padsArray[i].macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
+    }
+  }
+
+  return waitWithEventChecks(defaultDelay);
+}
+
+uint8_t waitForPlayersOnAllActivePads() {
+  prepareSend();
+  toSendMsg.function = padOutput_waitForPlayerOnPad;
+
+  return waitWithEventChecks(defaultDelay);
+}
+
+uint8_t playSingleSound(const int soundVal, const int soundLenMs, uint8_t padIndex /*= UINT8_MAX*/) {
   prepareSend();
 
   toSendMsg.function = padOutput_playSound8Val;
   toSendMsg.param1[0] = soundVal;
   toSendMsg.param2[0] = soundLenMs;
 
+  uint8_t *macAddr = padIndex < maxAllowedPads ? padsArray[padIndex].macAddr : broadcastAddress;
+
   esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
+
+  return waitWithEventChecks(soundLenMs);
 }
 
-void playSingleSound(int soundVal, int soundLenMs) {
-  playSingleSoundOnPad(broadcastAddress, soundVal, soundLenMs);
+uint8_t play8Sounds(const int soundVal[paramLen], const int soundLenMs[paramLen], uint8_t padIndex /*= UINT8_MAX*/) {
+  uint8_t *macAddr = padIndex < maxAllowedPads ? padsArray[padIndex].macAddr : broadcastAddress;
+
+  toSendMsg.function = padOutput_playSound8Val;
+  memcpy(toSendMsg.param1, soundVal, paramLen);
+  memcpy(toSendMsg.param2, soundLenMs, paramLen);
+
+  esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
+
+  unsigned long delay = 0;
+  for (int i = 0; i < paramLen; i++) {
+    delay += soundLenMs[i];
+  }
+
+  return waitWithEventChecks(delay);
 }
 
-void play8Sounds(int soundVal[paramLen], int soundLenMs[paramLen]) {
+uint8_t playCorrectActionJingle(uint8_t padIndex /*= UINT8_MAX*/) {
+  return play8Sounds(gameActionTones, gameActionDurations, padIndex);
 }
 
-void playCorrectActionJingle() {
+uint8_t playWrongActionJingle(uint8_t padIndex /*= UINT8_MAX*/) {
+  int reverseTones[paramLen] = { 0 };
+  for (size_t i = 0; i < paramLen; i++) {
+    reverseTones[paramLen - 1 - i] = gameActionTones[i];
+  }
+  return play8Sounds(reverseTones, gameActionDurations, padIndex);
 }
 
-void playCorrectActionJingleOnPad(uint8_t padIndex) {
+uint8_t playWinnerJingle(uint8_t padIndex /*= UINT8_MAX*/) {
+  return play8Sounds(gameConclusionTones, gameConclusionDurations, padIndex);
 }
 
-void playWrongActionJingle() {
-}
-
-void playWrongActionJingleOnPad(uint8_t padIndex) {
-}
-
-void playWinnerJingle() {
-}
-
-void playWinnerJingleOnPad(uint8_t padIndex) {
+uint8_t playLoserJingle(uint8_t padIndex /*= UINT8_MAX*/) {
+  int reverseTones[paramLen] = { 0 };
+  for (size_t i = 0; i < paramLen; i++) {
+    reverseTones[paramLen - 1 - i] = gameConclusionTones[i];
+  }
+  return play8Sounds(reverseTones, gameConclusionDurations, padIndex);
 }
 
 // ----------------CALLBACK FUNCTIONS-------------------
@@ -325,13 +431,19 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
 }
 
 void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
-  // add event order
-  if (isTrackingEvents) {
-    for (int i = 0; i < maxAllowedPads; i++) {
-      if (memcmp(padsArray[i].MACAddress, mac, 6) == 0) {
-        int j = findFirstEmptySlot(eventOrder, maxAllowedPads);
-        if (j != -1) {
-          eventOrder[j] = i;
+  if (waitingForAnyPadOccupied) {
+    anyPadOccupied = true;
+  } else if (waitingForSpecificPadOccupied < maxAllowedPads) {
+    if (memcmp(padsArray[waitingForSpecificPadOccupied].macAddr, mac, 6) == 0) {
+    }
+  } else if (waitingForAllPadsOccupied) {
+    for (int padIndex = 0; padIndex < maxAllowedPads; padIndex++) {
+      if (memcmp(padsArray[padIndex].macAddr, mac, 6) == 0) {
+        int emptySlot = findFirstEmptySlot(eventOrder, maxAllowedPads);
+
+        if (emptySlot != -1) {
+          allPadsOccupied = emptySlot == maxAllowedPads - 1;
+          eventOrder[emptySlot] = padIndex;
         } else {
           Serial.println("eventOrder array overflow detected");
         }
