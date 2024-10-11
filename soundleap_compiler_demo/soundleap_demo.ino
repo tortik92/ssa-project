@@ -15,12 +15,12 @@ const uint8_t phoneInput_cancelGame = 0xFF;
 
 const uint8_t padOutput_playSound8Val = 0x20;
 const uint8_t padOutput_waitForPlayerOnPad = 0x30;
-const uint8_t padOutput_cancelOperation = 0x30;
+const uint8_t padOutput_cancelOperation = 0xFF;
 
 const uint8_t padInput_padOccupied = 0x11;
 
 // other constants
-const uint8_t maxAllowedPads = 4;
+const uint8_t maxAllowedPads = 3;
 const uint8_t reaktionPlayerCount = 2;
 const uint8_t paramLen = 8;
 const uint8_t chordAMajorLen = 4;
@@ -52,8 +52,8 @@ uint8_t myMACAddr[] = { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x00 };
 uint8_t padMACAddrs[maxAllowedPads][6] = {
   { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x01 },
   { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x02 },
-  { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x03 },
-  { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x04 }
+  { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x03 }/*,
+  { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x04 }*/
 };
 
 SoftwareSerial BTserial(D6, D7);  // RX - TX
@@ -97,7 +97,7 @@ bool cancelFlag = false;
 // ----------------MAIN FUNCTIONS-----------------
 void setup() {
   // init connections
-  Serial.begin(9600);
+  Serial.begin(115200);
   BTserial.begin(9600);
 
   WiFi.mode(WIFI_STA);
@@ -107,6 +107,8 @@ void setup() {
   if (esp_now_init() != ERR_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
+  } else {
+    Serial.println("Successfully initialized ESP-NOW");
   }
 
   esp_now_register_send_cb(OnDataSent);
@@ -118,11 +120,19 @@ void setup() {
   uint8_t keylen = 0;
 
   for (int i = 0; i < maxAllowedPads; i++) {
-    esp_now_add_peer(padMACAddrs[i], ESP_NOW_ROLE_COMBO, channel, key, keylen);
     memcpy(&padsArray[i].macAddr, &padMACAddrs[i], sizeof(padsArray[i].macAddr));
     padsArray[i].isOccupied = false;
-    padsArray[i].isActive = false;
+    padsArray[i].isActive = true;
+
+    if(esp_now_add_peer(padMACAddrs[i], ESP_NOW_ROLE_COMBO, channel, key, keylen) != 0) {
+      Serial.println("Failed to add peer");
+      padsArray[i].isActive = false;
+    } else {
+      printWithMac("Added peer", padMACAddrs[i]);
+    }
   }
+
+  Serial.println("Added peers");
 
   // random seed
   randomSeed(analogRead(0));
@@ -133,6 +143,7 @@ void loop() {
 
   if (BTserial.available()) {
     gameSelection = BTserial.read();
+
     switch (gameSelection) {
       case phoneInput_makeSound_pad1:
         playSingleSound(chordAMajor[0], 1000, 0);
@@ -203,7 +214,7 @@ void loop() {
             if (play8Sounds(correctToneOrder, soundLenArray) == phoneInput_cancelGame) return;
             shuffle(shuffledToneOrder, chordAMajorLen);
 
-            while (memcmp(shuffledToneOrder, correctToneOrder, sizeof(chordAMajor)) != 0) {
+            while (memcmp(shuffledToneOrder, correctToneOrder, chordAMajorLen * sizeof(int)) != 0) {
               shuffle(shuffledToneOrder, chordAMajorLen);
               if (play8Sounds(shuffledToneOrder, soundLenArray) == phoneInput_cancelGame) return;
             }
@@ -234,7 +245,6 @@ void loop() {
           break;
         }
       default:
-        Serial.println("Game shortcut not defined");
         break;
     }
   }
@@ -313,6 +323,7 @@ uint8_t waitWithEventChecks(unsigned long ms) {
     }
   }
 
+  Serial.println("Timeout");
   return 0;
 }
 
@@ -328,6 +339,16 @@ void cancelOperation() {
   }
 }
 
+void printWithMac(const char* msg, uint8_t* mac) {
+  Serial.print(msg);
+  Serial.write(' ');
+  for(int i = 0; i < 6; i++) {
+    Serial.print(mac[i], HEX);
+    if (i < 5) Serial.print(":");
+    else Serial.print("\n");
+  }
+}
+
 // ----------ABSTRACTED PAD CALL FUNCTIONS-----------
 uint8_t waitForPlayerOnPad(int padIndex) {
   padsArray[padIndex].isOccupied = false;
@@ -336,6 +357,10 @@ uint8_t waitForPlayerOnPad(int padIndex) {
 
   prepareWait();
   waitingForSpecificPadOccupied = padIndex;
+
+  Serial.println();
+  printWithMac("Waiting for player on pad", padsArray[padIndex].macAddr);
+
   esp_now_send(padsArray[padIndex].macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
 
   return waitWithEventChecks(defaultDelay);
@@ -347,6 +372,9 @@ uint8_t waitForPlayerOnAnyPad() {
 
   prepareWait();
   waitingForAnyPadOccupied = true;
+
+  Serial.println("Waiting for player on any pad");
+
   // send wait signal to all active pads
   for (int i = 0; i < maxAllowedPads; i++) {
     padsArray[i].isOccupied = false;
@@ -362,6 +390,19 @@ uint8_t waitForPlayersOnAllActivePads() {
   prepareSend();
   toSendMsg.function = padOutput_waitForPlayerOnPad;
 
+  prepareWait();
+  waitingForAllPadsOccupied = true;
+
+  Serial.println("Waiting for players on all pads");
+
+  // send wait signal to all active pads
+  for (int i = 0; i < maxAllowedPads; i++) {
+    padsArray[i].isOccupied = false;
+    if (padsArray[i].isActive) {
+      esp_now_send(padsArray[i].macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
+    }
+  }
+
   return waitWithEventChecks(defaultDelay);
 }
 
@@ -374,6 +415,8 @@ uint8_t playSingleSound(const int soundVal, const int soundLenMs, uint8_t padInd
 
   uint8_t *macAddr = padIndex < maxAllowedPads ? padsArray[padIndex].macAddr : broadcastAddress;
 
+  printWithMac("Playing single sound on pad", macAddr);
+
   esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
 
   return waitWithEventChecks(soundLenMs);
@@ -385,6 +428,8 @@ uint8_t play8Sounds(const int soundVal[paramLen], const int soundLenMs[paramLen]
   toSendMsg.function = padOutput_playSound8Val;
   memcpy(toSendMsg.param1, soundVal, paramLen);
   memcpy(toSendMsg.param2, soundLenMs, paramLen);
+
+  printWithMac("Playing 8 sounds on pad", macAddr);
 
   esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
 
