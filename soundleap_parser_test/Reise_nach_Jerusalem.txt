@@ -1,0 +1,16 @@
+53444C506
+# Dies ist ein Kommentar
+say("REISE NACH JERUSALEM")
+wait(5000)
+if(ACTIVE_COUNT > 0) 05 else 15
+play_music(random(5000, 30000))
+alarm()
+wait_until_pads_occupied(ACTIVE_COUNT)
+say("ALLE MATTEN WURDEN BESETZT")
+wait(5000)
+say("ALLE VON DEN MATTEN RUNTER")
+wait(5000)
+say("NÄCHSTE RUNDE")
+deactivate(random(ACTIVE_COUNT))
+goto(04)
+say("Spiel ist zu Ende")
