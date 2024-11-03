@@ -163,7 +163,7 @@ void loop() {
               if (padsComm->waitForPlayerOnAnyPad() == PadsComm::WaitResult::CancelGame) return;
 
               // if not on the correct pad
-              PadsComm::pad *pad = padsComm->getPad(selectedPad);
+              PadsComm::Pad *pad = padsComm->getPad(selectedPad);
 
               if (!(*pad).isOccupied) {
                 if (padsComm->playWrongActionJingle() == PadsComm::WaitResult::CancelGame) return;

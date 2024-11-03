@@ -12,23 +12,23 @@ public:
   PadsComm(const PadsComm &copy) = delete;
 
   // structs/enums
-  typedef struct struct_recv_msg {
+  typedef struct RecvMsg {
     uint8_t returnValue;
-  } struct_recv_msg;
+  } RecvMsg;
 
-  typedef struct struct_send_msg {
+  typedef struct SendMsg {
     uint8_t function;
     int param1[paramLen];
     int param2[paramLen];
     int param3[paramLen];
     int param4[paramLen];
-  } struct_send_msg;
+  } SendMsg;
 
-  typedef struct pad {
+  typedef struct Pad {
     uint8_t macAddr[6];
     bool isOccupied;
     bool isActive;
-  } pad;
+  } Pad;
 
   enum class PadsState {
     Init,
@@ -75,11 +75,11 @@ public:
     return instance;
   }
   
-  pad* getPad(int index) {
+  Pad* getPad(int index) {
     return index < maxAllowedPads && index >= 0 ? &padsArray[index] : nullptr;
   }
 
-  pad* getPad(uint8_t* mac) {
+  Pad* getPad(uint8_t* mac) {
     for(int i = 0; i < maxAllowedPads; i++) {
       if(memcmp(padsArray[i].macAddr, mac, 6) == 0) {
         return &padsArray[i];
@@ -94,7 +94,7 @@ public:
         anyPadOccupied = true;
         break;
       case PadsState::WaitingForSpecificPadOccupied: {
-        pad* pad = getPad(waitingForSpecificPadOccupied);
+        Pad* pad = getPad(waitingForSpecificPadOccupied);
 
         if (pad != nullptr && memcmp((*pad).macAddr, mac, 6) == 0) {
           (*pad).isOccupied = true;
@@ -142,10 +142,10 @@ private:
   // variables
   BLEComm* btComm = BLEComm::getInstance();
 
-  struct_recv_msg toRecvMsg;
-  struct_send_msg toSendMsg;
+  RecvMsg toRecvMsg;
+  SendMsg toSendMsg;
 
-  pad padsArray[maxAllowedPads];
+  Pad padsArray[maxAllowedPads];
 
   // flags
   PadsState currentPadsState = PadsState::Init;
