@@ -31,18 +31,18 @@ public:
   } pad;
 
   enum class PadsState {
-    INIT,
-    IDLE,
-    WAITING_FOR_SPECIFIC_PAD_OCCUPIED,
-    WAITING_FOR_ANY_PAD_OCCUPIED,
-    WAITING_FOR_ALL_ACTIVE_PADS_OCCUPIED,
-    ABORT
+    Init,
+    Idle,
+    WaitingForSpecificPadOccupied,
+    WaitingForAnyPadOccupied,
+    WaitingForAllActivePadsOccupied,
+    Abort
   };
 
   enum class WaitResult {
-    PAD_OCCUPIED,
-    CANCEL_GAME,
-    TIMEOUT
+    PadOccupied,
+    CancelGame,
+    Timeout
   };
 
   static PadsComm* instance;
@@ -90,10 +90,10 @@ public:
 
   void setPadOccupied(uint8_t* mac, uint8_t* incomingData) {
     switch (currentPadsState) {
-      case PadsState::WAITING_FOR_ANY_PAD_OCCUPIED:
+      case PadsState::WaitingForAnyPadOccupied:
         anyPadOccupied = true;
         break;
-      case PadsState::WAITING_FOR_SPECIFIC_PAD_OCCUPIED: {
+      case PadsState::WaitingForSpecificPadOccupied: {
         pad* pad = getPad(waitingForSpecificPadOccupied);
 
         if (pad != nullptr && memcmp((*pad).macAddr, mac, 6) == 0) {
@@ -101,7 +101,7 @@ public:
         }
         break;
       }
-      case PadsState::WAITING_FOR_ALL_ACTIVE_PADS_OCCUPIED:
+      case PadsState::WaitingForAllActivePadsOccupied:
         for (int padIndex = 0; padIndex < maxAllowedPads; padIndex++) {
           if (memcmp(padsArray[padIndex].macAddr, mac, 6) == 0) {
             int emptySlot = findFirstEmptySlot(eventOrder, maxAllowedPads);
@@ -148,7 +148,7 @@ private:
   pad padsArray[maxAllowedPads];
 
   // flags
-  PadsState currentPadsState = PadsState::INIT;
+  PadsState currentPadsState = PadsState::Init;
 
   uint8_t waitingForSpecificPadOccupied = UINT8_MAX;
 

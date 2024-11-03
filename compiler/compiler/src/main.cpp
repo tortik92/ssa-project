@@ -4,20 +4,20 @@
 #include <espnow.h>
 
 #include "Constants.h"
-#include "PadsComm.h"
-#include "BLEComm.h"
+#include "comm/PadsComm.h"
+#include "comm/BLEComm.h"
 
 enum class ProgramState {
-  IDLE,
-  PLAYING_REAKTION,
-  PLAYING_MEMORY,
-  ABORT
+  Idle,
+  PlayingReaktion,
+  PlayingMemory,
+  Abort
 };
 
 PadsComm *padsComm = PadsComm::getInstance();
 BLEComm *btComm = BLEComm::getInstance();
 
-ProgramState programState = ProgramState::IDLE;
+ProgramState programState = ProgramState::Idle;
 
 uint8_t activePadCount = 0;
 
@@ -73,12 +73,12 @@ void setup() {
   // random seed
   randomSeed(analogRead(0));
 
-  programState = ProgramState::IDLE;
+  programState = ProgramState::Idle;
 }
 
 void loop() {
   switch (programState) {
-    case ProgramState::IDLE:
+    case ProgramState::Idle:
       if (btComm->hasUnreadBytes()) {
         switch (btComm->readByte()) {
           case phoneInput_makeSound_pad1:
@@ -94,17 +94,17 @@ void loop() {
             padsComm->playSingleSound(soundsArray[3], 1000, 3);
             break;
           case phoneInput_gameSelection_Memory:
-            programState = ProgramState::PLAYING_MEMORY;
+            programState = ProgramState::PlayingMemory;
             break;
           case phoneInput_gameSelection_Reaktion:
-            programState = ProgramState::PLAYING_REAKTION;
+            programState = ProgramState::PlayingReaktion;
             break;
           default:
             break;
         }
       }
       break;
-    case ProgramState::PLAYING_MEMORY:
+    case ProgramState::PlayingMemory:
       {
         Serial.println("Memory start");
 
@@ -125,7 +125,7 @@ void loop() {
             padsComm->playSingleSound(soundsArray[selectedPad], 1000, selectedPad);
 
             // check if player jumps on correct pad
-            if (padsComm->waitForPlayerOnAnyPad() == PadsComm::WaitResult::CANCEL_GAME) return;
+            if (padsComm->waitForPlayerOnAnyPad() == PadsComm::WaitResult::CancelGame) return;
 
 
             // if not on the correct pad
@@ -160,13 +160,13 @@ void loop() {
 
             for (int i = 0; i < soundSeqLen; i++) {
               // check if player jumps on correct pad
-              if (padsComm->waitForPlayerOnAnyPad() == PadsComm::WaitResult::CANCEL_GAME) return;
+              if (padsComm->waitForPlayerOnAnyPad() == PadsComm::WaitResult::CancelGame) return;
 
               // if not on the correct pad
               PadsComm::pad *pad = padsComm->getPad(selectedPad);
 
               if (!(*pad).isOccupied) {
-                if (padsComm->playWrongActionJingle() == PadsComm::WaitResult::CANCEL_GAME) return;
+                if (padsComm->playWrongActionJingle() == PadsComm::WaitResult::CancelGame) return;
                 else break;
               } else /* Correct pad */ {
                 if (correctSelectionsCount >= soundSeqLen) {
@@ -174,7 +174,7 @@ void loop() {
                   return;
                 } else {
                   PadsComm::WaitResult ret = padsComm->playCorrectActionJingle();
-                  if (ret == PadsComm::WaitResult::CANCEL_GAME) return;
+                  if (ret == PadsComm::WaitResult::CancelGame) return;
                 }
               }
             }
@@ -182,10 +182,10 @@ void loop() {
         }
 
         Serial.println("Memory end");
-        programState = ProgramState::IDLE;
+        programState = ProgramState::Idle;
         break;
       }
-    case ProgramState::PLAYING_REAKTION:
+    case ProgramState::PlayingReaktion:
       {
         Serial.println("---Reaktion selected---");
 
@@ -197,20 +197,20 @@ void loop() {
         int correctTone = soundsArray[random(chordLen)];
 
         while (activePadCount > 1) {
-          if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CANCEL_GAME) return;
+          if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CancelGame) return;
 
           // play all possible sounds so players know
           {
             int soundLenArray[paramLen] = { 500, 500, 500, 500, 0, 0, 0, 0 };
-            if (padsComm->play8Sounds(soundsArray, soundLenArray) == PadsComm::WaitResult::CANCEL_GAME) return;
-            if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CANCEL_GAME) return;
+            if (padsComm->play8Sounds(soundsArray, soundLenArray) == PadsComm::WaitResult::CancelGame) return;
+            if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CancelGame) return;
           }
 
           // play correct sound
           //shuffle(shuffledToneOrder, chordAMajorLen);
           //memcpy(&correctToneOrder, &shuffledToneOrder, sizeof(correctToneOrder));
-          if (padsComm->playSingleSound(correctTone, 500) == PadsComm::WaitResult::CANCEL_GAME) return;
-          if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CANCEL_GAME) return;
+          if (padsComm->playSingleSound(correctTone, 500) == PadsComm::WaitResult::CancelGame) return;
+          if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CancelGame) return;
           /*while (memcmp(shuffledToneOrder, correctToneOrder, sizeof(shuffledToneOrder)) == 0) {
             shuffle(shuffledToneOrder, chordAMajorLen);
           }*/
@@ -225,22 +225,22 @@ void loop() {
           if (padsComm->play8Sounds(shuffledToneOrder, soundLenArray) == PadsComm::WaitResult::CANCEL_GAME) return;
         }*/
 
-          if (padsComm->playSingleSound(randomTone, 500) == PadsComm::WaitResult::CANCEL_GAME) return;
+          if (padsComm->playSingleSound(randomTone, 500) == PadsComm::WaitResult::CancelGame) return;
 
           do {
-            if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CANCEL_GAME) return;
+            if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CancelGame) return;
             randomTone = soundsArray[random(4)];
-            if (padsComm->playSingleSound(randomTone, 500) == PadsComm::WaitResult::CANCEL_GAME) return;
+            if (padsComm->playSingleSound(randomTone, 500) == PadsComm::WaitResult::CancelGame) return;
           } while (randomTone != correctTone);
 
           Serial.println("Correct tone played, waiting for player on pads");
 
           PadsComm::WaitResult ret = padsComm->waitForPlayerOnAnyPad();
-          if (ret == PadsComm::WaitResult::CANCEL_GAME) {
+          if (ret == PadsComm::WaitResult::CancelGame) {
             Serial.println("canceled game");
             padsComm->playLoserJingle();
             return;
-          } else if (ret == PadsComm::WaitResult::TIMEOUT) {
+          } else if (ret == PadsComm::WaitResult::Timeout) {
             for (int i = 0; i < maxAllowedPads; i++) {
               if ((*padsComm->getPad(i)).isOccupied) {
                 padsComm->playWinnerJingle(i);
@@ -275,12 +275,12 @@ void loop() {
 
         padsComm->playCorrectActionJingle();
         Serial.println("---Reaktion End---");
-        programState = ProgramState::IDLE;
+        programState = ProgramState::Idle;
         break;
       }
-    case ProgramState::ABORT:
+    case ProgramState::Abort:
       Serial.println("Aborting...");
-      programState = ProgramState::IDLE;
+      programState = ProgramState::Idle;
       break;
   }
 }

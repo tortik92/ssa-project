@@ -9,7 +9,7 @@ PadsComm::WaitResult PadsComm::waitForPlayerOnPad(uint8_t padIndex) {
   toSendMsg.function = padOutput_waitForPlayerOnPad;
 
   prepareWait();
-  currentPadsState = PadsState::WAITING_FOR_SPECIFIC_PAD_OCCUPIED;
+  currentPadsState = PadsState::WaitingForSpecificPadOccupied;
   waitingForSpecificPadOccupied = padIndex;
 
   Serial.println();
@@ -24,7 +24,7 @@ PadsComm::WaitResult PadsComm::waitForPlayerOnAnyPad() {
   toSendMsg.function = padOutput_waitForPlayerOnPad;
 
   prepareWait();
-  currentPadsState = PadsState::WAITING_FOR_ANY_PAD_OCCUPIED;
+  currentPadsState = PadsState::WaitingForAnyPadOccupied;
 
   Serial.println("Waiting for player on any pad");
 
@@ -44,7 +44,7 @@ PadsComm::WaitResult PadsComm::waitForPlayersOnAllActivePads() {
   toSendMsg.function = padOutput_waitForPlayerOnPad;
 
   prepareWait();
-  currentPadsState = PadsState::WAITING_FOR_ALL_ACTIVE_PADS_OCCUPIED;
+  currentPadsState = PadsState::WaitingForAllActivePadsOccupied;
 
   Serial.println("Waiting for players on all pads");
 
@@ -122,26 +122,26 @@ PadsComm::WaitResult PadsComm::waitWithEventChecks(unsigned long ms) {
 
       if (incomingByte == phoneInput_cancelGame) {
         cancelOperation();
-        return PadsComm::WaitResult::CANCEL_GAME;
+        return PadsComm::WaitResult::CancelGame;
       }
     }
 
     switch (currentPadsState) {
-      case PadsState::WAITING_FOR_ANY_PAD_OCCUPIED:
+      case PadsState::WaitingForAnyPadOccupied:
         cancelOperation();
-        return PadsComm::WaitResult::PAD_OCCUPIED;
-      case PadsState::WAITING_FOR_SPECIFIC_PAD_OCCUPIED:
+        return PadsComm::WaitResult::PadOccupied;
+      case PadsState::WaitingForSpecificPadOccupied:
         if (waitingForSpecificPadOccupied != UINT8_MAX) {
           if (padsArray[waitingForSpecificPadOccupied].isOccupied) {
             cancelOperation();
-            return PadsComm::WaitResult::PAD_OCCUPIED;
+            return PadsComm::WaitResult::PadOccupied;
           }
         }
         break;
-      case PadsState::WAITING_FOR_ALL_ACTIVE_PADS_OCCUPIED:
+      case PadsState::WaitingForAllActivePadsOccupied:
         if (allPadsOccupied) {
           cancelOperation();
-          return PadsComm::WaitResult::PAD_OCCUPIED;
+          return PadsComm::WaitResult::PadOccupied;
         }
       default:
         break;
@@ -149,7 +149,7 @@ PadsComm::WaitResult PadsComm::waitWithEventChecks(unsigned long ms) {
   }
 
   Serial.println("Timeout");  
-  return PadsComm::WaitResult::TIMEOUT;
+  return PadsComm::WaitResult::Timeout;
 }
 
 void PadsComm::initEspNow(esp_now_send_cb_t OnDataSent, esp_now_recv_cb_t OnDataRecv) {
@@ -184,7 +184,7 @@ void PadsComm::initEspNow(esp_now_send_cb_t OnDataSent, esp_now_recv_cb_t OnData
   }
 
   Serial.println("Added peers");
-  currentPadsState = PadsState::IDLE;
+  currentPadsState = PadsState::Idle;
 }
 
 void PadsComm::prepareSend() {
