@@ -11,6 +11,7 @@ const uint8_t phoneInput_makeSound_pad3 = 0x03;
 const uint8_t phoneInput_makeSound_pad4 = 0x04;
 const uint8_t phoneInput_gameSelection_Memory = 0x10;
 const uint8_t phoneInput_gameSelection_Reaktion = 0x11;
+const uint8_t phoneInput_tokenize = 0x12;
 const uint8_t phoneInput_cancelGame = 0xFF;
 
 // PadsComm I/0
@@ -39,4 +40,6 @@ const int defaultBeat[paramLen] = {200, 200, 400, 400, 200, 200, 0, 0};
 
 // lexer
 const size_t maxTokens = 256;
-const uint8_t intAsStrLen = 10;
+const uint8_t keywordCount = 5;
+const uint8_t tokLen = 16;
+const uint8_t intAsStrLen = 11;

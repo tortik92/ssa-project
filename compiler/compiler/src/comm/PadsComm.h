@@ -66,6 +66,7 @@ public:
   void prepareSend();
   void prepareWait();
   int findFirstEmptySlot(uint8_t *arr, size_t n);
+  void printWithMac(const char *msg, uint8_t *mac);
 
   // getter/setter
   static PadsComm* getInstance() {
@@ -89,7 +90,7 @@ public:
   }
 
   void setPadOccupied(uint8_t* mac, uint8_t* incomingData) {
-    switch (currentPadsState) {
+    switch (padsState) {
       case PadsState::WaitingForAnyPadOccupied:
         anyPadOccupied = true;
         break;
@@ -132,7 +133,7 @@ public:
   void setEventTrackingFlag(bool eventTrackingFlag_) { eventTrackingFlag = eventTrackingFlag_; }
   bool getAnyPadOccupied() const { return anyPadOccupied; }
   void setAnyPadOccupied(bool anyPadOccupied_) { anyPadOccupied = anyPadOccupied_; }
-  PadsState getCurrentPadsState() const { return currentPadsState; }
+  PadsState getCurrentPadsState() const { return padsState; }
   uint8_t getWaitingForSpecificPadOccupied() const { return waitingForSpecificPadOccupied; }
   uint8_t getEventOrder(uint8_t index) {
     return index < maxAllowedPads && index >= 0 ? eventOrder[index] : UINT8_MAX;
@@ -148,7 +149,7 @@ private:
   Pad padsArray[maxAllowedPads];
 
   // flags
-  PadsState currentPadsState = PadsState::Init;
+  PadsState padsState = PadsState::Init;
 
   uint8_t waitingForSpecificPadOccupied = UINT8_MAX;
 

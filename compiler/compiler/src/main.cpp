@@ -6,16 +6,19 @@
 #include "Constants.h"
 #include "comm/PadsComm.h"
 #include "comm/BLEComm.h"
+#include "lexer/Lexer.h"
 
 enum class ProgramState {
   Idle,
   PlayingReaktion,
   PlayingMemory,
+  Tokenize,
   Abort
 };
 
 PadsComm *padsComm = PadsComm::getInstance();
 BLEComm *btComm = BLEComm::getInstance();
+Lexer lexer;
 
 ProgramState programState = ProgramState::Idle;
 
@@ -34,17 +37,7 @@ void shuffle(int *array, size_t n) {
   }
 }
 
-void printWithMac(const char *msg, uint8_t *mac) {
-  Serial.print(msg);
-  Serial.write(' ');
-  for (int i = 0; i < 6; i++) {
-    Serial.print(mac[i], HEX);
-    if (i < 5)
-      Serial.print(":");
-    else
-      Serial.print("\n");
-  }
-}
+
 
 // callback functions
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -98,6 +91,9 @@ void loop() {
             break;
           case phoneInput_gameSelection_Reaktion:
             programState = ProgramState::PlayingReaktion;
+            break;
+          case phoneInput_tokenize:
+            programState = ProgramState::Tokenize;
             break;
           default:
             break;
@@ -275,6 +271,60 @@ void loop() {
 
         padsComm->playCorrectActionJingle();
         Serial.println("---Reaktion End---");
+        programState = ProgramState::Idle;
+        break;
+      }
+    case ProgramState::Tokenize:
+      {
+        char code[] = "var something = if(13 + 4 == 7*300)";
+        Lexer::Token *tokens = lexer.tokenize(code, sizeof(code));
+
+        for (size_t i = 0; i < maxTokens && strcmp(tokens[i].value, "") != 0; i++) {
+          Serial.print("Value: '");
+          Serial.print(tokens[i].value);
+          Serial.print("'\nTokenType: ");
+          switch (tokens[i].type) {
+            case Lexer::TokenType::Var:
+              Serial.println("Var");
+              break;
+            case Lexer::TokenType::If:
+              Serial.println("If");
+              break;
+            case Lexer::TokenType::Else:
+              Serial.println("Else");
+              break;
+            case Lexer::TokenType::While:
+              Serial.println("While");
+              break;
+            case Lexer::TokenType::For:
+              Serial.println("For");
+              break;
+            case Lexer::TokenType::Identifier:
+              Serial.println("Identifier");
+              break;
+            case Lexer::TokenType::Equals:
+              Serial.println("Equals");
+              break;
+            case Lexer::TokenType::ArithmeticOperator:
+              Serial.println("ArithmeticOperator");
+              break;
+            case Lexer::TokenType::OpenParen:
+              Serial.println("OpenParen");
+              break;
+            case Lexer::TokenType::CloseParen:
+              Serial.println("CloseParen");
+              break;
+            case Lexer::TokenType::Number:
+              Serial.println("Number");
+              break;
+            case Lexer::TokenType::EndOfFile:
+              Serial.println("EOF");
+              break;
+            default:
+              break;
+          }
+        }
+
         programState = ProgramState::Idle;
         break;
       }

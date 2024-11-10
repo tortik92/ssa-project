@@ -9,7 +9,7 @@ PadsComm::WaitResult PadsComm::waitForPlayerOnPad(uint8_t padIndex) {
   toSendMsg.function = padOutput_waitForPlayerOnPad;
 
   prepareWait();
-  currentPadsState = PadsState::WaitingForSpecificPadOccupied;
+  padsState = PadsState::WaitingForSpecificPadOccupied;
   waitingForSpecificPadOccupied = padIndex;
 
   Serial.println();
@@ -24,7 +24,7 @@ PadsComm::WaitResult PadsComm::waitForPlayerOnAnyPad() {
   toSendMsg.function = padOutput_waitForPlayerOnPad;
 
   prepareWait();
-  currentPadsState = PadsState::WaitingForAnyPadOccupied;
+  padsState = PadsState::WaitingForAnyPadOccupied;
 
   Serial.println("Waiting for player on any pad");
 
@@ -44,7 +44,7 @@ PadsComm::WaitResult PadsComm::waitForPlayersOnAllActivePads() {
   toSendMsg.function = padOutput_waitForPlayerOnPad;
 
   prepareWait();
-  currentPadsState = PadsState::WaitingForAllActivePadsOccupied;
+  padsState = PadsState::WaitingForAllActivePadsOccupied;
 
   Serial.println("Waiting for players on all pads");
 
@@ -67,6 +67,9 @@ PadsComm::WaitResult PadsComm::playSingleSound(const int soundVal, const int sou
   toSendMsg.param1[0] = soundVal;
   toSendMsg.param2[0] = soundLenMs;
 
+  printWithMac("Playing single sound on pad", macAddr);
+  Serial.println(soundVal);
+
   esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
 
   return waitWithEventChecks(soundLenMs);
@@ -78,6 +81,14 @@ PadsComm::WaitResult PadsComm::play8Sounds(const int soundVal[paramLen], const i
   toSendMsg.function = padOutput_playSound8Val;
   memcpy(toSendMsg.param1, soundVal, paramLen);
   memcpy(toSendMsg.param2, soundLenMs, paramLen);
+
+  printWithMac("Playing 8 sounds on pad", macAddr);
+  Serial.print("Sounds: [");
+  for (int i = 0; i < paramLen; i++) {
+    Serial.print(soundVal[i]);
+    if (i < paramLen - 1) Serial.print(", ");
+    else Serial.println("]");
+  }
 
   esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
 
@@ -126,7 +137,7 @@ PadsComm::WaitResult PadsComm::waitWithEventChecks(unsigned long ms) {
       }
     }
 
-    switch (currentPadsState) {
+    switch (padsState) {
       case PadsState::WaitingForAnyPadOccupied:
         cancelOperation();
         return PadsComm::WaitResult::PadOccupied;
@@ -184,7 +195,7 @@ void PadsComm::initEspNow(esp_now_send_cb_t OnDataSent, esp_now_recv_cb_t OnData
   }
 
   Serial.println("Added peers");
-  currentPadsState = PadsState::Idle;
+  padsState = PadsState::Idle;
 }
 
 void PadsComm::prepareSend() {
@@ -226,4 +237,16 @@ int PadsComm::findFirstEmptySlot(uint8_t *arr, size_t n) {
       return i;
   }
   return -1;
+}
+
+void PadsComm::printWithMac(const char *msg, uint8_t *mac) {
+  Serial.print(msg);
+  Serial.write(' ');
+  for (int i = 0; i < 6; i++) {
+    Serial.print(mac[i], HEX);
+    if (i < 5)
+      Serial.print(":");
+    else
+      Serial.print("\n");
+  }
 }
