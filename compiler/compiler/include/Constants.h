@@ -43,3 +43,6 @@ const size_t maxTokens = 256;
 const uint8_t keywordCount = 5;
 const uint8_t tokLen = 16;
 const uint8_t intAsStrLen = 11;
+
+// parser
+const uint8_t maxStatements = 128;
