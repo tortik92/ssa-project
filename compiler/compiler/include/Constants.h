@@ -12,6 +12,7 @@ const uint8_t phoneInput_makeSound_pad4 = 0x04;
 const uint8_t phoneInput_gameSelection_Memory = 0x10;
 const uint8_t phoneInput_gameSelection_Reaktion = 0x11;
 const uint8_t phoneInput_tokenize = 0x12;
+const uint8_t phoneInput_parse = 0x13;
 const uint8_t phoneInput_cancelGame = 0xFF;
 
 // PadsComm I/0
@@ -45,4 +46,5 @@ const uint8_t tokLen = 16;
 const uint8_t intAsStrLen = 11;
 
 // parser
-const uint8_t maxStatements = 128;
+const uint8_t poolSize = 64;
+const uint8_t maxProgramStatements = 128;

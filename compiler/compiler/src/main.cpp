@@ -4,21 +4,25 @@
 #include <espnow.h>
 
 #include "Constants.h"
+#include "GlobalFunctions.h"
 #include "comm/PadsComm.h"
 #include "comm/BLEComm.h"
 #include "lexer/Lexer.h"
+#include "parser/Parser.h"
 
 enum class ProgramState {
   Idle,
   PlayingReaktion,
   PlayingMemory,
   Tokenize,
+  Parse,
   Abort
 };
 
 PadsComm *padsComm = PadsComm::getInstance();
 BLEComm *btComm = BLEComm::getInstance();
 Lexer lexer;
+Parser parser;
 
 ProgramState programState = ProgramState::Idle;
 
@@ -55,6 +59,59 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
     padsComm->setPadOccupied(mac, incomingData);
   }
 }
+
+// tostring
+
+void toString1(const Parser::NumericLiteral *numLit) {
+  Serial.print("NumericLiteral(");
+  Serial.print(numLit->num);
+  Serial.println(")");
+}
+
+void toString2(const Parser::Identifier *ident) {
+  Serial.print("Identifier(");
+  Serial.print(ident->symbol);
+  Serial.println(")");
+}
+
+void toString(const Parser::Stmt *stmt);
+
+void toString3(const Parser::BinaryExpr *binaryExpr) {
+  Serial.println("BinaryExpr(");
+  Serial.print("operator:(");
+  Serial.print(binaryExpr->op);
+  Serial.println(")");
+  Serial.println("left:(");
+  toString(static_cast<const Parser::Stmt*>(binaryExpr->left));
+  Serial.println(")");
+  Serial.println("right(");
+  toString(static_cast<const Parser::Stmt*>(binaryExpr->right));
+  Serial.println(")");
+  Serial.println(")");
+}
+
+void toString(const Parser::Stmt *stmt) {
+  switch (stmt->kind) {
+    case Parser::NodeType::BinaryExpr:
+      toString3(static_cast<const Parser::BinaryExpr*>(stmt));
+      break;
+    case Parser::NodeType::Identifier:
+      toString2(static_cast<const Parser::Identifier*>(stmt));
+      break;
+    case Parser::NodeType::NumericLiteral:
+      toString1(static_cast<const Parser::NumericLiteral*>(stmt));
+      break;
+    case Parser::NodeType::Program:
+      GlobalFunctions::restart("Found Program in Program, don't know what to do with it");
+      break;
+    case Parser::NodeType::Undefined:
+      GlobalFunctions::restart("Undefined node found");
+    default:
+      GlobalFunctions::restart("Undefined statement found when printing AST");
+      break;
+  }
+}
+
 
 // ----------------MAIN FUNCTIONS-----------------
 void setup() {
@@ -94,6 +151,9 @@ void loop() {
             break;
           case phoneInput_tokenize:
             programState = ProgramState::Tokenize;
+            break;
+          case phoneInput_parse:
+            programState = ProgramState::Parse;
             break;
           default:
             break;
@@ -276,13 +336,13 @@ void loop() {
       }
     case ProgramState::Tokenize:
       {
-        char code[] = "var something = if(13 + 4 == 7*300)";
+        char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
         Lexer::Token *tokens = lexer.tokenize(code, sizeof(code));
 
         for (size_t i = 0; i < maxTokens && strcmp(tokens[i].value, "") != 0; i++) {
-          Serial.print("Value: '");
+          Serial.print("Value: \"");
           Serial.print(tokens[i].value);
-          Serial.print("'\nTokenType: ");
+          Serial.print("\"\nTokenType: ");
           switch (tokens[i].type) {
             case Lexer::TokenType::Var:
               Serial.println("Var");
@@ -325,6 +385,23 @@ void loop() {
           }
         }
 
+        programState = ProgramState::Idle;
+        break;
+      }
+    case ProgramState::Parse:
+      {
+        char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
+        Parser::Program *program = parser.produceAST(code, sizeof(code));
+
+        Serial.println("Program parsed successfully!");
+
+        if (program->kind == Parser::NodeType::Program)
+          Serial.println("NodeType: Program");
+
+        for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
+          toString(program->body[i]);
+        }
+        
         programState = ProgramState::Idle;
         break;
       }
