@@ -13,7 +13,7 @@ const uint8_t phoneInput_gameSelection_Memory = 0x10;
 const uint8_t phoneInput_gameSelection_Reaktion = 0x11;
 const uint8_t phoneInput_tokenize = 0x12;
 const uint8_t phoneInput_parse = 0x13;
-const uint8_t phoneInput_cancelGame = 0xFF;
+const uint8_t phoneInput_cancel = 0xFF;
 
 // PadsComm I/0
 const uint8_t padOutput_playSound8Val = 0x20;

@@ -10,21 +10,10 @@
 #include "lexer/Lexer.h"
 #include "parser/Parser.h"
 
-enum class ProgramState {
-  Idle,
-  PlayingReaktion,
-  PlayingMemory,
-  Tokenize,
-  Parse,
-  Abort
-};
-
 PadsComm *padsComm = PadsComm::getInstance();
 BLEComm *btComm = BLEComm::getInstance();
 Lexer lexer;
 Parser parser;
-
-ProgramState programState = ProgramState::Idle;
 
 uint8_t activePadCount = 0;
 
@@ -40,8 +29,6 @@ void shuffle(int *array, size_t n) {
     }
   }
 }
-
-
 
 // callback functions
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -82,10 +69,10 @@ void toString3(const Parser::BinaryExpr *binaryExpr) {
   Serial.print(binaryExpr->op);
   Serial.println(")");
   Serial.println("left:(");
-  toString(static_cast<const Parser::Stmt*>(binaryExpr->left));
+  toString(static_cast<const Parser::Stmt *>(binaryExpr->left));
   Serial.println(")");
   Serial.println("right(");
-  toString(static_cast<const Parser::Stmt*>(binaryExpr->right));
+  toString(static_cast<const Parser::Stmt *>(binaryExpr->right));
   Serial.println(")");
   Serial.println(")");
 }
@@ -93,13 +80,13 @@ void toString3(const Parser::BinaryExpr *binaryExpr) {
 void toString(const Parser::Stmt *stmt) {
   switch (stmt->kind) {
     case Parser::NodeType::BinaryExpr:
-      toString3(static_cast<const Parser::BinaryExpr*>(stmt));
+      toString3(static_cast<const Parser::BinaryExpr *>(stmt));
       break;
     case Parser::NodeType::Identifier:
-      toString2(static_cast<const Parser::Identifier*>(stmt));
+      toString2(static_cast<const Parser::Identifier *>(stmt));
       break;
     case Parser::NodeType::NumericLiteral:
-      toString1(static_cast<const Parser::NumericLiteral*>(stmt));
+      toString1(static_cast<const Parser::NumericLiteral *>(stmt));
       break;
     case Parser::NodeType::Program:
       GlobalFunctions::restart("Found Program in Program, don't know what to do with it");
@@ -122,191 +109,163 @@ void setup() {
 
   // random seed
   randomSeed(analogRead(0));
-
-  programState = ProgramState::Idle;
 }
 
 void loop() {
-  switch (programState) {
-    case ProgramState::Idle:
-      if (btComm->hasUnreadBytes()) {
-        switch (btComm->readByte()) {
-          case phoneInput_makeSound_pad1:
-            padsComm->playSingleSound(soundsArray[0], 1000, 0);
-            break;
-          case phoneInput_makeSound_pad2:
-            padsComm->playSingleSound(soundsArray[1], 1000, 1);
-            break;
-          case phoneInput_makeSound_pad3:
-            padsComm->playSingleSound(soundsArray[2], 1000, 2);
-            break;
-          case phoneInput_makeSound_pad4:
-            padsComm->playSingleSound(soundsArray[3], 1000, 3);
-            break;
-          case phoneInput_gameSelection_Memory:
-            programState = ProgramState::PlayingMemory;
-            break;
-          case phoneInput_gameSelection_Reaktion:
-            programState = ProgramState::PlayingReaktion;
-            break;
-          case phoneInput_tokenize:
-            programState = ProgramState::Tokenize;
-            break;
-          case phoneInput_parse:
-            programState = ProgramState::Parse;
-            break;
-          default:
-            break;
-        }
-      }
-      break;
-    case ProgramState::PlayingMemory:
-      {
-        Serial.println("Memory start");
+  if (btComm->hasUnreadBytes()) {
+    switch (btComm->readByte()) {
+      case phoneInput_makeSound_pad1:
+        padsComm->playSingleSound(soundsArray[0], 1000, 0);
+        break;
+      case phoneInput_makeSound_pad2:
+        padsComm->playSingleSound(soundsArray[1], 1000, 1);
+        break;
+      case phoneInput_makeSound_pad3:
+        padsComm->playSingleSound(soundsArray[2], 1000, 2);
+        break;
+      case phoneInput_makeSound_pad4:
+        padsComm->playSingleSound(soundsArray[3], 1000, 3);
+        break;
+      case phoneInput_gameSelection_Memory:
+        {
+          Serial.println("Memory start");
 
-        uint8_t selectedLastRound = UINT8_MAX;
-        uint8_t selectedPad = UINT8_MAX;
+          uint8_t selectedLastRound = UINT8_MAX;
+          uint8_t selectedPad = UINT8_MAX;
 
-        bool easyMemory = true;
+          bool easyMemory = true;
 
-        if (easyMemory) {
-          while (true) {
-            // select random pad and deactivate for next round
-            while (selectedPad == selectedLastRound) {
-              selectedPad = random(maxAllowedPads);
-            }
-            selectedLastRound = selectedPad;
+          if (easyMemory) {
+            while (true) {
+              // select random pad and deactivate for next round
+              while (selectedPad == selectedLastRound) {
+                selectedPad = random(maxAllowedPads);
+              }
+              selectedLastRound = selectedPad;
 
-            // play tone on correct pad
-            padsComm->playSingleSound(soundsArray[selectedPad], 1000, selectedPad);
+              // play tone on correct pad
+              padsComm->playSingleSound(soundsArray[selectedPad], 1000, selectedPad);
 
-            // check if player jumps on correct pad
-            if (padsComm->waitForPlayerOnAnyPad() == PadsComm::WaitResult::CancelGame) return;
-
-
-            // if not on the correct pad
-            if ((*padsComm->getPad(selectedPad)).isOccupied) {
-              padsComm->playLoserJingle();
-              return;
-            } else /* Correct pad */ {
-              padsComm->playWinnerJingle();
-            }
-          }
-        } else {
-          const uint8_t soundSeqLen = 32;
-          uint8_t correctSelectionsCount = 0;
-          uint8_t soundSeq[soundSeqLen];
-          memset(soundSeq, UINT8_MAX, soundSeqLen);
-
-          while (true) {
-            // select random pad and deactivate for next round
-            while (selectedPad == selectedLastRound) {
-              selectedPad = random(maxAllowedPads);
-            }
-            selectedLastRound = selectedPad;
-
-            soundSeq[correctSelectionsCount] = selectedPad;
-            correctSelectionsCount++;
-
-            // play sound sequence on pads in order
-            for (int i = 0; i < soundSeqLen && soundSeq[i] < maxAllowedPads; i++) {
-              uint8_t padIndex = soundSeq[i];
-              padsComm->playSingleSound(soundsArray[padIndex], 1000, padIndex);
-            }
-
-            for (int i = 0; i < soundSeqLen; i++) {
               // check if player jumps on correct pad
-              if (padsComm->waitForPlayerOnAnyPad() == PadsComm::WaitResult::CancelGame) return;
+              padsComm->waitForPlayerOnAnyPad();
 
               // if not on the correct pad
-              PadsComm::Pad *pad = padsComm->getPad(selectedPad);
-
-              if (!(*pad).isOccupied) {
-                if (padsComm->playWrongActionJingle() == PadsComm::WaitResult::CancelGame) return;
-                else break;
+              if ((*padsComm->getPad(selectedPad)).isOccupied) {
+                padsComm->playLoserJingle();
+                return;
               } else /* Correct pad */ {
-                if (correctSelectionsCount >= soundSeqLen) {
-                  padsComm->playWinnerJingle();
+                padsComm->playWinnerJingle();
+              }
+            }
+          } else {
+            const uint8_t soundSeqLen = 32;
+            uint8_t correctSelectionsCount = 0;
+            uint8_t soundSeq[soundSeqLen];
+            memset(soundSeq, UINT8_MAX, soundSeqLen);
+
+            while (true) {
+              // select random pad and deactivate for next round
+              while (selectedPad == selectedLastRound) {
+                selectedPad = random(maxAllowedPads);
+              }
+              selectedLastRound = selectedPad;
+
+              soundSeq[correctSelectionsCount] = selectedPad;
+              correctSelectionsCount++;
+
+              // play sound sequence on pads in order
+              for (int i = 0; i < soundSeqLen && soundSeq[i] < maxAllowedPads; i++) {
+                uint8_t padIndex = soundSeq[i];
+                padsComm->playSingleSound(soundsArray[padIndex], 1000, padIndex);
+              }
+
+              for (int i = 0; i < soundSeqLen; i++) {
+                // check if player jumps on correct pad
+                padsComm->waitForPlayerOnAnyPad();
+
+                // if not on the correct pad
+                PadsComm::Pad *pad = padsComm->getPad(selectedPad);
+
+                if (!pad->isOccupied) {
+                  padsComm->playWrongActionJingle();
+                  break;
+                } else /* Correct pad */ {
+                  if (correctSelectionsCount >= soundSeqLen) {
+                    padsComm->playWinnerJingle();
+                  } else {
+                    padsComm->playCorrectActionJingle();
+                  }
                   return;
-                } else {
-                  PadsComm::WaitResult ret = padsComm->playCorrectActionJingle();
-                  if (ret == PadsComm::WaitResult::CancelGame) return;
                 }
               }
             }
           }
+
+          Serial.println("Memory end");
+          break;
         }
+      case phoneInput_gameSelection_Reaktion:
+        {
+          Serial.println("---Reaktion selected---");
 
-        Serial.println("Memory end");
-        programState = ProgramState::Idle;
-        break;
-      }
-    case ProgramState::PlayingReaktion:
-      {
-        Serial.println("---Reaktion selected---");
+          activePadCount = 2;
+          //int shuffledToneOrder[chordAMajorLen] = { 0 };
+          //memcpy(&shuffledToneOrder, &soundsArray, sizeof(shuffledToneOrder));
+          //int correctToneOrder[chordAMajorLen] = { 0 };
+          int randomTone = soundsArray[random(chordLen)];
+          int correctTone = soundsArray[random(chordLen)];
 
-        activePadCount = 2;
-        //int shuffledToneOrder[chordAMajorLen] = { 0 };
-        //memcpy(&shuffledToneOrder, &soundsArray, sizeof(shuffledToneOrder));
-        //int correctToneOrder[chordAMajorLen] = { 0 };
-        int randomTone = soundsArray[random(chordLen)];
-        int correctTone = soundsArray[random(chordLen)];
+          while (activePadCount > 1) {
+            padsComm->waitWithEventChecks(3000);
 
-        while (activePadCount > 1) {
-          if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CancelGame) return;
+            // play all possible sounds so players know
+            {
+              int soundLenArray[paramLen] = { 500, 500, 500, 500, 0, 0, 0, 0 };
+              padsComm->play8Sounds(soundsArray, soundLenArray);
+              padsComm->waitWithEventChecks(3000);
+            }
 
-          // play all possible sounds so players know
-          {
-            int soundLenArray[paramLen] = { 500, 500, 500, 500, 0, 0, 0, 0 };
-            if (padsComm->play8Sounds(soundsArray, soundLenArray) == PadsComm::WaitResult::CancelGame) return;
-            if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CancelGame) return;
-          }
-
-          // play correct sound
-          //shuffle(shuffledToneOrder, chordAMajorLen);
-          //memcpy(&correctToneOrder, &shuffledToneOrder, sizeof(correctToneOrder));
-          if (padsComm->playSingleSound(correctTone, 500) == PadsComm::WaitResult::CancelGame) return;
-          if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CancelGame) return;
-          /*while (memcmp(shuffledToneOrder, correctToneOrder, sizeof(shuffledToneOrder)) == 0) {
+            // play correct sound
+            //shuffle(shuffledToneOrder, chordAMajorLen);
+            //memcpy(&correctToneOrder, &shuffledToneOrder, sizeof(correctToneOrder));
+            padsComm->playSingleSound(correctTone, 500);
+            padsComm->waitWithEventChecks(3000);
+            /*while (memcmp(shuffledToneOrder, correctToneOrder, sizeof(shuffledToneOrder)) == 0) {
             shuffle(shuffledToneOrder, chordAMajorLen);
           }*/
 
-          // initial shuffle
-          while (randomTone == correctTone) {
-            randomTone = soundsArray[random(4)];
-          }
+            // initial shuffle
+            while (randomTone == correctTone) {
+              randomTone = soundsArray[random(4)];
+            }
 
-          /*while (memcmp(shuffledToneOrder, correctToneOrder, sizeof(shuffledToneOrder)) != 0) {
+            /*while (memcmp(shuffledToneOrder, correctToneOrder, sizeof(shuffledToneOrder)) != 0) {
           shuffle(shuffledToneOrder, chordAMajorLen);
           if (padsComm->play8Sounds(shuffledToneOrder, soundLenArray) == PadsComm::WaitResult::CANCEL_GAME) return;
         }*/
 
-          if (padsComm->playSingleSound(randomTone, 500) == PadsComm::WaitResult::CancelGame) return;
+            padsComm->playSingleSound(randomTone, 500);
 
-          do {
-            if (padsComm->waitWithEventChecks(3000) == PadsComm::WaitResult::CancelGame) return;
-            randomTone = soundsArray[random(4)];
-            if (padsComm->playSingleSound(randomTone, 500) == PadsComm::WaitResult::CancelGame) return;
-          } while (randomTone != correctTone);
+            do {
+              padsComm->waitWithEventChecks(3000);
+              randomTone = soundsArray[random(4)];
+              padsComm->playSingleSound(randomTone, 500);
+            } while (randomTone != correctTone);
 
-          Serial.println("Correct tone played, waiting for player on pads");
+            Serial.println("Correct tone played, waiting for player on pads");
 
-          PadsComm::WaitResult ret = padsComm->waitForPlayerOnAnyPad();
-          if (ret == PadsComm::WaitResult::CancelGame) {
-            Serial.println("canceled game");
-            padsComm->playLoserJingle();
-            return;
-          } else if (ret == PadsComm::WaitResult::Timeout) {
-            for (int i = 0; i < maxAllowedPads; i++) {
-              if ((*padsComm->getPad(i)).isOccupied) {
-                padsComm->playWinnerJingle(i);
+            PadsComm::WaitResult ret = padsComm->waitForPlayerOnAnyPad();
+            if (ret == PadsComm::WaitResult::Timeout) {
+              for (int i = 0; i < maxAllowedPads; i++) {
+                if ((*padsComm->getPad(i)).isOccupied) {
+                  padsComm->playWinnerJingle(i);
+                }
               }
             }
-          }
 
-          activePadCount--;
+            activePadCount--;
 
-          /*Serial.println("Auswertung");
+            /*Serial.println("Auswertung");
           // play correct for all except winner and loser
           for (int i = 1; i < activePadCount - 1; i++) {
             uint8_t padIndex = eventOrder[i];
@@ -327,87 +286,82 @@ void loop() {
           for (int i = 0; i < maxAllowedPads; i++) {
             eventOrder[i] = 0;
           }*/
-        }
-
-        padsComm->playCorrectActionJingle();
-        Serial.println("---Reaktion End---");
-        programState = ProgramState::Idle;
-        break;
-      }
-    case ProgramState::Tokenize:
-      {
-        char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
-        Lexer::Token *tokens = lexer.tokenize(code, sizeof(code));
-
-        for (size_t i = 0; i < maxTokens && strcmp(tokens[i].value, "") != 0; i++) {
-          Serial.print("Value: \"");
-          Serial.print(tokens[i].value);
-          Serial.print("\"\nTokenType: ");
-          switch (tokens[i].type) {
-            case Lexer::TokenType::Var:
-              Serial.println("Var");
-              break;
-            case Lexer::TokenType::If:
-              Serial.println("If");
-              break;
-            case Lexer::TokenType::Else:
-              Serial.println("Else");
-              break;
-            case Lexer::TokenType::While:
-              Serial.println("While");
-              break;
-            case Lexer::TokenType::For:
-              Serial.println("For");
-              break;
-            case Lexer::TokenType::Identifier:
-              Serial.println("Identifier");
-              break;
-            case Lexer::TokenType::Equals:
-              Serial.println("Equals");
-              break;
-            case Lexer::TokenType::ArithmeticOperator:
-              Serial.println("ArithmeticOperator");
-              break;
-            case Lexer::TokenType::OpenParen:
-              Serial.println("OpenParen");
-              break;
-            case Lexer::TokenType::CloseParen:
-              Serial.println("CloseParen");
-              break;
-            case Lexer::TokenType::Number:
-              Serial.println("Number");
-              break;
-            case Lexer::TokenType::EndOfFile:
-              Serial.println("EOF");
-              break;
-            default:
-              break;
           }
+
+          padsComm->playCorrectActionJingle();
+          Serial.println("---Reaktion End---");
+          break;
         }
+      case phoneInput_tokenize:
+        {
+          char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
+          Lexer::Token *tokens = lexer.tokenize(code, sizeof(code));
 
-        programState = ProgramState::Idle;
-        break;
-      }
-    case ProgramState::Parse:
-      {
-        char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
-        Parser::Program *program = parser.produceAST(code, sizeof(code));
+          for (size_t i = 0; i < maxTokens && strcmp(tokens[i].value, "") != 0; i++) {
+            Serial.print("Value: \"");
+            Serial.print(tokens[i].value);
+            Serial.print("\"\nTokenType: ");
+            switch (tokens[i].type) {
+              case Lexer::TokenType::Var:
+                Serial.println("Var");
+                break;
+              case Lexer::TokenType::If:
+                Serial.println("If");
+                break;
+              case Lexer::TokenType::Else:
+                Serial.println("Else");
+                break;
+              case Lexer::TokenType::While:
+                Serial.println("While");
+                break;
+              case Lexer::TokenType::For:
+                Serial.println("For");
+                break;
+              case Lexer::TokenType::Identifier:
+                Serial.println("Identifier");
+                break;
+              case Lexer::TokenType::Equals:
+                Serial.println("Equals");
+                break;
+              case Lexer::TokenType::ArithmeticOperator:
+                Serial.println("ArithmeticOperator");
+                break;
+              case Lexer::TokenType::OpenParen:
+                Serial.println("OpenParen");
+                break;
+              case Lexer::TokenType::CloseParen:
+                Serial.println("CloseParen");
+                break;
+              case Lexer::TokenType::Number:
+                Serial.println("Number");
+                break;
+              case Lexer::TokenType::EndOfFile:
+                Serial.println("EOF");
+                break;
+              default:
+                break;
+            }
+          }
 
-        Serial.println("Program parsed successfully!");
-
-        if (program->kind == Parser::NodeType::Program)
-          Serial.println("NodeType: Program");
-
-        for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
-          toString(program->body[i]);
+          break;
         }
-        
-        programState = ProgramState::Idle;
+      case phoneInput_parse:
+        {
+          char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
+          Parser::Program *program = parser.produceAST(code, sizeof(code));
+
+          Serial.println("Program parsed successfully!");
+
+          if (program->kind == Parser::NodeType::Program)
+            Serial.println("NodeType: Program");
+
+          for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
+            toString(program->body[i]);
+          }
+          break;
+        }
+      default:
         break;
-      }
-    case ProgramState::Abort:
-      Serial.println("Aborting...");
-      programState = ProgramState::Idle;
-      break;
+    }
   }
 }

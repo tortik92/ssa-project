@@ -131,9 +131,9 @@ PadsComm::WaitResult PadsComm::waitWithEventChecks(unsigned long ms) {
     if (btComm->hasUnreadBytes()) {
       uint8_t incomingByte = btComm->readByte();
 
-      if (incomingByte == phoneInput_cancelGame) {
+      if (incomingByte == phoneInput_cancel) {
         cancelOperation();
-        return PadsComm::WaitResult::CancelGame;
+        GlobalFunctions::restart("Received abort signal from phone");
       }
     }
 

@@ -5,6 +5,7 @@
 #include <Arduino.h>
 
 #include "BLEComm.h"
+#include "GlobalFunctions.h"
 #include "Constants.h"
 
 class PadsComm {
@@ -41,7 +42,6 @@ public:
 
   enum class WaitResult {
     PadOccupied,
-    CancelGame,
     Timeout
   };
 
@@ -112,7 +112,7 @@ public:
               eventOrder[emptySlot] = padIndex;
               break;
             } else {
-              Serial.println("eventOrder array overflow detected");
+              GlobalFunctions::restart("eventOrder array overflow detected");
             }
           }
         }

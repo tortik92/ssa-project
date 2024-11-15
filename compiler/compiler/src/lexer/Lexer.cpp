@@ -7,25 +7,23 @@ Lexer::Token* Lexer::tokenize(char* code, size_t len) {
   }
   currentToken = &tokens[0];
 
-  for (size_t i = 0; i < len && currentState == LexerState::Running; i++) {
-    const char c[2] = { code[i], '\0' };
-
+  for (size_t i = 0; i < len; i++) {
     switch (code[i]) {
       case '(':
-        addToken(currentToken, c, 2, TokenType::OpenParen);
+        addToken(currentToken, &code[i], 1, TokenType::OpenParen);
         break;
       case ')':
-        addToken(currentToken, c, 2, TokenType::CloseParen);
+        addToken(currentToken, &code[i], 1, TokenType::CloseParen);
         break;
       case '+':
       case '-':
       case '*':
       case '/':
       case '%':
-        addToken(currentToken, c, 2, TokenType::ArithmeticOperator);
+        addToken(currentToken, &code[i], 1, TokenType::ArithmeticOperator);
         break;
       case '=':
-        addToken(currentToken, c, 2, TokenType::Equals);
+        addToken(currentToken, &code[i], 1, TokenType::Equals);
         break;
       default:
         // handle multicharacter tokens
@@ -49,20 +47,15 @@ Lexer::Token* Lexer::tokenize(char* code, size_t len) {
           addToken(currentToken, &code[i], identLen, getIdentTokenType(&code[i], identLen));
           i += identLen - 1;
         } else if (!isSpace(code[i]) && code[i] != '\0') {
-          Serial.print("Undefined identifier '");
-          Serial.print(code[i]);
-          Serial.println("' found");
-          currentState = LexerState::UndefinedIdent;
+          GlobalFunctions::restart("Character \"", &code[i], "\" not recognized");
           return tokens;
         }
         break;
     }
   }
 
-  if(currentState != LexerState::TooManyTokens) {
-    addToken(currentToken, "", tokLen, TokenType::EndOfFile);
-  }
-  
+  addToken(currentToken, "", tokLen, TokenType::EndOfFile);
+
   return tokens;
 }
 
@@ -71,16 +64,15 @@ Lexer::Token* Lexer::tokenize(char* code, size_t len) {
 void Lexer::addToken(Token* dest, const char src[tokLen], size_t srcLen, TokenType tokenType) {
   size_t copyLen = srcLen < tokLen - 1 ? srcLen : tokLen - 1;
   
-  strncpy((*dest).value, src, copyLen);
-  (*dest).value[copyLen] = '\0';
-  (*dest).type = tokenType;
+  strncpy(dest->value, src, copyLen);
+  dest->value[copyLen] = '\0';
+  dest->type = tokenType;
 
   if (dest == currentToken) {
     if(currentToken != &tokens[maxTokens]) {
       currentToken++;
     } else {
-      Serial.println("Too many tokens in program!");
-      currentState = LexerState::TooManyTokens;
+      GlobalFunctions::restart("Too many tokens in program!");
     }
   }
 }
