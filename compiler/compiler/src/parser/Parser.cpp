@@ -12,25 +12,19 @@ Parser::Program* Parser::produceAST(char* code, size_t len) {
 }
 
 Parser::Stmt* Parser::parseStmt() {
-  Serial.println("Parsing Statement!");
   return parseExpr();
 }
 
 Parser::Expr* Parser::parseExpr() {
-  Serial.println("Parsing Expression!");
   return parseAdditiveExpr();
 }
 
 Parser::Expr* Parser::parseAdditiveExpr() {
-  Serial.println("Parsing additive expression");
   Expr* leftMost = parseMultiplicativeExpr();
 
 
   while (strcmp(at()->value, "+") == 0 || strcmp(at()->value, "-") == 0) {
     char* op = eat()->value;
-
-    Serial.print("Found ");
-    Serial.println(op);
 
     Expr* right = parseMultiplicativeExpr();
 
@@ -40,21 +34,17 @@ Parser::Expr* Parser::parseAdditiveExpr() {
     binaryExpr->right = right;
     strncpy(binaryExpr->op, op, sizeof(binaryExpr->op));
 
-    return binaryExpr;
+    leftMost = binaryExpr;
   }
 
   return leftMost;
 }
 
 Parser::Expr* Parser::parseMultiplicativeExpr() {
-  Serial.println("Parsing multiplicative expression");
   Expr* leftMost = parsePrimaryExpr();
 
   while (strcmp(at()->value, "*") == 0 || strcmp(at()->value, "/") == 0 || strcmp(at()->value, "%") == 0) {
     char* op = eat()->value;
-
-    Serial.print("Found ");
-    Serial.println(op);
 
     Expr* right = parsePrimaryExpr();
 
@@ -64,7 +54,7 @@ Parser::Expr* Parser::parseMultiplicativeExpr() {
     binaryExpr->right = right;
     strncpy(binaryExpr->op, op, sizeof(binaryExpr->op));
 
-    return binaryExpr;
+    leftMost = binaryExpr;
   }
 
   return leftMost;
@@ -86,10 +76,16 @@ Parser::Expr* Parser::parsePrimaryExpr() {
         identifier->kind = NodeType::Identifier;
         strncpy(identifier->symbol, eat()->value, sizeof(identifier->symbol));
 
-        Serial.print("Found identifier ");
-        Serial.println(identifier->symbol);
-
         return identifier;
+      }
+    case Lexer::TokenType::Null:
+      {
+        eat();
+        NullLiteral* nullLiteral = newNullLiteral();
+
+        nullLiteral->kind = NodeType::NullLiteral;
+
+        return nullLiteral;
       }
     case Lexer::TokenType::Number:
       {
@@ -98,21 +94,13 @@ Parser::Expr* Parser::parsePrimaryExpr() {
         number->kind = NodeType::NumericLiteral;
         number->num = strtof(eat()->value, nullptr);
 
-        Serial.print("Found numeric literal ");
-        Serial.println(number->num);
-
-        Serial.print("NextVal: ");
-        Serial.print(at()->value);
-
         return number;
       }
     case Lexer::TokenType::OpenParen:
       {
         eat();  // consume '('
-        Serial.println("Found '('");
         Expr* val = parseExpr();
-        Serial.print("NextVal before expected: ");
-        Serial.println(at()->value);
+
         expect(Lexer::TokenType::CloseParen, "Expected a ')', found \"");
         return val;
       }
@@ -132,7 +120,7 @@ Lexer::Token* Parser::eat() {
 
 Lexer::Token* Parser::expect(Lexer::TokenType type, const char* err) {
   Lexer::Token* prev = eat();
-  if (prev->type == Lexer::TokenType::Undefined || prev->type != type) {
+  if (prev->type == Lexer::TokenType::Null || prev->type != type) {
     GlobalFunctions::restart(err, prev->value, "\"");
   }
   return prev;
@@ -153,14 +141,16 @@ void Parser::push(Stmt* stmt) {
 }
 
 void Parser::clearPools() {
-  for(size_t i = 0; i < poolSize; i++) {
+  for (size_t i = 0; i < poolSize; i++) {
     binaryExprPool[i] = BinaryExpr();
     identifierPool[i] = Identifier();
+    nullLiteralPool[i] = NullLiteral();
     numericLiteralPool[i] = NumericLiteral();
   }
 
   binaryExprCount = 0;
   identifierCount = 0;
+  nullLiteralCount = 0;
   numericLiteralCount = 0;
 }
 
@@ -176,6 +166,13 @@ Parser::Identifier* Parser::newIdentifier() {
     GlobalFunctions::restart("Out of memory for Identifier nodes");
   }
   return &identifierPool[identifierCount++];
+}
+
+Parser::NullLiteral* Parser::newNullLiteral() {
+  if (nullLiteralCount >= poolSize) {
+    GlobalFunctions::restart("Out of memory for NullLiteral nodes");
+  }
+  return &nullLiteralPool[nullLiteralCount++];
 }
 
 Parser::NumericLiteral* Parser::newNumericLiteral() {

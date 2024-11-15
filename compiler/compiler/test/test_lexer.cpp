@@ -1,34 +1,44 @@
+#include <Arduino.h>
 #include <unity.h>
-#include <ctime>
 
-#include "lexer/Lexer.hpp"
+#include "lexer/Lexer.h"
 
-Lexer* lexer;
-char code[] = "(1 + 2) * 3 + b";
+Lexer lexer;
 
 void setUp() {
-  lexer = new Lexer();
 }
 
 void tearDown() {
-  delete lexer;
 }
 
 void test_lexer_tokenize() {
-  size_t len = 10;
-  Lexer::Token* tokens = lexer->tokenize(code, len);
+  char code[] = "(100 + 2) * 3 + b";
+  Lexer::Token* tokens = lexer.tokenize(code, sizeof(code));
+  
   TEST_ASSERT_EQUAL(Lexer::TokenType::OpenParen, tokens[0].type);
+  TEST_ASSERT_EQUAL(Lexer::TokenType::Number, tokens[1].type);
 }
+/*
+void test_lexer_doubleParen() {
+  char code[] = "a + (basdf * (c-d) / e)";
+  Lexer::Token* tokens = lexer.tokenize(code, sizeof(code));
+  TEST_ASSERT_EQUAL(Lexer::TokenType::OpenParen, tokens[2].type);
+  TEST_ASSERT_EQUAL_STRING("basdf", tokens[4].value);  
+  TEST_ASSERT_EQUAL(Lexer::TokenType::OpenParen, tokens[5].type);
+  TEST_ASSERT_EQUAL(Lexer::TokenType::CloseParen, tokens[9].type);
+  TEST_ASSERT_EQUAL(Lexer::TokenType::CloseParen, tokens[12].type);
+}*/
 
-void test_add() {
-  TEST_ASSERT_EQUAL(4, 2 + 2);
-}
 
-int main() {
-  clock_t start_time = clock();
-  while(clock() < start_time + 4000 * (CLOCKS_PER_SEC/1000));
+void setup() {
+  delay(2000);
    
   UNITY_BEGIN();
-  RUN_TEST(test_add);
+  RUN_TEST(test_lexer_tokenize);
+  //RUN_TEST(test_lexer_doubleParen);
   UNITY_END();
+}
+
+void loop() {
+
 }

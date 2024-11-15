@@ -41,7 +41,7 @@ const int defaultBeat[paramLen] = {200, 200, 400, 400, 200, 200, 0, 0};
 
 // lexer
 const size_t maxTokens = 256;
-const uint8_t keywordCount = 5;
+const uint8_t keywordCount = 6;
 const uint8_t tokLen = 16;
 const uint8_t intAsStrLen = 11;
 

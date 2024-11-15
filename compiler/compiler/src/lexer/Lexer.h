@@ -25,7 +25,7 @@ public:
     OpenParen,
     CloseParen,
 
-    Undefined,
+    Null,
     EndOfFile,
   };
 
@@ -51,6 +51,7 @@ private:
   Token* currentToken;
 
   const Token keywords[keywordCount]{
+    Token("null", TokenType::Null),
     Token("var", TokenType::Var),
     Token("if", TokenType::If),
     Token("else", TokenType::Else),

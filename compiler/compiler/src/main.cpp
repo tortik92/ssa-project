@@ -49,44 +49,43 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
 
 // tostring
 
-void toString1(const Parser::NumericLiteral *numLit) {
-  Serial.print("NumericLiteral(");
+void toStringNumericLiteral(const Parser::NumericLiteral *numLit) {
+  Serial.print("\"numericLiteral\":\"");
   Serial.print(numLit->num);
-  Serial.println(")");
+  Serial.print("\",");
 }
 
-void toString2(const Parser::Identifier *ident) {
-  Serial.print("Identifier(");
+void toStringIdentifier(const Parser::Identifier *ident) {
+  Serial.print("\"identifier\":\"");
   Serial.print(ident->symbol);
-  Serial.println(")");
+  Serial.print("\",");
 }
 
 void toString(const Parser::Stmt *stmt);
 
-void toString3(const Parser::BinaryExpr *binaryExpr) {
-  Serial.println("BinaryExpr(");
-  Serial.print("operator:(");
-  Serial.print(binaryExpr->op);
-  Serial.println(")");
-  Serial.println("left:(");
+void toStringBinaryExpr(const Parser::BinaryExpr *binaryExpr) {
+  Serial.print("\"left\":{");
   toString(static_cast<const Parser::Stmt *>(binaryExpr->left));
-  Serial.println(")");
-  Serial.println("right(");
+  Serial.print("},");
+  Serial.print("\"binaryExpr\":{");
+  Serial.print("\"operator\":\"");
+  Serial.print(binaryExpr->op);
+  Serial.print("\",");
+  Serial.print("\"right\":{");
   toString(static_cast<const Parser::Stmt *>(binaryExpr->right));
-  Serial.println(")");
-  Serial.println(")");
+  Serial.print("}},");
 }
 
 void toString(const Parser::Stmt *stmt) {
   switch (stmt->kind) {
     case Parser::NodeType::BinaryExpr:
-      toString3(static_cast<const Parser::BinaryExpr *>(stmt));
+      toStringBinaryExpr(static_cast<const Parser::BinaryExpr *>(stmt));
       break;
     case Parser::NodeType::Identifier:
-      toString2(static_cast<const Parser::Identifier *>(stmt));
+      toStringIdentifier(static_cast<const Parser::Identifier *>(stmt));
       break;
     case Parser::NodeType::NumericLiteral:
-      toString1(static_cast<const Parser::NumericLiteral *>(stmt));
+      toStringNumericLiteral(static_cast<const Parser::NumericLiteral *>(stmt));
       break;
     case Parser::NodeType::Program:
       GlobalFunctions::restart("Found Program in Program, don't know what to do with it");
@@ -350,14 +349,14 @@ void loop() {
           char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
           Parser::Program *program = parser.produceAST(code, sizeof(code));
 
-          Serial.println("Program parsed successfully!");
-
           if (program->kind == Parser::NodeType::Program)
-            Serial.println("NodeType: Program");
+            Serial.println("Program parsed successfully!");
 
+          Serial.print("{\"statements\":[")
           for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
             toString(program->body[i]);
           }
+          Serial.print("]}")
           break;
         }
       default:

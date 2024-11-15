@@ -6,13 +6,14 @@
 class Parser {
 public:
   Parser() {
-    tokensPtr = nullptr; // gets assigned in produceAST()
+    tokensPtr = nullptr;  // gets assigned in produceAST()
     currentStmtIndex = 0;
   }
 
   enum class NodeType {
     Undefined,
     Program,
+    NullLiteral,
     NumericLiteral,
     Identifier,
     BinaryExpr,
@@ -33,10 +34,10 @@ public:
 
     Program()
       : Stmt(NodeType::Program) {
-        for(size_t i = 0; i < maxProgramStatements; i++) {
-          body[i] = nullptr;
-        }
+      for (size_t i = 0; i < maxProgramStatements; i++) {
+        body[i] = nullptr;
       }
+    }
   } Program;
 
 
@@ -71,6 +72,11 @@ public:
       : Expr(NodeType::NumericLiteral) {}
   } NumericLiteral;
 
+  typedef struct NullLiteral : Expr {
+    NullLiteral()
+      : Expr(NodeType::NullLiteral) {}
+  } NullLiteral;
+
   Program* produceAST(char* code, size_t len);
 private:
   Program program;
@@ -81,14 +87,17 @@ private:
 
   BinaryExpr binaryExprPool[poolSize];
   Identifier identifierPool[poolSize];
-  NumericLiteral numericLiteralPool[poolSize]; 
+  NullLiteral nullLiteralPool[poolSize];
+  NumericLiteral numericLiteralPool[poolSize];
   size_t binaryExprCount = 0;
   size_t identifierCount = 0;
+  size_t nullLiteralCount = 0;
   size_t numericLiteralCount = 0;
 
   void clearPools();
   BinaryExpr* newBinaryExpr();
   Identifier* newIdentifier();
+  NullLiteral* newNullLiteral();
   NumericLiteral* newNumericLiteral();
 
   /**
