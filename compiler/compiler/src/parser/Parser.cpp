@@ -1,8 +1,8 @@
 #include "Parser.h"
 
 Parser::Program* Parser::produceAST(char* code, size_t len) {
-  clearPools();
-  tokensPtr = lexer.tokenize(code, len);
+  cleanup();
+  tokensPtr = lexer->tokenize(code, len);
 
   while (!endOfFile()) {
     push(parseStmt());
@@ -24,7 +24,7 @@ Parser::Expr* Parser::parseAdditiveExpr() {
 
 
   while (strcmp(at()->value, "+") == 0 || strcmp(at()->value, "-") == 0) {
-    char* op = eat()->value;
+    char op = eat()->value[0];
 
     Expr* right = parseMultiplicativeExpr();
 
@@ -32,7 +32,7 @@ Parser::Expr* Parser::parseAdditiveExpr() {
     binaryExpr->kind = NodeType::BinaryExpr;
     binaryExpr->left = leftMost;
     binaryExpr->right = right;
-    strncpy(binaryExpr->op, op, sizeof(binaryExpr->op));
+    binaryExpr->op = op;
 
     leftMost = binaryExpr;
   }
@@ -44,7 +44,7 @@ Parser::Expr* Parser::parseMultiplicativeExpr() {
   Expr* leftMost = parsePrimaryExpr();
 
   while (strcmp(at()->value, "*") == 0 || strcmp(at()->value, "/") == 0 || strcmp(at()->value, "%") == 0) {
-    char* op = eat()->value;
+    char op = eat()->value[0];
 
     Expr* right = parsePrimaryExpr();
 
@@ -52,7 +52,7 @@ Parser::Expr* Parser::parseMultiplicativeExpr() {
     binaryExpr->kind = NodeType::BinaryExpr;
     binaryExpr->left = leftMost;
     binaryExpr->right = right;
-    strncpy(binaryExpr->op, op, sizeof(binaryExpr->op));
+    binaryExpr->op = op;
 
     leftMost = binaryExpr;
   }
@@ -74,7 +74,7 @@ Parser::Expr* Parser::parsePrimaryExpr() {
         Identifier* identifier = newIdentifier();
 
         identifier->kind = NodeType::Identifier;
-        strncpy(identifier->symbol, eat()->value, sizeof(identifier->symbol));
+        identifier->symbol = eat()->value;
 
         return identifier;
       }
@@ -140,7 +140,12 @@ void Parser::push(Stmt* stmt) {
   }
 }
 
-void Parser::clearPools() {
+void Parser::cleanup() {
+  for(size_t i = 0; i < maxProgramStatements; i++) {
+    program.body[i] = nullptr;
+  }
+  currentStmtIndex = 0;
+
   for (size_t i = 0; i < poolSize; i++) {
     binaryExprPool[i] = BinaryExpr();
     identifierPool[i] = Identifier();

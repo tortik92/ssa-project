@@ -30,18 +30,19 @@ public:
   };
 
   typedef struct Token {
-    char value[tokLen];
+    char* value;
     TokenType type;
 
     Token() {
-      strncpy(value, "\0", tokLen - 1);
+      value = nullptr;
       type = TokenType::Identifier;
     }
 
-    Token(const char* val, TokenType t)
-      : type(t) {
-      strncpy(value, val, tokLen - 1);
-      value[tokLen - 1] = '\0';
+    Token(char* _value, TokenType _type)
+      : value(_value), type(_type) {}
+
+    ~Token() {
+      delete[] value;
     }
   } Token;
 
@@ -50,16 +51,18 @@ private:
   Token tokens[maxTokens];
   Token* currentToken;
 
+  char keywordVal[keywordCount][6] = { "null", "var", "if", "else", "while", "for" };
+
   const Token keywords[keywordCount]{
-    Token("null", TokenType::Null),
-    Token("var", TokenType::Var),
-    Token("if", TokenType::If),
-    Token("else", TokenType::Else),
-    Token("while", TokenType::While),
-    Token("for", TokenType::For)
+    Token(keywordVal[0], TokenType::Null),
+    Token(keywordVal[1], TokenType::Var),
+    Token(keywordVal[2], TokenType::If),
+    Token(keywordVal[3], TokenType::Else),
+    Token(keywordVal[4], TokenType::While),
+    Token(keywordVal[5], TokenType::For)
   };
 
-  void addToken(Token* dest, const char tokenValue[tokLen], size_t srcTokLen, TokenType tokenType);
+  void addToken(Token* dest, const char* src, size_t srcLen, TokenType tokenType);
 
   TokenType getIdentTokenType(const char* ident, size_t len);
 };

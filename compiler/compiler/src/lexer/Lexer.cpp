@@ -2,7 +2,8 @@
 
 
 Lexer::Token* Lexer::tokenize(char* code, size_t len) {
-  for (size_t i = 0; i < maxTokens; i++) {
+  for (size_t i = 0; i < maxTokens && tokens[i].value != nullptr; i++) {
+    delete[] tokens[i].value;
     tokens[i] = Token();
   }
   currentToken = &tokens[0];
@@ -54,22 +55,22 @@ Lexer::Token* Lexer::tokenize(char* code, size_t len) {
     }
   }
 
-  addToken(currentToken, "", tokLen, TokenType::EndOfFile);
+  char endOfFile[] = "EOF";
+
+  addToken(currentToken, endOfFile, strlen(endOfFile), TokenType::EndOfFile);
 
   return tokens;
 }
 
 
-
-void Lexer::addToken(Token* dest, const char src[tokLen], size_t srcLen, TokenType tokenType) {
-  size_t copyLen = srcLen < tokLen - 1 ? srcLen : tokLen - 1;
-  
-  strncpy(dest->value, src, copyLen);
-  dest->value[copyLen] = '\0';
+void Lexer::addToken(Token* dest, const char* src, size_t srcLen, TokenType tokenType) {
+  dest->value = new char[srcLen + 1];
+  strncpy(dest->value, src, srcLen);
+  dest->value[srcLen] = '\0';
   dest->type = tokenType;
 
   if (dest == currentToken) {
-    if(currentToken != &tokens[maxTokens]) {
+    if (currentToken != &tokens[maxTokens]) {
       currentToken++;
     } else {
       GlobalFunctions::restart("Too many tokens in program!");

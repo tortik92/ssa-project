@@ -5,9 +5,8 @@
 
 class Parser {
 public:
-  Parser() {
-    tokensPtr = nullptr;  // gets assigned in produceAST()
-    currentStmtIndex = 0;
+  Parser(Lexer* lexer) {
+    this->lexer = lexer;
   }
 
   enum class NodeType {
@@ -52,21 +51,21 @@ public:
   typedef struct BinaryExpr : Expr {
     Expr* left;
     Expr* right;
-    char op[2];
+    char op;
 
     BinaryExpr()
       : Expr(NodeType::BinaryExpr) {}
   } BinaryExpr;
 
   typedef struct Identifier : Expr {
-    char symbol[tokLen];
+    const char* symbol;
 
     Identifier()
       : Expr(NodeType::Identifier) {}
   } Identifier;
 
   typedef struct NumericLiteral : Expr {
-    float num;
+    int num;
 
     NumericLiteral()
       : Expr(NodeType::NumericLiteral) {}
@@ -80,7 +79,7 @@ public:
   Program* produceAST(char* code, size_t len);
 private:
   Program program;
-  Lexer lexer;
+  Lexer* lexer;
 
   Lexer::Token* tokensPtr;
   size_t currentStmtIndex;
@@ -94,11 +93,14 @@ private:
   size_t nullLiteralCount = 0;
   size_t numericLiteralCount = 0;
 
-  void clearPools();
   BinaryExpr* newBinaryExpr();
   Identifier* newIdentifier();
   NullLiteral* newNullLiteral();
   NumericLiteral* newNumericLiteral();
+
+  void cleanup();
+
+  
 
   /**
    * orders of expression:

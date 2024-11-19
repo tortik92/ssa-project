@@ -9,11 +9,13 @@
 #include "comm/BLEComm.h"
 #include "lexer/Lexer.h"
 #include "parser/Parser.h"
+#include "interpreter/Interpreter.h"
 
 PadsComm *padsComm = PadsComm::getInstance();
 BLEComm *btComm = BLEComm::getInstance();
 Lexer lexer;
-Parser parser;
+Parser parser = Parser(&lexer);
+Interpreter interpreter;
 
 uint8_t activePadCount = 0;
 
@@ -48,7 +50,6 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
 }
 
 // tostring
-
 void toStringNumericLiteral(const Parser::NumericLiteral *numLit) {
   Serial.print("\"numericLiteral\":\"");
   Serial.print(numLit->num);
@@ -64,10 +65,10 @@ void toStringIdentifier(const Parser::Identifier *ident) {
 void toString(const Parser::Stmt *stmt);
 
 void toStringBinaryExpr(const Parser::BinaryExpr *binaryExpr) {
+  Serial.print("\"binaryExpr\":{");
   Serial.print("\"left\":{");
   toString(static_cast<const Parser::Stmt *>(binaryExpr->left));
   Serial.print("},");
-  Serial.print("\"binaryExpr\":{");
   Serial.print("\"operator\":\"");
   Serial.print(binaryExpr->op);
   Serial.print("\",");
@@ -98,6 +99,14 @@ void toString(const Parser::Stmt *stmt) {
   }
 }
 
+void toString(const Parser::Program *program) {
+  Serial.print("{");
+
+  for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
+    toString(program->body[i]);
+  }
+  Serial.print("}");
+}
 
 // ----------------MAIN FUNCTIONS-----------------
 void setup() {
@@ -296,7 +305,7 @@ void loop() {
           char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
           Lexer::Token *tokens = lexer.tokenize(code, sizeof(code));
 
-          for (size_t i = 0; i < maxTokens && strcmp(tokens[i].value, "") != 0; i++) {
+          for (size_t i = 0; i < maxTokens && tokens[i].value != nullptr; i++) {
             Serial.print("Value: \"");
             Serial.print(tokens[i].value);
             Serial.print("\"\nTokenType: ");
@@ -346,19 +355,70 @@ void loop() {
         }
       case phoneInput_parse:
         {
-          char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
+          char code[maxCharsAllowed] = "var something if(13 + 4 / (7*300) + foo * bar)";
+
           Parser::Program *program = parser.produceAST(code, sizeof(code));
 
           if (program->kind == Parser::NodeType::Program)
             Serial.println("Program parsed successfully!");
 
-          Serial.print("{\"statements\":[")
-          for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
-            toString(program->body[i]);
-          }
-          Serial.print("]}")
+          toString(program);
           break;
         }
+      case phoneInput_interpret:
+        {
+          char code[maxCharsAllowed] = "34 + 21 - 36 * 1 / x";
+          Environment env;
+
+          Parser::Program *program = parser.produceAST(code, sizeof(code));
+          toString(program);
+          Serial.println("\n");
+
+          Values::NumberVal numVal(3);
+
+          env.declareVar("x", &numVal);
+          Serial.print("Declared variable!\nValue: ");
+          Values::RuntimeVal *rtVal = env.lookupVar("x");
+          if (rtVal == nullptr) {
+            GlobalFunctions::restart("rtVal was nullptr");
+          } else {
+            Serial.println(static_cast<Values::NumberVal *>(rtVal)->value);
+          }
+
+          numVal.value = 4;
+          env.assignVar("x", &numVal);
+          Serial.println("Assigned variable!");
+          Serial.println(static_cast<Values::NumberVal *>(env.lookupVar("x"))->value);
+
+          Values::RuntimeVal *val = interpreter.evaluate(program, &env);
+
+          delay(10);
+
+          Serial.print("Value: ");
+          switch (val->type) {
+            case Values::ValueType::Null:
+              Serial.println("Null");
+              break;
+            case Values::ValueType::Boolean:
+              {
+                Serial.print("Boolean: ");
+                Values::BooleanVal *boolVal = static_cast<Values::BooleanVal *>(val);
+                Serial.println(boolVal->value);
+                break;
+              }
+            case Values::ValueType::Number:
+              {
+                Serial.print("Number: ");
+                Values::NumberVal *numVal = static_cast<Values::NumberVal *>(val);
+                Serial.println(numVal->value);
+                break;
+              }
+            default:
+              GlobalFunctions::restart("Undefined ValueType");
+              break;
+          }
+        }
+        break;
       default:
         break;
     }

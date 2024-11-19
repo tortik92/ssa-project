@@ -13,6 +13,7 @@ const uint8_t phoneInput_gameSelection_Memory = 0x10;
 const uint8_t phoneInput_gameSelection_Reaktion = 0x11;
 const uint8_t phoneInput_tokenize = 0x12;
 const uint8_t phoneInput_parse = 0x13;
+const uint8_t phoneInput_interpret = 0x14;
 const uint8_t phoneInput_cancel = 0xFF;
 
 // PadsComm I/0
@@ -40,11 +41,15 @@ const int soundsArray[paramLen] = {880, 1760, 2640, 3520, 0, 0, 0, 0}; // tone v
 const int defaultBeat[paramLen] = {200, 200, 400, 400, 200, 200, 0, 0};
 
 // lexer
-const size_t maxTokens = 256;
+const uint8_t maxCharsAllowed = 255;
+const uint8_t maxTokens = 128;
 const uint8_t keywordCount = 6;
-const uint8_t tokLen = 16;
 const uint8_t intAsStrLen = 11;
 
 // parser
-const uint8_t poolSize = 64;
-const uint8_t maxProgramStatements = 128;
+const uint8_t poolSize = 32;
+const uint8_t maxProgramStatements = 32;
+
+// interpreter
+const uint8_t valueTypesCount = 3;
+const uint8_t maxVariables = poolSize * valueTypesCount;
