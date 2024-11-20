@@ -2,10 +2,12 @@
 
 
 
-Values::RuntimeVal* Environment::declareVar(const char* varName, Values::RuntimeVal* value) {
+Values::RuntimeVal* Environment::declareVar(const char* varName, Values::RuntimeVal* value, bool constant) {
   if (this->has(varName)) {
     GlobalFunctions::restart("Cannot declare variable \"", varName, "\", as it is already defined");
   }
+
+  isConstant[varIndex] = constant;
   this->set(varName, value);
 
   return value;
@@ -54,6 +56,11 @@ void Environment::set(const char* varName, Values::RuntimeVal* value) {
   if (index >= maxVariables) {
     GlobalFunctions::restart("Out of variables for scope");
   }
+
+  if (isConstant[index]) {
+    GlobalFunctions::restart("Trying to reassign const variable");
+  }
+
   Serial.print("Setting \"");
   Serial.print(varName);
   Serial.print("\" to ");
@@ -100,7 +107,7 @@ void Environment::set(const char* varName, Values::RuntimeVal* value) {
         break;
       }
     default:
-      GlobalFunctions::restart("Unknown runtime value type encountered!");
+      GlobalFunctions::restart("Unknown runtime value type (should not happen)");
       // do not forget to edit valueTypesCount in Constants.h!
       break;
   }

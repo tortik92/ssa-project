@@ -12,7 +12,42 @@ Parser::Program* Parser::produceAST(char* code, size_t len) {
 }
 
 Parser::Stmt* Parser::parseStmt() {
-  return parseExpr();
+  Serial.println(at()->value);
+  switch (this->at()->type)
+  {
+  case Lexer::TokenType::Let:
+  case Lexer::TokenType::Const:
+    Serial.println("Parsing var decl");
+    return parseVarDeclaration();
+  default:
+    Serial.println("Parsing expr");
+    return parseExpr();
+  }
+}
+
+Parser::VarDeclaration* Parser::parseVarDeclaration() {
+  const bool isConstant = eat()->type == Lexer::TokenType::Const;
+  const char* ident = expect(Lexer::TokenType::Identifier, "Expected identifier after let/const")->value;
+
+  VarDeclaration* varDecl = newVarDeclaration();
+  varDecl->constant = isConstant;
+  varDecl->ident = ident;
+
+  if(this->at()->type == Lexer::TokenType::Semicolon) {
+    if(isConstant) {
+      GlobalFunctions::restart("Uninitialized const variable");
+    }
+
+    varDecl->value = nullptr;
+
+    return varDecl;
+  }
+
+  expect(Lexer::TokenType::Equals, "Expected '='");
+  varDecl->value = parseExpr();
+  expect(Lexer::TokenType::Semicolon, "Expected ';'");
+
+  return varDecl;
 }
 
 Parser::Expr* Parser::parseExpr() {
@@ -65,7 +100,8 @@ Parser::Expr* Parser::parsePrimaryExpr() {
 
   switch (tokenType) {
     case Lexer::TokenType::Identifier:
-    case Lexer::TokenType::Var:
+    case Lexer::TokenType::Let:
+    case Lexer::TokenType::Const:
     case Lexer::TokenType::If:
     case Lexer::TokenType::Else:
     case Lexer::TokenType::For:
@@ -77,15 +113,6 @@ Parser::Expr* Parser::parsePrimaryExpr() {
         identifier->symbol = eat()->value;
 
         return identifier;
-      }
-    case Lexer::TokenType::Null:
-      {
-        eat();
-        NullLiteral* nullLiteral = newNullLiteral();
-
-        nullLiteral->kind = NodeType::NullLiteral;
-
-        return nullLiteral;
       }
     case Lexer::TokenType::Number:
       {
@@ -120,7 +147,7 @@ Lexer::Token* Parser::eat() {
 
 Lexer::Token* Parser::expect(Lexer::TokenType type, const char* err) {
   Lexer::Token* prev = eat();
-  if (prev->type == Lexer::TokenType::Null || prev->type != type) {
+  if (prev->type != type) {
     GlobalFunctions::restart(err, prev->value, "\"");
   }
   return prev;
@@ -149,13 +176,13 @@ void Parser::cleanup() {
   for (size_t i = 0; i < poolSize; i++) {
     binaryExprPool[i] = BinaryExpr();
     identifierPool[i] = Identifier();
-    nullLiteralPool[i] = NullLiteral();
+    varDeclarationPool[i] = VarDeclaration();
     numericLiteralPool[i] = NumericLiteral();
   }
 
   binaryExprCount = 0;
   identifierCount = 0;
-  nullLiteralCount = 0;
+  varDeclarationCount = 0;
   numericLiteralCount = 0;
 }
 
@@ -173,11 +200,11 @@ Parser::Identifier* Parser::newIdentifier() {
   return &identifierPool[identifierCount++];
 }
 
-Parser::NullLiteral* Parser::newNullLiteral() {
-  if (nullLiteralCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for NullLiteral nodes");
+Parser::VarDeclaration* Parser::newVarDeclaration() {
+  if (varDeclarationCount >= poolSize) {
+    GlobalFunctions::restart("Out of memory for VarDeclaration nodes");
   }
-  return &nullLiteralPool[nullLiteralCount++];
+  return &varDeclarationPool[varDeclarationCount++];
 }
 
 Parser::NumericLiteral* Parser::newNumericLiteral() {

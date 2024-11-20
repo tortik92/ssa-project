@@ -12,15 +12,15 @@ Values::RuntimeVal* Interpreter::evaluate(Parser::Stmt* astNode, Environment* en
 
         return numVal;
       }
-    case Parser::NodeType::NullLiteral:
-      Serial.println("Null");
-      return env->values.newNullVal();
     case Parser::NodeType::Identifier:
       Serial.println("Ident");
       return evalIdentifier(static_cast<Parser::Identifier*>(astNode), env);
     case Parser::NodeType::BinaryExpr:
       Serial.println("BinExp");
       return evalBinaryExpr(static_cast<Parser::BinaryExpr* >(astNode), env);
+    case Parser::NodeType::VarDeclaration:
+      Serial.println("VarDecl");
+      return evalVarDeclaration(static_cast<Parser::VarDeclaration* >(astNode), env);
     case Parser::NodeType::Program:
       Serial.println("Program");
       return evalProgram(static_cast<Parser::Program*>(astNode), env);
@@ -40,6 +40,11 @@ Values::RuntimeVal* Interpreter::evalProgram(Parser::Program* program, Environme
   return lastEvaluated;
 }
 
+Values::RuntimeVal* Interpreter::evalVarDeclaration(Parser::VarDeclaration* declaration, Environment* env) {
+  Values::RuntimeVal* val = declaration->value != nullptr ? evaluate(declaration->value, env) : env->values.newNullVal();
+  return env->declareVar(declaration->ident, val);
+}
+
 Values::RuntimeVal* Interpreter::evalBinaryExpr(Parser::BinaryExpr* binExp, Environment* env) {
   Values::RuntimeVal* left = evaluate(binExp->left, env);
   Values::RuntimeVal* right = evaluate(binExp->right, env);
@@ -55,13 +60,7 @@ Values::RuntimeVal* Interpreter::evalBinaryExpr(Parser::BinaryExpr* binExp, Envi
 }
 
 Values::RuntimeVal* Interpreter::evalIdentifier(Parser::Identifier* ident, Environment* env) {
-  Serial.print("Looking up symbol \"");
-  Serial.print(ident->symbol);
-  Serial.println("\"");
   Values::RuntimeVal* val = env->lookupVar(ident->symbol);
-  if(val == nullptr) Serial.println("Nullptr");
-  if(val->type != Values::ValueType::Number) Serial.println("NaN");
-  else Serial.println(static_cast<Values::NumberVal*>(val)->value);
   return val;
 }
 

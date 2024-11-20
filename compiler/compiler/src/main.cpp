@@ -77,6 +77,17 @@ void toStringBinaryExpr(const Parser::BinaryExpr *binaryExpr) {
   Serial.print("}},");
 }
 
+void toStringVarDecl(const Parser::VarDeclaration *varDecl) {
+  Serial.print("\"varDecl\":{");
+  Serial.print("\"isConstant\":");
+  Serial.print(varDecl->constant ? "\"true\"," : "\"false\",");
+  Serial.print("\"identifier\":\"");
+  Serial.print(varDecl->ident);
+  Serial.print("\",\"value\":{");
+  toString(varDecl->value);
+  Serial.print("}");
+}
+
 void toString(const Parser::Stmt *stmt) {
   switch (stmt->kind) {
     case Parser::NodeType::BinaryExpr:
@@ -87,6 +98,9 @@ void toString(const Parser::Stmt *stmt) {
       break;
     case Parser::NodeType::NumericLiteral:
       toStringNumericLiteral(static_cast<const Parser::NumericLiteral *>(stmt));
+      break;
+    case Parser::NodeType::VarDeclaration:
+      toStringVarDecl(static_cast<const Parser::VarDeclaration *>(stmt));
       break;
     case Parser::NodeType::Program:
       GlobalFunctions::restart("Found Program in Program, don't know what to do with it");
@@ -302,7 +316,14 @@ void loop() {
         }
       case phoneInput_tokenize:
         {
-          char code[] = "var something if(13 + 4 / (7*300) + foo * bar)";
+          char code[maxCharsAllowed];  // = "var something if(13 + 4 / (7*300) + foo * bar)";
+
+          String codeAsStr = Serial.readStringUntil('\n');
+
+          strncpy(code, codeAsStr.c_str(), maxCharsAllowed);
+
+          Serial.println(code);
+
           Lexer::Token *tokens = lexer.tokenize(code, sizeof(code));
 
           for (size_t i = 0; i < maxTokens && tokens[i].value != nullptr; i++) {
@@ -310,9 +331,6 @@ void loop() {
             Serial.print(tokens[i].value);
             Serial.print("\"\nTokenType: ");
             switch (tokens[i].type) {
-              case Lexer::TokenType::Var:
-                Serial.println("Var");
-                break;
               case Lexer::TokenType::If:
                 Serial.println("If");
                 break;
@@ -367,55 +385,48 @@ void loop() {
         }
       case phoneInput_interpret:
         {
-          char code[maxCharsAllowed] = "34 + 21 - 36 * 1 / x";
+          char code[maxCharsAllowed];
           Environment env;
+          env.declareVar("true", env.values.newBooleanVal(true));
+          env.declareVar("false", env.values.newBooleanVal(false));
+          env.declareVar("null", env.values.newNullVal());
 
-          Parser::Program *program = parser.produceAST(code, sizeof(code));
-          toString(program);
-          Serial.println("\n");
+          while (strcmp(code, "exit") != 0) {
+            if (Serial.available() > 0) {
+              strncpy(code, Serial.readStringUntil('\n').c_str(), maxCharsAllowed);
 
-          Values::NumberVal numVal(3);
+              Parser::Program *program = parser.produceAST(code, sizeof(code));
+              toString(program);
+              Serial.println("\n");
 
-          env.declareVar("x", &numVal);
-          Serial.print("Declared variable!\nValue: ");
-          Values::RuntimeVal *rtVal = env.lookupVar("x");
-          if (rtVal == nullptr) {
-            GlobalFunctions::restart("rtVal was nullptr");
-          } else {
-            Serial.println(static_cast<Values::NumberVal *>(rtVal)->value);
-          }
 
-          numVal.value = 4;
-          env.assignVar("x", &numVal);
-          Serial.println("Assigned variable!");
-          Serial.println(static_cast<Values::NumberVal *>(env.lookupVar("x"))->value);
+              Values::RuntimeVal *val = interpreter.evaluate(program, &env);
 
-          Values::RuntimeVal *val = interpreter.evaluate(program, &env);
-
-          delay(10);
-
-          Serial.print("Value: ");
-          switch (val->type) {
-            case Values::ValueType::Null:
-              Serial.println("Null");
-              break;
-            case Values::ValueType::Boolean:
-              {
-                Serial.print("Boolean: ");
-                Values::BooleanVal *boolVal = static_cast<Values::BooleanVal *>(val);
-                Serial.println(boolVal->value);
-                break;
+              Serial.print("Value: ");
+              switch (val->type) {
+                case Values::ValueType::Null:
+                  Serial.println("Null");
+                  break;
+                case Values::ValueType::Boolean:
+                  {
+                    Serial.print("Boolean: ");
+                    Values::BooleanVal *boolVal = static_cast<Values::BooleanVal *>(val);
+                    Serial.println(boolVal->value);
+                    break;
+                  }
+                case Values::ValueType::Number:
+                  {
+                    Serial.print("Number: ");
+                    Values::NumberVal *numVal = static_cast<Values::NumberVal *>(val);
+                    Serial.println(numVal->value);
+                    break;
+                  }
+                default:
+                  GlobalFunctions::restart("Undefined ValueType");
+                  break;
               }
-            case Values::ValueType::Number:
-              {
-                Serial.print("Number: ");
-                Values::NumberVal *numVal = static_cast<Values::NumberVal *>(val);
-                Serial.println(numVal->value);
-                break;
-              }
-            default:
-              GlobalFunctions::restart("Undefined ValueType");
-              break;
+              strncpy(code, "\0", sizeof(code));
+            }
           }
         }
         break;

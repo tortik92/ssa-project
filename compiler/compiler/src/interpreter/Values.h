@@ -49,10 +49,11 @@ public:
     return &nullValPool[nullValCount++];
   }
 
-  BooleanVal* newBooleanVal() {
+  BooleanVal* newBooleanVal(bool value = true) {
     if (booleanValCount >= poolSize) {
       GlobalFunctions::restart("Out of memory for BooleanVal runtime values");
     }
+    booleanValPool[booleanValCount] = value;
     return &booleanValPool[booleanValCount++];
   }
 

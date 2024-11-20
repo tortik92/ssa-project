@@ -9,15 +9,17 @@
 class Lexer {
 public:
   enum class TokenType {
-    Var,
+    // Keywords
+    Let, Const,
 
     If,
     Else,
     While,
     For,
-
+    // Literal Types
     Identifier,
     Number,
+    String,
 
     Equals,
     ArithmeticOperator,
@@ -25,7 +27,8 @@ public:
     OpenParen,
     CloseParen,
 
-    Null,
+    Semicolon,
+    // End of file
     EndOfFile,
   };
 
@@ -51,11 +54,11 @@ private:
   Token tokens[maxTokens];
   Token* currentToken;
 
-  char keywordVal[keywordCount][6] = { "null", "var", "if", "else", "while", "for" };
+  char keywordVal[keywordCount][6] = { "let", "const", "if", "else", "while", "for" };
 
   const Token keywords[keywordCount]{
-    Token(keywordVal[0], TokenType::Null),
-    Token(keywordVal[1], TokenType::Var),
+    Token(keywordVal[0], TokenType::Let),
+    Token(keywordVal[1], TokenType::Const),
     Token(keywordVal[2], TokenType::If),
     Token(keywordVal[3], TokenType::Else),
     Token(keywordVal[4], TokenType::While),

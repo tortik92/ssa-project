@@ -26,6 +26,9 @@ Lexer::Token* Lexer::tokenize(char* code, size_t len) {
       case '=':
         addToken(currentToken, &code[i], 1, TokenType::Equals);
         break;
+      case ';':
+        addToken(currentToken, &code[i], 1, TokenType::Semicolon);
+        break;
       default:
         // handle multicharacter tokens
         if (isDigit(code[i])) {

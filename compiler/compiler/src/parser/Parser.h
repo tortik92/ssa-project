@@ -11,8 +11,10 @@ public:
 
   enum class NodeType {
     Undefined,
+    // statements
     Program,
-    NullLiteral,
+    VarDeclaration,
+    // expressions
     NumericLiteral,
     Identifier,
     BinaryExpr,
@@ -48,6 +50,14 @@ public:
       : Stmt(_nodeType) {}
   } Expr;
 
+  typedef struct VarDeclaration : Stmt {
+    bool constant;
+    const char* ident;
+    Expr* value;
+
+    VarDeclaration() : Stmt(Parser::NodeType::VarDeclaration) {}
+  } VarDeclaration;
+
   typedef struct BinaryExpr : Expr {
     Expr* left;
     Expr* right;
@@ -71,11 +81,6 @@ public:
       : Expr(NodeType::NumericLiteral) {}
   } NumericLiteral;
 
-  typedef struct NullLiteral : Expr {
-    NullLiteral()
-      : Expr(NodeType::NullLiteral) {}
-  } NullLiteral;
-
   Program* produceAST(char* code, size_t len);
 private:
   Program program;
@@ -86,21 +91,19 @@ private:
 
   BinaryExpr binaryExprPool[poolSize];
   Identifier identifierPool[poolSize];
-  NullLiteral nullLiteralPool[poolSize];
+  VarDeclaration varDeclarationPool[poolSize];
   NumericLiteral numericLiteralPool[poolSize];
   size_t binaryExprCount = 0;
   size_t identifierCount = 0;
-  size_t nullLiteralCount = 0;
+  size_t varDeclarationCount = 0;
   size_t numericLiteralCount = 0;
 
   BinaryExpr* newBinaryExpr();
   Identifier* newIdentifier();
-  NullLiteral* newNullLiteral();
+  VarDeclaration* newVarDeclaration();
   NumericLiteral* newNumericLiteral();
 
   void cleanup();
-
-  
 
   /**
    * orders of expression:
@@ -111,6 +114,7 @@ private:
    */
   Stmt* parseStmt();
   Expr* parseExpr();
+  VarDeclaration* parseVarDeclaration();
   Expr* parseAdditiveExpr();
   Expr* parseMultiplicativeExpr();
   Expr* parsePrimaryExpr();

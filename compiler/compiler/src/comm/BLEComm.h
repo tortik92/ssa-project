@@ -17,6 +17,7 @@ public:
 
     bool hasUnreadBytes();
     uint8_t readByte();
+    String readCode();
 private:
     static BLEComm* instance;
 

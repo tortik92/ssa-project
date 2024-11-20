@@ -18,7 +18,7 @@ public:
     }
   }
 
-  Values::RuntimeVal* declareVar(const char* varName, Values::RuntimeVal* value);
+  Values::RuntimeVal* declareVar(const char* varName, Values::RuntimeVal* value, bool constant);
   Values::RuntimeVal* assignVar(const char* varName, Values::RuntimeVal* value);
   Values::RuntimeVal* lookupVar(const char* varName);
   Environment* resolve(const char* varName);
@@ -30,6 +30,8 @@ private:
 
   char* varNames[maxVariables];
   Values::RuntimeVal* valuesArray[maxVariables];
+
+  bool isConstant[maxVariables] = {0};
 
   bool has(const char* varName);
   void set(const char* varName, Values::RuntimeVal* value);

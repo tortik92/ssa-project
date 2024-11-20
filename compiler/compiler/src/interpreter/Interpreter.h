@@ -11,6 +11,7 @@ public:
 private:
   Values::RuntimeVal* evalProgram(Parser::Program* program, Environment* env);
   Values::RuntimeVal* evalBinaryExpr(Parser::BinaryExpr* binExp, Environment* env);
+  Values::RuntimeVal* evalVarDeclaration(Parser::VarDeclaration* declaration, Environment* env);
   Values::RuntimeVal* evalIdentifier(Parser::Identifier* ident, Environment* env);
   Values::NumberVal* evalNumericBinaryExpr(Values::NumberVal* left, Values::NumberVal* right, char op, Environment* env);
 };
