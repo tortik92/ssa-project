@@ -47,17 +47,18 @@ bool Environment::has(const char* varName) {
 
 void Environment::set(const char* varName, Values::RuntimeVal* value) {
   int index = getIndex(varName);
-  bool isNotDeclared = false;
+  bool isDeclared = true;
   if (index == -1) {
     index = varIndex;
-    isNotDeclared = true;
+    isDeclared = false;
   }
 
   if (index >= maxVariables) {
     GlobalFunctions::restart("Out of variables for scope");
   }
 
-  if (isConstant[index]) {
+  if (isDeclared && isConstant[index]) {
+
     GlobalFunctions::restart("Trying to reassign const variable");
   }
 
@@ -65,7 +66,7 @@ void Environment::set(const char* varName, Values::RuntimeVal* value) {
   Serial.print(varName);
   Serial.print("\" to ");
 
-  if (isNotDeclared) {
+  if (!isDeclared) {
     size_t varLen = strlen(varName);
     varNames[index] = new char[varLen + 1];
     strncpy(varNames[index], varName, varLen);
@@ -74,14 +75,14 @@ void Environment::set(const char* varName, Values::RuntimeVal* value) {
 
   switch (value->type) {
     case Values::ValueType::Null:
-      if (isNotDeclared) {
+      if (!isDeclared) {
         valuesArray[index] = values.newNullVal();
       }
       Serial.println("Null");
       break;
     case Values::ValueType::Boolean:
       {
-        if (isNotDeclared) {
+        if (!isDeclared) {
           valuesArray[index] = values.newBooleanVal();
         }
         Values::BooleanVal* boolVal = static_cast<Values::BooleanVal*>(value);
@@ -95,7 +96,7 @@ void Environment::set(const char* varName, Values::RuntimeVal* value) {
       }
     case Values::ValueType::Number:
       {
-        if (isNotDeclared) {
+        if (!isDeclared) {
           valuesArray[index] = values.newNumberVal();
         }
         Values::NumberVal* numVal = static_cast<Values::NumberVal*>(value);
@@ -112,7 +113,7 @@ void Environment::set(const char* varName, Values::RuntimeVal* value) {
       break;
   }
 
-  if (isNotDeclared) varIndex++;
+  if (!isDeclared) varIndex++;
 }
 
 Values::RuntimeVal* Environment::get(const char* varName) {

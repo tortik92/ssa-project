@@ -42,7 +42,7 @@ Values::RuntimeVal* Interpreter::evalProgram(Parser::Program* program, Environme
 
 Values::RuntimeVal* Interpreter::evalVarDeclaration(Parser::VarDeclaration* declaration, Environment* env) {
   Values::RuntimeVal* val = declaration->value != nullptr ? evaluate(declaration->value, env) : env->values.newNullVal();
-  return env->declareVar(declaration->ident, val);
+  return env->declareVar(declaration->ident, val, declaration->constant);
 }
 
 Values::RuntimeVal* Interpreter::evalBinaryExpr(Parser::BinaryExpr* binExp, Environment* env) {

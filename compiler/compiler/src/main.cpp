@@ -84,7 +84,7 @@ void toStringVarDecl(const Parser::VarDeclaration *varDecl) {
   Serial.print("\"identifier\":\"");
   Serial.print(varDecl->ident);
   Serial.print("\",\"value\":{");
-  toString(varDecl->value);
+  if (varDecl->value != nullptr) toString(varDecl->value);
   Serial.print("}");
 }
 
@@ -387,9 +387,11 @@ void loop() {
         {
           char code[maxCharsAllowed];
           Environment env;
-          env.declareVar("true", env.values.newBooleanVal(true));
-          env.declareVar("false", env.values.newBooleanVal(false));
-          env.declareVar("null", env.values.newNullVal());
+          env.declareVar("true", env.values.newBooleanVal(true), true);
+          env.declareVar("false", env.values.newBooleanVal(false), true);
+          env.declareVar("null", env.values.newNullVal(), true);
+
+          Serial.println("Ready to interpret!");
 
           while (strcmp(code, "exit") != 0) {
             if (Serial.available() > 0) {
@@ -398,7 +400,6 @@ void loop() {
               Parser::Program *program = parser.produceAST(code, sizeof(code));
               toString(program);
               Serial.println("\n");
-
 
               Values::RuntimeVal *val = interpreter.evaluate(program, &env);
 
@@ -428,6 +429,8 @@ void loop() {
               strncpy(code, "\0", sizeof(code));
             }
           }
+
+          Serial.println("Exiting...");
         }
         break;
       default:

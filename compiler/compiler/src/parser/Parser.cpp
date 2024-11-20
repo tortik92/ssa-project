@@ -34,6 +34,7 @@ Parser::VarDeclaration* Parser::parseVarDeclaration() {
   varDecl->ident = ident;
 
   if(this->at()->type == Lexer::TokenType::Semicolon) {
+    eat();
     if(isConstant) {
       GlobalFunctions::restart("Uninitialized const variable");
     }
