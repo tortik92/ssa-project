@@ -1,14 +1,19 @@
 #pragma once
 
+#include <functional>
+
 #include "Constants.h"
 #include "GlobalFunctions.h"
+
+class Environment;
 
 class Values {
 public:
   enum class ValueType {
     Null,
     Boolean,
-    Number
+    Number,
+    NativeFn
   };
 
   typedef struct RuntimeVal {
@@ -42,6 +47,17 @@ public:
       : RuntimeVal(ValueType::Number), value(_value) {}
   } NumberVal;
 
+  using FunctionCall = std::function<RuntimeVal*(RuntimeVal* args[maxFunctionArgs], Environment* env)>;
+
+  typedef struct NativeFnValue : Values::RuntimeVal {
+    FunctionCall call;
+
+    NativeFnValue()
+      : RuntimeVal(Values::ValueType::NativeFn) {}
+  } NativeFnValue;
+
+
+
   NullVal* newNullVal() {
     if (nullValCount >= poolSize) {
       GlobalFunctions::restart("Out of memory for NullVal runtime values");
@@ -64,22 +80,35 @@ public:
     return &numberValPool[numberValCount++];
   }
 
+  NativeFnValue* newNativeFn() {
+    if (nativeFnCount >= poolSize) {
+      GlobalFunctions::restart("Out of memory for NumberVal runtime values");
+    }
+    return &nativeFnPool[nativeFnCount++];
+  }
+
+
   void clearPools() {
-    for(size_t i = 0; i < poolSize; i++) {
+    for (size_t i = 0; i < poolSize; i++) {
       nullValPool[i] = NullVal();
       booleanValPool[i] = BooleanVal();
       numberValPool[i] = NumberVal();
+      nativeFnPool[i] = NativeFnValue();
     }
 
     nullValCount = 0;
     booleanValCount = 0;
     numberValCount = 0;
+    nativeFnCount = 0;
   }
 private:
   NullVal nullValPool[poolSize];
   BooleanVal booleanValPool[poolSize];
   NumberVal numberValPool[poolSize];
+  NativeFnValue nativeFnPool[poolSize];
+
   size_t nullValCount = 0;
   size_t booleanValCount = 0;
   size_t numberValCount = 0;
+  size_t nativeFnCount = 0;
 };

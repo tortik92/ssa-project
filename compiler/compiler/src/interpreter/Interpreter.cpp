@@ -21,6 +21,12 @@ Values::RuntimeVal* Interpreter::evaluate(Parser::Stmt* astNode, Environment* en
     case Parser::NodeType::VarDeclaration:
       Serial.println("VarDecl");
       return evalVarDeclaration(static_cast<Parser::VarDeclaration* >(astNode), env);
+    case Parser::NodeType::AssignmentExpr:
+      Serial.println("AssignmentExpr");
+      return evalAssignmentExpr(static_cast<Parser::AssignmentExpr*>(astNode), env);
+    case Parser::NodeType::CallExpr:
+      Serial.println("CallExpr");
+      return evalCallExpr(static_cast<Parser::CallExpr*>(astNode), env);
     case Parser::NodeType::Program:
       Serial.println("Program");
       return evalProgram(static_cast<Parser::Program*>(astNode), env);
@@ -78,7 +84,7 @@ Values::NumberVal* Interpreter::evalNumericBinaryExpr(Values::NumberVal* left, V
       numberVal->value = left->value * right->value;
       break;
     case '/':
-      if(right->value == 0) {
+      if (right->value == 0) {
         GlobalFunctions::restart("Attempted to divide by 0");
       } else {
         numberVal->value = left->value / right->value;
@@ -96,4 +102,31 @@ Values::NumberVal* Interpreter::evalNumericBinaryExpr(Values::NumberVal* left, V
   }
 
   return numberVal;
+}
+
+Values::RuntimeVal* Interpreter::evalAssignmentExpr(Parser::AssignmentExpr* node, Environment* env) {
+  if (node->assignee->kind != Parser::NodeType::Identifier) {
+    GlobalFunctions::restart("Expected identifier on left side of assignment expression");
+  }
+
+  const char* varname = static_cast<Parser::Identifier*>(node->assignee)->symbol;
+
+  return env->assignVar(varname, evaluate(node->value, env));
+}
+
+Values::RuntimeVal* Interpreter::evalCallExpr(Parser::CallExpr* expr, Environment* env) {
+  Values::RuntimeVal* args[maxFunctionArgs];
+
+  for (size_t i = 0; i < maxFunctionArgs && expr->args[i] != nullptr; i++) {
+    args[i] = evaluate(expr->args[i], env);
+  }
+
+  Values::RuntimeVal* fn = evaluate(expr->caller, env);
+
+  if (fn->type != Values::ValueType::NativeFn) {
+    GlobalFunctions::restart("Cannot call value that is not a function");
+  }
+
+  Values::RuntimeVal* result = static_cast<Values::NativeFnValue*>(fn)->call(args, env);
+  return result;
 }

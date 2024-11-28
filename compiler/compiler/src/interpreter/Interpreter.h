@@ -14,4 +14,6 @@ private:
   Values::RuntimeVal* evalVarDeclaration(Parser::VarDeclaration* declaration, Environment* env);
   Values::RuntimeVal* evalIdentifier(Parser::Identifier* ident, Environment* env);
   Values::NumberVal* evalNumericBinaryExpr(Values::NumberVal* left, Values::NumberVal* right, char op, Environment* env);
+  Values::RuntimeVal* evalAssignmentExpr(Parser::AssignmentExpr* node, Environment* env);
+  Values::RuntimeVal* evalCallExpr(Parser::CallExpr* expr, Environment* env);
 };

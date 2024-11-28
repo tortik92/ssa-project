@@ -99,12 +99,21 @@ void Environment::set(const char* varName, Values::RuntimeVal* value) {
         if (!isDeclared) {
           valuesArray[index] = values.newNumberVal();
         }
-        Values::NumberVal* numVal = static_cast<Values::NumberVal*>(value);
-
-        static_cast<Values::NumberVal*>(valuesArray[index])->value = numVal->value;
+        static_cast<Values::NumberVal*>(valuesArray[index])->value = static_cast<Values::NumberVal*>(value)->value;
 
         Serial.print("Number: ");
         Serial.println(static_cast<Values::NumberVal*>(valuesArray[index])->value);
+        break;
+      }
+    case Values::ValueType::NativeFn:
+      {
+        if (!isDeclared) {
+          valuesArray[index] = values.newNativeFn();
+        }
+
+        static_cast<Values::NativeFnValue*>(valuesArray[index])->call = static_cast<Values::NativeFnValue*>(value)->call;
+
+        Serial.println("NativeFn");
         break;
       }
     default:

@@ -23,11 +23,40 @@ Lexer::Token* Lexer::tokenize(char* code, size_t len) {
       case '%':
         addToken(currentToken, &code[i], 1, TokenType::ArithmeticOperator);
         break;
+      case '<':
+      case '>':
+        addToken(currentToken, &code[i], i + 1 < len && code[i + 1] == '=' ? 2 : 1, TokenType::RelationalOperator);
+        break;
+      case '!':
+        if (i + 1 < len && code[i + 1] == '=') {
+          addToken(currentToken, &code[i], 2, TokenType::RelationalOperator);
+        } else {
+          addToken(currentToken, &code[i], 1, TokenType::LogicalOperator);
+        }
+        break;
+      case '&':
+      case '|':
+        if(i + 1 >= len || code[i + 1] != code[i]) {
+          GlobalFunctions::restart("Expected '", &code[i], "'");
+        } else {
+          addToken(currentToken, &code[i], 2, TokenType::LogicalOperator);
+        }
+        break;
       case '=':
-        addToken(currentToken, &code[i], 1, TokenType::Equals);
+        if (i + 1 < len && code[i + 1] == '=') {
+          addToken(currentToken, &code[i], 2, TokenType::RelationalOperator);
+        } else {
+          addToken(currentToken, &code[i], 1, TokenType::Equals);
+        }
         break;
       case ';':
         addToken(currentToken, &code[i], 1, TokenType::Semicolon);
+        break;
+      case ',':
+        addToken(currentToken, &code[i], 1, TokenType::Comma);
+        break;
+      case '.':
+        addToken(currentToken, &code[i], 1, TokenType::Dot);
         break;
       default:
         // handle multicharacter tokens

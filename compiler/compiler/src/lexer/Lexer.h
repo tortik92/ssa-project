@@ -10,24 +10,29 @@ class Lexer {
 public:
   enum class TokenType {
     // Keywords
-    Let, Const,
-
+    Let,
+    Const,
     If,
     Else,
     While,
     For,
+
     // Literal Types
     Identifier,
     Number,
-    String,
 
     Equals,
-    ArithmeticOperator,
+    ArithmeticOperator, // +, -, *, /, %
+    RelationalOperator, // <, <=, >, >=, ==, !=
+    LogicalOperator, // !, &&, ||
 
-    OpenParen,
-    CloseParen,
+    OpenParen, // (
+    CloseParen, // )
 
     Semicolon,
+    Dot,
+    Comma,
+    
     // End of file
     EndOfFile,
   };

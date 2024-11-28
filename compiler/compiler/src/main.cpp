@@ -174,6 +174,7 @@ void loop() {
               // if not on the correct pad
               if ((*padsComm->getPad(selectedPad)).isOccupied) {
                 padsComm->playLoserJingle();
+                break;
                 return;
               } else /* Correct pad */ {
                 padsComm->playWinnerJingle();
@@ -387,20 +388,18 @@ void loop() {
         {
           char code[maxCharsAllowed];
           Environment env;
-          env.declareVar("true", env.values.newBooleanVal(true), true);
-          env.declareVar("false", env.values.newBooleanVal(false), true);
-          env.declareVar("null", env.values.newNullVal(), true);
 
           Serial.println("Ready to interpret!");
 
-          while (strcmp(code, "exit") != 0) {
+          while (true) {
             if (Serial.available() > 0) {
               strncpy(code, Serial.readStringUntil('\n').c_str(), maxCharsAllowed);
 
-              Parser::Program *program = parser.produceAST(code, sizeof(code));
-              toString(program);
-              Serial.println("\n");
+              if (strcmp(code, "exit") == 0) {
+                break;
+              }
 
+              Parser::Program *program = parser.produceAST(code, sizeof(code));
               Values::RuntimeVal *val = interpreter.evaluate(program, &env);
 
               Serial.print("Value: ");
@@ -422,6 +421,9 @@ void loop() {
                     Serial.println(numVal->value);
                     break;
                   }
+                case Values::ValueType::NativeFn:
+                  Serial.println("NativeFn");
+                  break;
                 default:
                   GlobalFunctions::restart("Undefined ValueType");
                   break;

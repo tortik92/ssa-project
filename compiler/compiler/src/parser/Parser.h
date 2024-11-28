@@ -15,6 +15,9 @@ public:
     Program,
     VarDeclaration,
     // expressions
+    AssignmentExpr,
+    CallExpr,
+    // literals
     NumericLiteral,
     Identifier,
     BinaryExpr,
@@ -55,8 +58,26 @@ public:
     const char* ident;
     Expr* value;
 
-    VarDeclaration() : Stmt(Parser::NodeType::VarDeclaration) {}
+    VarDeclaration()
+      : Stmt(Parser::NodeType::VarDeclaration) {}
   } VarDeclaration;
+
+
+  typedef struct AssignmentExpr : Expr {
+    Expr* assignee;
+    Expr* value;
+
+    AssignmentExpr()
+      : Expr(NodeType::AssignmentExpr) {}
+  } AssignmentExpr;
+
+  typedef struct CallExpr : Expr {
+    Expr* caller;
+    Expr* args[maxFunctionArgs];
+
+    CallExpr()
+      : Expr(NodeType::CallExpr) {}
+  } CallExpr;
 
   typedef struct BinaryExpr : Expr {
     Expr* left;
@@ -81,6 +102,7 @@ public:
       : Expr(NodeType::NumericLiteral) {}
   } NumericLiteral;
 
+
   Program* produceAST(char* code, size_t len);
 private:
   Program program;
@@ -91,32 +113,37 @@ private:
 
   BinaryExpr binaryExprPool[poolSize];
   Identifier identifierPool[poolSize];
-  VarDeclaration varDeclarationPool[poolSize];
   NumericLiteral numericLiteralPool[poolSize];
+  VarDeclaration varDeclarationPool[poolSize];
+  AssignmentExpr assignmentExprPool[poolSize];
+  CallExpr callExprPool[poolSize];
+
   size_t binaryExprCount = 0;
   size_t identifierCount = 0;
-  size_t varDeclarationCount = 0;
   size_t numericLiteralCount = 0;
+  size_t varDeclarationCount = 0;
+  size_t assignentExprCount = 0;
+  size_t callExprCount = 0;
 
   BinaryExpr* newBinaryExpr();
   Identifier* newIdentifier();
-  VarDeclaration* newVarDeclaration();
   NumericLiteral* newNumericLiteral();
+  VarDeclaration* newVarDeclaration();
+  AssignmentExpr* newAssignmentExpr();
+  CallExpr* newCallExpr();
 
   void cleanup();
 
-  /**
-   * orders of expression:
-   * 
-   * 1. additive
-   * 2. multiplicative
-   * 3. primary
-   */
   Stmt* parseStmt();
   Expr* parseExpr();
   VarDeclaration* parseVarDeclaration();
+  Expr* parseAssignmentExpr();
   Expr* parseAdditiveExpr();
   Expr* parseMultiplicativeExpr();
+  Expr* parseCallMemberExpr();
+  Expr* parseCallExpr(Expr* caller);
+  void parseArgs(CallExpr* callExpr);
+  void parseArgsList(CallExpr* callExpr);
   Expr* parsePrimaryExpr();
 
   bool endOfFile();

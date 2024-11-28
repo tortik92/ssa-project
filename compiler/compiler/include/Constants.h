@@ -51,5 +51,6 @@ const uint8_t poolSize = 32;
 const uint8_t maxProgramStatements = 32;
 
 // interpreter
+const uint8_t maxFunctionArgs = 8;
 const uint8_t valueTypesCount = 3;
 const uint8_t maxVariables = poolSize * valueTypesCount;
