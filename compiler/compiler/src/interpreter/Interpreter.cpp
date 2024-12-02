@@ -30,10 +30,15 @@ Values::RuntimeVal* Interpreter::evaluate(Parser::Stmt* astNode, Environment* en
     case Parser::NodeType::Program:
       Serial.println("Program");
       return evalProgram(static_cast<Parser::Program*>(astNode), env);
+    case Parser::NodeType::Undefined:
+      GlobalFunctions::restart("Undefined NodeType found while interpreting");
+      break;
     default:
       GlobalFunctions::restart("AST node not set up for interpretation (should not happen)");
-      return env->values.newNullVal();
+      break;
   }
+
+  return env->values.newNullVal();
 }
 
 Values::RuntimeVal* Interpreter::evalProgram(Parser::Program* program, Environment* env) {
@@ -117,8 +122,8 @@ Values::RuntimeVal* Interpreter::evalAssignmentExpr(Parser::AssignmentExpr* node
 Values::RuntimeVal* Interpreter::evalCallExpr(Parser::CallExpr* expr, Environment* env) {
   Values::RuntimeVal* args[maxFunctionArgs];
 
-  for (size_t i = 0; i < maxFunctionArgs && expr->args[i] != nullptr; i++) {
-    args[i] = evaluate(expr->args[i], env);
+  for (size_t i = 0; i < maxFunctionArgs; i++) {
+    args[i] = expr->args[i] != nullptr ? evaluate(expr->args[i], env) : nullptr;
   }
 
   Values::RuntimeVal* fn = evaluate(expr->caller, env);

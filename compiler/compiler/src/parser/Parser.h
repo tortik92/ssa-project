@@ -76,7 +76,11 @@ public:
     Expr* args[maxFunctionArgs];
 
     CallExpr()
-      : Expr(NodeType::CallExpr) {}
+      : Expr(NodeType::CallExpr) {
+        for(size_t i = 0; i < maxFunctionArgs; i++) {
+          args[i] = nullptr;
+        }
+      }
   } CallExpr;
 
   typedef struct BinaryExpr : Expr {

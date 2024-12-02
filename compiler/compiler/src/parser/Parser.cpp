@@ -59,6 +59,9 @@ Parser::Expr* Parser::parseAssignmentExpr() {
 
   if (at()->type == Lexer::TokenType::Equals) {
     eat();
+    if(left->kind != NodeType::Identifier) {
+      GlobalFunctions::restart("Expected variable name for assignment");
+    }
     Expr* value = parseAssignmentExpr();
 
     AssignmentExpr* assignmentExpr = newAssignmentExpr();
@@ -116,6 +119,7 @@ Parser::Expr* Parser::parseCallMemberExpr() {
   Expr* member = parsePrimaryExpr();
 
   if (at()->type == Lexer::TokenType::OpenParen) {
+    Serial.println("Found OpenParen");
     return parseCallExpr(member);
   }
 
@@ -123,11 +127,13 @@ Parser::Expr* Parser::parseCallMemberExpr() {
 }
 
 Parser::Expr* Parser::parseCallExpr(Expr* caller) {
+  Serial.println("Parsing call expr");
   CallExpr* callExpr = newCallExpr();
   callExpr->caller = caller;
   parseArgs(callExpr);
 
   if (at()->type == Lexer::TokenType::OpenParen) {
+    Serial.println("Parsing CallExpr in CallExpr");
     parseCallExpr(callExpr);
   }
 
@@ -141,7 +147,7 @@ void Parser::parseArgs(CallExpr* callExpr) {
 }
 
 void Parser::parseArgsList(CallExpr* callExpr) {
-  callExpr->args[0] = parseAssignmentExpr();
+  callExpr->args[0] = strcmp(at()->value, ")") != 0 ? parseAssignmentExpr() : nullptr;
 
   for(size_t i = 1; at()->type == Lexer::TokenType::Comma; i++) {
     if(i >= maxFunctionArgs) {

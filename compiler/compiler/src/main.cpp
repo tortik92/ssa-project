@@ -88,6 +88,27 @@ void toStringVarDecl(const Parser::VarDeclaration *varDecl) {
   Serial.print("}");
 }
 
+void toStringAssignmentExpr(const Parser::AssignmentExpr *assignmentExpr) {
+  Serial.println("\"assignee\":{");
+  toString(assignmentExpr->assignee);
+  Serial.println("},\"value\":{");
+  toString(assignmentExpr->value);
+  Serial.println("},");
+}
+
+void toStringCallExpr(const Parser::CallExpr *callExpr) {
+  Serial.print("\"caller\":{");
+  toString(callExpr->caller);
+
+  Serial.print("},\"args\":[");
+  for (size_t i = 0; i < maxFunctionArgs && callExpr->args[i] != nullptr; i++) {
+    Serial.print("{");
+    toString(callExpr->args[i]);
+    Serial.print("},");
+  }
+  Serial.print("],");
+}
+
 void toString(const Parser::Stmt *stmt) {
   switch (stmt->kind) {
     case Parser::NodeType::BinaryExpr:
@@ -101,6 +122,12 @@ void toString(const Parser::Stmt *stmt) {
       break;
     case Parser::NodeType::VarDeclaration:
       toStringVarDecl(static_cast<const Parser::VarDeclaration *>(stmt));
+      break;
+    case Parser::NodeType::AssignmentExpr:
+      toStringAssignmentExpr(static_cast<const Parser::AssignmentExpr *>(stmt));
+      break;
+    case Parser::NodeType::CallExpr:
+      toStringCallExpr(static_cast<const Parser::CallExpr *>(stmt));
       break;
     case Parser::NodeType::Program:
       GlobalFunctions::restart("Found Program in Program, don't know what to do with it");
@@ -400,7 +427,10 @@ void loop() {
               }
 
               Parser::Program *program = parser.produceAST(code, sizeof(code));
+              toString(program);
+              Serial.println("Successfully parsed program");
               Values::RuntimeVal *val = interpreter.evaluate(program, &env);
+              Serial.println("Successfully evaluated program");
 
               Serial.print("Value: ");
               switch (val->type) {
