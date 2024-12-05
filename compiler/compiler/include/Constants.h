@@ -49,6 +49,7 @@ const uint8_t intAsStrLen = 11;
 // parser
 const uint8_t poolSize = 32;
 const uint8_t maxProgramStatements = 32;
+const uint8_t maxBlockStatements = 8;
 
 // interpreter
 const uint8_t maxFunctionArgs = 8;

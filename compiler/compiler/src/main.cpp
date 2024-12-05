@@ -51,21 +51,21 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
 
 // tostring
 void toStringNumericLiteral(const Parser::NumericLiteral *numLit) {
-  Serial.print("\"numericLiteral\":\"");
+  Serial.print("{\"type\":\"numericLiteral\",\"value\":\"");
   Serial.print(numLit->num);
-  Serial.print("\",");
+  Serial.print("\"}");
 }
 
 void toStringIdentifier(const Parser::Identifier *ident) {
-  Serial.print("\"identifier\":\"");
+  Serial.print("{\"type\":\"identifier\",\"symbol\":\"");
   Serial.print(ident->symbol);
-  Serial.print("\",");
+  Serial.print("\"}");
 }
 
 void toString(const Parser::Stmt *stmt);
 
 void toStringBinaryExpr(const Parser::BinaryExpr *binaryExpr) {
-  Serial.print("\"binaryExpr\":{");
+  Serial.print("{\"type\":\"binaryExpr\",");
   Serial.print("\"left\":{");
   toString(static_cast<const Parser::Stmt *>(binaryExpr->left));
   Serial.print("},");
@@ -74,45 +74,82 @@ void toStringBinaryExpr(const Parser::BinaryExpr *binaryExpr) {
   Serial.print("\",");
   Serial.print("\"right\":{");
   toString(static_cast<const Parser::Stmt *>(binaryExpr->right));
-  Serial.print("}},");
+  Serial.print("}}");
+}
+
+void toStringLogicalExpr(const Parser::LogicalExpr *logicalExpr) {
+  Serial.print("{\"type\":\"logicalExpr\",");
+  Serial.print("\"left\":{");
+  toString(static_cast<const Parser::Stmt *>(logicalExpr->left));
+  Serial.print("},");
+  Serial.print("\"operator\":\"");
+  Serial.print(logicalExpr->op);
+  Serial.print("\",\"right\":{");
+  toString(static_cast<const Parser::Stmt *>(logicalExpr->right));
+  Serial.print("}}");
 }
 
 void toStringVarDecl(const Parser::VarDeclaration *varDecl) {
-  Serial.print("\"varDecl\":{");
+  Serial.print("{\"type\":\"varDecl\",");
   Serial.print("\"isConstant\":");
   Serial.print(varDecl->constant ? "\"true\"," : "\"false\",");
   Serial.print("\"identifier\":\"");
   Serial.print(varDecl->ident);
   Serial.print("\",\"value\":{");
   if (varDecl->value != nullptr) toString(varDecl->value);
+  Serial.print("}}");
+}
+
+void toStringBlockStmt(const Parser::BlockStmt *blockStmt) {
+  Serial.print("{\"type\":\"blockStmt\",\"body\":[");
+  for (size_t i = 0; i < maxProgramStatements && blockStmt->body[i] != nullptr; i++) {
+    toString(blockStmt->body[i]);
+    Serial.print(",");
+  }
+  Serial.print("]}");
+}
+
+void toStringIfStmt(const Parser::IfStmt *ifStmt) {
+  Serial.print("{\"type\":\"ifStmt\",");
+  Serial.print("\"test\":{");
+  toString(ifStmt->test);
+  Serial.print("},\"consequent\":");
+  toStringBlockStmt(ifStmt->consequent);
+  Serial.print(",\"alternate\":");
+  if (ifStmt->alternate != nullptr) {
+    toStringBlockStmt(ifStmt->alternate);
+  } else {
+    Serial.print("null");
+  }
   Serial.print("}");
 }
 
 void toStringAssignmentExpr(const Parser::AssignmentExpr *assignmentExpr) {
-  Serial.println("\"assignee\":{");
+  Serial.print("{\"type\":\"assignmentExpr\",\"assignee\":");
   toString(assignmentExpr->assignee);
-  Serial.println("},\"value\":{");
+  Serial.print(",\"value\":");
   toString(assignmentExpr->value);
-  Serial.println("},");
+  Serial.print("}");
 }
 
 void toStringCallExpr(const Parser::CallExpr *callExpr) {
-  Serial.print("\"caller\":{");
+  Serial.print("{\"type\":\"callExpr\",\"caller\":{");
   toString(callExpr->caller);
-
   Serial.print("},\"args\":[");
   for (size_t i = 0; i < maxFunctionArgs && callExpr->args[i] != nullptr; i++) {
-    Serial.print("{");
     toString(callExpr->args[i]);
-    Serial.print("},");
+    Serial.print(",");
   }
-  Serial.print("],");
+  Serial.print("]}");
 }
 
 void toString(const Parser::Stmt *stmt) {
   switch (stmt->kind) {
     case Parser::NodeType::BinaryExpr:
       toStringBinaryExpr(static_cast<const Parser::BinaryExpr *>(stmt));
+      break;
+    case Parser::NodeType::LogicalExpr:
+      toStringLogicalExpr(static_cast<const Parser::LogicalExpr *>(stmt));
       break;
     case Parser::NodeType::Identifier:
       toStringIdentifier(static_cast<const Parser::Identifier *>(stmt));
@@ -122,6 +159,12 @@ void toString(const Parser::Stmt *stmt) {
       break;
     case Parser::NodeType::VarDeclaration:
       toStringVarDecl(static_cast<const Parser::VarDeclaration *>(stmt));
+      break;
+    case Parser::NodeType::IfStmt:
+      toStringIfStmt(static_cast<const Parser::IfStmt *>(stmt));
+      break;
+    case Parser::NodeType::BlockStmt:
+      toStringBlockStmt(static_cast<const Parser::BlockStmt *>(stmt));
       break;
     case Parser::NodeType::AssignmentExpr:
       toStringAssignmentExpr(static_cast<const Parser::AssignmentExpr *>(stmt));
@@ -135,24 +178,31 @@ void toString(const Parser::Stmt *stmt) {
     case Parser::NodeType::Undefined:
       GlobalFunctions::restart("Undefined node found");
     default:
-      GlobalFunctions::restart("Undefined statement found when printing AST");
+      GlobalFunctions::restart("Undefined statement found while printing AST");
       break;
   }
 }
 
 void toString(const Parser::Program *program) {
-  Serial.print("{");
+  Serial.print("{\"type\":\"program\",\"body\":[");
 
   for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
     toString(program->body[i]);
   }
-  Serial.print("}");
+  Serial.print("]");
 }
 
 // ----------------MAIN FUNCTIONS-----------------
 void setup() {
   // init connections
   Serial.begin(115200);
+
+  delay(500);
+  Serial.setDebugOutput(true);
+
+  Serial.print("\nReset reason: ");
+  Serial.println(ESP.getResetReason());
+  Serial.println(ESP.getResetInfo());
 
   padsComm->initEspNow(OnDataSent, OnDataRecv);
 
@@ -359,17 +409,17 @@ void loop() {
             Serial.print(tokens[i].value);
             Serial.print("\"\nTokenType: ");
             switch (tokens[i].type) {
+              case Lexer::TokenType::Let:
+                Serial.println("Let");
+                break;
+              case Lexer::TokenType::Const:
+                Serial.println("Const");
+                break;
               case Lexer::TokenType::If:
                 Serial.println("If");
                 break;
               case Lexer::TokenType::Else:
                 Serial.println("Else");
-                break;
-              case Lexer::TokenType::While:
-                Serial.println("While");
-                break;
-              case Lexer::TokenType::For:
-                Serial.println("For");
                 break;
               case Lexer::TokenType::Identifier:
                 Serial.println("Identifier");
@@ -380,20 +430,38 @@ void loop() {
               case Lexer::TokenType::ArithmeticOperator:
                 Serial.println("ArithmeticOperator");
                 break;
+              case Lexer::TokenType::LogicalOperator:
+                Serial.println("LogicalOperator");
+                break;
+              case Lexer::TokenType::RelationalOperator:
+                Serial.println("RelationalOperator");
+                break;
               case Lexer::TokenType::OpenParen:
                 Serial.println("OpenParen");
                 break;
               case Lexer::TokenType::CloseParen:
                 Serial.println("CloseParen");
                 break;
+              case Lexer::TokenType::OpenBrace:
+                Serial.println("OpenBrace");
+                break;
+              case Lexer::TokenType::CloseBrace:
+                Serial.println("CloseBrace");
+                break;
               case Lexer::TokenType::Number:
                 Serial.println("Number");
+                break;
+              case Lexer::TokenType::Semicolon:
+                Serial.println("Semicolon");
+                break;
+              case Lexer::TokenType::Comma:
+                Serial.println("Colon");
                 break;
               case Lexer::TokenType::EndOfFile:
                 Serial.println("EOF");
                 break;
-              default:
-                break;
+                /*default:
+                break;*/
             }
           }
 
@@ -427,6 +495,9 @@ void loop() {
               }
 
               Parser::Program *program = parser.produceAST(code, sizeof(code));
+
+              ESP.wdtFeed(); // keep WatchdogTimer from resetting the program
+
               toString(program);
               Serial.println("Successfully parsed program");
               Values::RuntimeVal *val = interpreter.evaluate(program, &env);

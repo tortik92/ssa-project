@@ -14,8 +14,6 @@ public:
     Const,
     If,
     Else,
-    While,
-    For,
 
     // Literal Types
     Identifier,
@@ -24,13 +22,14 @@ public:
     Equals,
     ArithmeticOperator, // +, -, *, /, %
     RelationalOperator, // <, <=, >, >=, ==, !=
-    LogicalOperator, // !, &&, ||
+    LogicalOperator, // not, and, or
 
     OpenParen, // (
     CloseParen, // )
+    OpenBrace, // {
+    CloseBrace, // }
 
     Semicolon,
-    Dot,
     Comma,
     
     // End of file
@@ -59,15 +58,15 @@ private:
   Token tokens[maxTokens];
   Token* currentToken;
 
-  char keywordVal[keywordCount][6] = { "let", "const", "if", "else", "while", "for" };
+  char keywordVal[keywordCount][6] = { "let", "const", "if", "else", "and", "or" };
 
   const Token keywords[keywordCount]{
     Token(keywordVal[0], TokenType::Let),
     Token(keywordVal[1], TokenType::Const),
     Token(keywordVal[2], TokenType::If),
     Token(keywordVal[3], TokenType::Else),
-    Token(keywordVal[4], TokenType::While),
-    Token(keywordVal[5], TokenType::For)
+    Token(keywordVal[4], TokenType::LogicalOperator),
+    Token(keywordVal[5], TokenType::LogicalOperator),
   };
 
   void addToken(Token* dest, const char* src, size_t srcLen, TokenType tokenType);

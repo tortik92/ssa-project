@@ -16,6 +16,12 @@ Lexer::Token* Lexer::tokenize(char* code, size_t len) {
       case ')':
         addToken(currentToken, &code[i], 1, TokenType::CloseParen);
         break;
+      case '{':
+        addToken(currentToken, &code[i], 1, TokenType::OpenBrace);
+        break;
+      case '}':
+        addToken(currentToken, &code[i], 1, TokenType::CloseBrace);
+        break;
       case '+':
       case '-':
       case '*':
@@ -25,26 +31,24 @@ Lexer::Token* Lexer::tokenize(char* code, size_t len) {
         break;
       case '<':
       case '>':
-        addToken(currentToken, &code[i], i + 1 < len && code[i + 1] == '=' ? 2 : 1, TokenType::RelationalOperator);
+        {
+          uint8_t tokLen = i + 1 < len && code[i + 1] == '=' ? 2 : 1;
+          addToken(currentToken, &code[i], tokLen, TokenType::RelationalOperator);
+          i += tokLen - 1;
+        }
         break;
       case '!':
         if (i + 1 < len && code[i + 1] == '=') {
           addToken(currentToken, &code[i], 2, TokenType::RelationalOperator);
+          i++;
         } else {
-          addToken(currentToken, &code[i], 1, TokenType::LogicalOperator);
-        }
-        break;
-      case '&':
-      case '|':
-        if(i + 1 >= len || code[i + 1] != code[i]) {
-          GlobalFunctions::restart("Expected '", &code[i], "'");
-        } else {
-          addToken(currentToken, &code[i], 2, TokenType::LogicalOperator);
+          GlobalFunctions::restart("Character '!' not recognized");
         }
         break;
       case '=':
         if (i + 1 < len && code[i + 1] == '=') {
           addToken(currentToken, &code[i], 2, TokenType::RelationalOperator);
+          i++;
         } else {
           addToken(currentToken, &code[i], 1, TokenType::Equals);
         }
@@ -54,9 +58,6 @@ Lexer::Token* Lexer::tokenize(char* code, size_t len) {
         break;
       case ',':
         addToken(currentToken, &code[i], 1, TokenType::Comma);
-        break;
-      case '.':
-        addToken(currentToken, &code[i], 1, TokenType::Dot);
         break;
       default:
         // handle multicharacter tokens
@@ -112,7 +113,7 @@ void Lexer::addToken(Token* dest, const char* src, size_t srcLen, TokenType toke
 
 Lexer::TokenType Lexer::getIdentTokenType(const char* ident, size_t len) {
   for (size_t i = 0; i < keywordCount; i++) {
-    if (strncmp(keywords[i].value, ident, len) == 0) {
+    if (strlen(keywords[i].value) == len && strncmp(keywords[i].value, ident, len) == 0) {
       return keywords[i].type;
     }
   }

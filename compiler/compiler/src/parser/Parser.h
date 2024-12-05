@@ -14,6 +14,8 @@ public:
     // statements
     Program,
     VarDeclaration,
+    IfStmt,
+    BlockStmt,
     // expressions
     AssignmentExpr,
     CallExpr,
@@ -21,6 +23,7 @@ public:
     NumericLiteral,
     Identifier,
     BinaryExpr,
+    LogicalExpr
   };
 
   typedef struct Stmt {
@@ -86,7 +89,7 @@ public:
   typedef struct BinaryExpr : Expr {
     Expr* left;
     Expr* right;
-    char op;
+    char* op;
 
     BinaryExpr()
       : Expr(NodeType::BinaryExpr) {}
@@ -106,6 +109,27 @@ public:
       : Expr(NodeType::NumericLiteral) {}
   } NumericLiteral;
 
+  typedef struct LogicalExpr : Expr {
+    Expr* left;
+    Expr* right;
+    char* op;
+
+    LogicalExpr() : Expr(NodeType::LogicalExpr) {}
+  } LogicalExpr;
+
+  typedef struct BlockStmt : Stmt {
+    Stmt* body[maxBlockStatements];
+
+    BlockStmt() : Stmt(NodeType::BlockStmt) {}
+  } BlockStmt;
+
+  typedef struct IfStmt : Stmt {
+    Expr* test;
+    BlockStmt* consequent;
+    BlockStmt* alternate;
+
+    IfStmt() : Stmt(NodeType::IfStmt) {}
+  } IfStmt;
 
   Program* produceAST(char* code, size_t len);
 private:
@@ -121,6 +145,9 @@ private:
   VarDeclaration varDeclarationPool[poolSize];
   AssignmentExpr assignmentExprPool[poolSize];
   CallExpr callExprPool[poolSize];
+  LogicalExpr logicalExprPool[poolSize];
+  BlockStmt blockStmtPool[poolSize];
+  IfStmt ifStmtPool[poolSize];
 
   size_t binaryExprCount = 0;
   size_t identifierCount = 0;
@@ -128,6 +155,9 @@ private:
   size_t varDeclarationCount = 0;
   size_t assignentExprCount = 0;
   size_t callExprCount = 0;
+  size_t logicalExprCount = 0;
+  size_t blockStmtCount = 0;
+  size_t ifStmtCount = 0;
 
   BinaryExpr* newBinaryExpr();
   Identifier* newIdentifier();
@@ -135,12 +165,19 @@ private:
   VarDeclaration* newVarDeclaration();
   AssignmentExpr* newAssignmentExpr();
   CallExpr* newCallExpr();
+  LogicalExpr* newLogicalExpr();
+  BlockStmt* newBlockStmt();
+  IfStmt* newIfStmt();
 
   void cleanup();
 
   Stmt* parseStmt();
   Expr* parseExpr();
   VarDeclaration* parseVarDeclaration();
+  IfStmt* parseIfStmt();
+  BlockStmt* parseBlockStmt();
+  Expr* parseLogicalExpr();
+  Expr* parseRelationalExpr();
   Expr* parseAssignmentExpr();
   Expr* parseAdditiveExpr();
   Expr* parseMultiplicativeExpr();
@@ -155,5 +192,5 @@ private:
 
   Lexer::Token* at();
   Lexer::Token* eat();
-  Lexer::Token* expect(Lexer::TokenType type, const char* err);
+  Lexer::Token* expect(Lexer::TokenType type, const char* expectedVal);
 };
