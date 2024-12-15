@@ -1,6 +1,7 @@
 #include "Interpreter.h"
 
 Values::RuntimeVal* Interpreter::evaluate(Parser::Stmt* astNode, Environment* env) {
+  ESP.wdtFeed();
   switch (astNode->kind) {
     case Parser::NodeType::NumericLiteral:
       {
@@ -76,7 +77,7 @@ void Interpreter::evalIfStmt(Parser::IfStmt* ifStmt, Environment* env) {
     if (static_cast<Values::BooleanVal*>(result)->value) {
       Serial.println("Evaluating consequent block");
       evalBlockStmt(ifStmt->consequent, env);
-    } else {
+    } else if (ifStmt->alternate != nullptr) {
       Serial.println("Evaluating alternate block");
       evalBlockStmt(ifStmt->alternate, env);
     }
@@ -84,19 +85,6 @@ void Interpreter::evalIfStmt(Parser::IfStmt* ifStmt, Environment* env) {
 }
 
 void Interpreter::evalBlockStmt(Parser::BlockStmt* blockStmt, Environment* parent) {
-  Serial.println(ESP.getFreeContStack());
-
-  uint32_t free;
-  uint32_t max;
-  uint8_t frag;
-  ESP.getHeapStats(&free, &max, &frag);
-  Serial.print("Free Heap: ");
-  Serial.println(free);
-  Serial.print("Max Heap: ");
-  Serial.println(max);
-  Serial.print("Heap fragmentation: ");
-  Serial.print(frag);
-  Serial.println("%");
   Environment env(parent);
   for (size_t i = 0; i < maxBlockStatements && blockStmt->body[i] != nullptr; i++) {
     Serial.print("In loop\nIndex: ");
@@ -112,7 +100,7 @@ Values::BooleanVal* Interpreter::evalLogicalExpr(Parser::LogicalExpr* logicalExp
   Serial.println("Evaluated left and right part of logical expression");
 
   if (left->type != Values::ValueType::Boolean || right->type != Values::ValueType::Boolean) {
-    GlobalFunctions::restart("Cannot use ", logicalExpr->op, " on non-boolean values");
+    GlobalFunctions::restart("Cannot use \"", logicalExpr->op, "\" on non-boolean values");
     return nullptr;
   } else {
     Values::BooleanVal* leftBool = static_cast<Values::BooleanVal*>(left);

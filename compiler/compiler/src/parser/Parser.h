@@ -9,6 +9,18 @@ public:
     this->lexer = lexer;
   }
 
+  ~Parser() {
+    delete[] binaryExprPool;
+    delete[] identifierPool;
+    delete[] numericLiteralPool;
+    delete[] varDeclarationPool;
+    delete[] assignmentExprPool;
+    delete[] callExprPool;
+    delete[] logicalExprPool;
+    delete[] blockStmtPool;
+    delete[] ifStmtPool;
+  }
+
   enum class NodeType {
     Undefined,
     // statements
@@ -80,10 +92,10 @@ public:
 
     CallExpr()
       : Expr(NodeType::CallExpr) {
-        for(size_t i = 0; i < maxFunctionArgs; i++) {
-          args[i] = nullptr;
-        }
+      for (size_t i = 0; i < maxFunctionArgs; i++) {
+        args[i] = nullptr;
       }
+    }
   } CallExpr;
 
   typedef struct BinaryExpr : Expr {
@@ -114,13 +126,15 @@ public:
     Expr* right;
     char* op;
 
-    LogicalExpr() : Expr(NodeType::LogicalExpr) {}
+    LogicalExpr()
+      : Expr(NodeType::LogicalExpr) {}
   } LogicalExpr;
 
   typedef struct BlockStmt : Stmt {
     Stmt* body[maxBlockStatements];
 
-    BlockStmt() : Stmt(NodeType::BlockStmt) {}
+    BlockStmt()
+      : Stmt(NodeType::BlockStmt) {}
   } BlockStmt;
 
   typedef struct IfStmt : Stmt {
@@ -128,7 +142,8 @@ public:
     BlockStmt* consequent;
     BlockStmt* alternate;
 
-    IfStmt() : Stmt(NodeType::IfStmt) {}
+    IfStmt()
+      : Stmt(NodeType::IfStmt) {}
   } IfStmt;
 
   Program* produceAST(char* code, size_t len);
@@ -136,24 +151,24 @@ private:
   Program program;
   Lexer* lexer;
 
-  Lexer::Token* tokensPtr;
+  std::queue<std::shared_ptr<Lexer::Token>> tokens;
   size_t currentStmtIndex;
 
-  BinaryExpr binaryExprPool[poolSize];
-  Identifier identifierPool[poolSize];
-  NumericLiteral numericLiteralPool[poolSize];
-  VarDeclaration varDeclarationPool[poolSize];
-  AssignmentExpr assignmentExprPool[poolSize];
-  CallExpr callExprPool[poolSize];
-  LogicalExpr logicalExprPool[poolSize];
-  BlockStmt blockStmtPool[poolSize];
-  IfStmt ifStmtPool[poolSize];
+  BinaryExpr* binaryExprPool = new BinaryExpr[poolSize];
+  Identifier* identifierPool = new Identifier[poolSize];
+  NumericLiteral* numericLiteralPool = new NumericLiteral[poolSize];
+  VarDeclaration* varDeclarationPool = new VarDeclaration[poolSize];
+  AssignmentExpr* assignmentExprPool = new AssignmentExpr[poolSize];
+  CallExpr* callExprPool = new CallExpr[poolSize];
+  LogicalExpr* logicalExprPool = new LogicalExpr[poolSize];
+  BlockStmt* blockStmtPool = new BlockStmt[poolSize];
+  IfStmt* ifStmtPool = new IfStmt[poolSize];
 
   size_t binaryExprCount = 0;
   size_t identifierCount = 0;
   size_t numericLiteralCount = 0;
   size_t varDeclarationCount = 0;
-  size_t assignentExprCount = 0;
+  size_t assignmentExprCount = 0;
   size_t callExprCount = 0;
   size_t logicalExprCount = 0;
   size_t blockStmtCount = 0;
@@ -191,6 +206,6 @@ private:
   void push(Stmt* stmt);
 
   Lexer::Token* at();
-  Lexer::Token* eat();
-  Lexer::Token* expect(Lexer::TokenType type, const char* expectedVal);
+  std::shared_ptr<Lexer::Token> eat();
+  std::shared_ptr<Lexer::Token> expect(Lexer::TokenType type, const char* expectedVal);
 };

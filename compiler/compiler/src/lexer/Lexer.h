@@ -1,7 +1,9 @@
 #pragma once
 
+#include <queue>
+#include <memory>
+
 #include <Arduino.h>
-#include <ctype.h>
 
 #include "Constants.h"
 #include "GlobalFunctions.h"
@@ -53,10 +55,9 @@ public:
     }
   } Token;
 
-  Token* tokenize(char* code, size_t len);
+  std::queue<std::shared_ptr<Token>> tokenize(char* code, size_t len);
 private:
-  Token tokens[maxTokens];
-  Token* currentToken;
+  std::queue<std::shared_ptr<Token>> tokens;
 
   char keywordVal[keywordCount][6] = { "let", "const", "if", "else", "and", "or" };
 
@@ -69,7 +70,7 @@ private:
     Token(keywordVal[5], TokenType::LogicalOperator),
   };
 
-  void addToken(Token* dest, const char* src, size_t srcLen, TokenType tokenType);
+  void addToken(const char* src, size_t srcLen, TokenType tokenType);
 
   TokenType getIdentTokenType(const char* ident, size_t len);
 };

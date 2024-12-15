@@ -9,6 +9,14 @@ class Environment;
 
 class Values {
 public:
+  ~Values() {
+    Serial.println("Values destructor");
+    delete[] nullValPool; 
+    delete[] booleanValPool;
+    delete[] numberValPool;
+    delete[] nativeFnPool;
+  }
+
   enum class ValueType {
     Null,
     Boolean,
@@ -102,10 +110,10 @@ public:
     nativeFnCount = 0;
   }
 private:
-  NullVal nullValPool[poolSize];
-  BooleanVal booleanValPool[poolSize];
-  NumberVal numberValPool[poolSize];
-  NativeFnValue nativeFnPool[poolSize];
+  NullVal* nullValPool = new NullVal[poolSize];
+  BooleanVal* booleanValPool = new BooleanVal[poolSize];
+  NumberVal* numberValPool = new NumberVal[poolSize];
+  NativeFnValue* nativeFnPool = new NativeFnValue[poolSize];
 
   size_t nullValCount = 0;
   size_t booleanValCount = 0;

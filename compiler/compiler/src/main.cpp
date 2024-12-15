@@ -66,27 +66,25 @@ void toString(const Parser::Stmt *stmt);
 
 void toStringBinaryExpr(const Parser::BinaryExpr *binaryExpr) {
   Serial.print("{\"type\":\"binaryExpr\",");
-  Serial.print("\"left\":{");
+  Serial.print("\"left\":");
   toString(static_cast<const Parser::Stmt *>(binaryExpr->left));
-  Serial.print("},");
-  Serial.print("\"operator\":\"");
+  Serial.print(",\"operator\":\"");
   Serial.print(binaryExpr->op);
   Serial.print("\",");
-  Serial.print("\"right\":{");
+  Serial.print("\"right\":");
   toString(static_cast<const Parser::Stmt *>(binaryExpr->right));
-  Serial.print("}}");
+  Serial.print("}");
 }
 
 void toStringLogicalExpr(const Parser::LogicalExpr *logicalExpr) {
   Serial.print("{\"type\":\"logicalExpr\",");
-  Serial.print("\"left\":{");
+  Serial.print("\"left\":");
   toString(static_cast<const Parser::Stmt *>(logicalExpr->left));
-  Serial.print("},");
-  Serial.print("\"operator\":\"");
+  Serial.print(",\"operator\":\"");
   Serial.print(logicalExpr->op);
-  Serial.print("\",\"right\":{");
+  Serial.print("\",\"right\":");
   toString(static_cast<const Parser::Stmt *>(logicalExpr->right));
-  Serial.print("}}");
+  Serial.print("}");
 }
 
 void toStringVarDecl(const Parser::VarDeclaration *varDecl) {
@@ -95,9 +93,9 @@ void toStringVarDecl(const Parser::VarDeclaration *varDecl) {
   Serial.print(varDecl->constant ? "\"true\"," : "\"false\",");
   Serial.print("\"identifier\":\"");
   Serial.print(varDecl->ident);
-  Serial.print("\",\"value\":{");
+  Serial.print("\",\"value\":");
   if (varDecl->value != nullptr) toString(varDecl->value);
-  Serial.print("}}");
+  Serial.print("}");
 }
 
 void toStringBlockStmt(const Parser::BlockStmt *blockStmt) {
@@ -111,9 +109,9 @@ void toStringBlockStmt(const Parser::BlockStmt *blockStmt) {
 
 void toStringIfStmt(const Parser::IfStmt *ifStmt) {
   Serial.print("{\"type\":\"ifStmt\",");
-  Serial.print("\"test\":{");
+  Serial.print("\"test\":");
   toString(ifStmt->test);
-  Serial.print("},\"consequent\":");
+  Serial.print(",\"consequent\":");
   toStringBlockStmt(ifStmt->consequent);
   Serial.print(",\"alternate\":");
   if (ifStmt->alternate != nullptr) {
@@ -133,9 +131,9 @@ void toStringAssignmentExpr(const Parser::AssignmentExpr *assignmentExpr) {
 }
 
 void toStringCallExpr(const Parser::CallExpr *callExpr) {
-  Serial.print("{\"type\":\"callExpr\",\"caller\":{");
+  Serial.print("{\"type\":\"callExpr\",\"caller\":");
   toString(callExpr->caller);
-  Serial.print("},\"args\":[");
+  Serial.print(",\"args\":[");
   for (size_t i = 0; i < maxFunctionArgs && callExpr->args[i] != nullptr; i++) {
     toString(callExpr->args[i]);
     Serial.print(",");
@@ -186,10 +184,17 @@ void toString(const Parser::Stmt *stmt) {
 void toString(const Parser::Program *program) {
   Serial.print("{\"type\":\"program\",\"body\":[");
 
-  for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
-    toString(program->body[i]);
+  size_t i = 0;
+  while (true) {
+    if (i < maxProgramStatements && program->body[i] != nullptr) {
+      toString(program->body[i]);
+      Serial.println(",");
+      i++;
+    } else {
+      break;
+    }
   }
-  Serial.print("]");
+  Serial.print("]}");
 }
 
 // ----------------MAIN FUNCTIONS-----------------
@@ -402,13 +407,17 @@ void loop() {
 
           Serial.println(code);
 
-          Lexer::Token *tokens = lexer.tokenize(code, sizeof(code));
+          std::queue<std::shared_ptr<Lexer::Token>> tokens = lexer.tokenize(code, sizeof(code));
 
-          for (size_t i = 0; i < maxTokens && tokens[i].value != nullptr; i++) {
+          Serial.println("Tokenized!");
+
+          while (!tokens.empty()) {
+            Lexer::Token *token = tokens.front().get();
+            tokens.pop();
             Serial.print("Value: \"");
-            Serial.print(tokens[i].value);
+            Serial.print(token->value);
             Serial.print("\"\nTokenType: ");
-            switch (tokens[i].type) {
+            switch (token->type) {
               case Lexer::TokenType::Let:
                 Serial.println("Let");
                 break;
@@ -481,27 +490,37 @@ void loop() {
         }
       case phoneInput_interpret:
         {
-          char code[maxCharsAllowed];
+          GlobalFunctions::printMemoryStats("before program");
+
           Environment env;
 
           Serial.println("Ready to interpret!");
 
           while (true) {
             if (Serial.available() > 0) {
-              strncpy(code, Serial.readStringUntil('\n').c_str(), maxCharsAllowed);
+              String code = Serial.readStringUntil('\n');
 
-              if (strcmp(code, "exit") == 0) {
+              if(code.equals("exit")) {
                 break;
               }
 
-              Parser::Program *program = parser.produceAST(code, sizeof(code));
 
-              ESP.wdtFeed(); // keep WatchdogTimer from resetting the program
+              Serial.println("Got string: ");
+              Serial.println(code);
 
+              char* code_cstr = new char[code.length() + 1];
+              code.toCharArray(code_cstr, code.length() + 1, 0);
+
+              Parser::Program *program = parser.produceAST(code_cstr, maxCharsAllowed);
               toString(program);
               Serial.println("Successfully parsed program");
+              GlobalFunctions::printMemoryStats("after AST printing");
+              ESP.wdtFeed();
+
               Values::RuntimeVal *val = interpreter.evaluate(program, &env);
-              Serial.println("Successfully evaluated program");
+              GlobalFunctions::printMemoryStats("after evaluation");
+              ESP.wdtFeed();
+
 
               Serial.print("Value: ");
               switch (val->type) {
@@ -529,7 +548,10 @@ void loop() {
                   GlobalFunctions::restart("Undefined ValueType");
                   break;
               }
-              strncpy(code, "\0", sizeof(code));
+
+              delete[] code_cstr;
+
+              GlobalFunctions::printMemoryStats("after program");
             }
           }
 
