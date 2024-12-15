@@ -23,6 +23,12 @@ Parser::Stmt* Parser::parseStmt() {
     case Lexer::TokenType::If:
       Serial.println("Parsing if statement");
       return parseIfStmt();
+    case Lexer::TokenType::While:
+      Serial.println("Parsing while statement");
+      return parseWhileStmt();
+    case Lexer::TokenType::Break:
+      Serial.println("Parsing break statement");
+      return parseBreakStmt();
     default:
       Serial.println("Parsing expr");
       return parseExpr();
@@ -71,6 +77,27 @@ Parser::IfStmt* Parser::parseIfStmt() {
   }
 
   return ifStmt;
+}
+
+Parser::WhileStmt* Parser::parseWhileStmt() {
+  eat();  // consume 'while'
+  WhileStmt* whileStmt = newWhileStmt();
+
+  expect(Lexer::TokenType::OpenParen, "(");
+  whileStmt->test = parseExpr();
+  expect(Lexer::TokenType::CloseParen, ")");
+
+  whileStmt->body = parseBlockStmt();
+
+  return whileStmt;
+}
+
+Parser::BreakStmt* Parser::parseBreakStmt() {
+  eat(); // consume 'break'
+  Serial.println("Parsing break statement");
+  BreakStmt* breakStmt = newBreakStmt();
+
+  return breakStmt;
 }
 
 Parser::BlockStmt* Parser::parseBlockStmt() {
@@ -255,6 +282,8 @@ Parser::Expr* Parser::parsePrimaryExpr() {
     case Lexer::TokenType::Const:
     case Lexer::TokenType::If:
     case Lexer::TokenType::Else:
+    case Lexer::TokenType::While:
+    case Lexer::TokenType::Break:
     case Lexer::TokenType::LogicalOperator:
       {
         Identifier* identifier = newIdentifier();
@@ -341,6 +370,8 @@ void Parser::cleanup() {
     callExprPool[i] = CallExpr();
     blockStmtPool[i] = BlockStmt();
     ifStmtPool[i] = IfStmt();
+    whileStmtPool[i] = WhileStmt();
+    breakStmtPool[i] = BreakStmt();
   }
 
   binaryExprCount = 0;
@@ -351,6 +382,8 @@ void Parser::cleanup() {
   callExprCount = 0;
   blockStmtCount = 0;
   ifStmtCount = 0;
+  whileStmtCount = 0;
+  breakStmtCount = 0;
 }
 
 Parser::BinaryExpr* Parser::newBinaryExpr() {
@@ -414,4 +447,18 @@ Parser::IfStmt* Parser::newIfStmt() {
     GlobalFunctions::restart("Out of memory for IfStmt nodes");
   }
   return &ifStmtPool[ifStmtCount++];
+}
+
+Parser::WhileStmt* Parser::newWhileStmt() {
+  if (whileStmtCount >= poolSize) {
+    GlobalFunctions::restart("Out of memory for WhileStmt nodes");
+  }
+  return &whileStmtPool[whileStmtCount++];
+}
+
+Parser::BreakStmt* Parser::newBreakStmt() {
+  if (breakStmtCount >= poolSize) {
+    GlobalFunctions::restart("Out of memory for BreakStmt nodes");
+  }
+  return &breakStmtPool[breakStmtCount++];
 }

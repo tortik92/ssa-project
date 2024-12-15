@@ -5,7 +5,6 @@ Values::RuntimeVal* Interpreter::evaluate(Parser::Stmt* astNode, Environment* en
   switch (astNode->kind) {
     case Parser::NodeType::NumericLiteral:
       {
-        Serial.println("NumLit");
         Values::NumberVal* numVal = env->values.newNumberVal();
         Parser::NumericLiteral* numericLiteral = static_cast<Parser::NumericLiteral*>(astNode);
 
@@ -14,33 +13,26 @@ Values::RuntimeVal* Interpreter::evaluate(Parser::Stmt* astNode, Environment* en
         return numVal;
       }
     case Parser::NodeType::Identifier:
-      Serial.println("Ident");
       return evalIdentifier(static_cast<Parser::Identifier*>(astNode), env);
     case Parser::NodeType::BinaryExpr:
-      Serial.println("BinExp");
       return evalBinaryExpr(static_cast<Parser::BinaryExpr* >(astNode), env);
     case Parser::NodeType::VarDeclaration:
-      Serial.println("VarDecl");
       return evalVarDeclaration(static_cast<Parser::VarDeclaration* >(astNode), env);
     case Parser::NodeType::IfStmt:
-      Serial.println("IfStmt");
-      evalIfStmt(static_cast<Parser::IfStmt* >(astNode), env);
-      break;
+      return evalIfStmt(static_cast<Parser::IfStmt* >(astNode), env);
+    case Parser::NodeType::WhileStmt:
+      return evalWhileStmt(static_cast<Parser::WhileStmt*>(astNode), env);
+    case Parser::NodeType::BreakStmt:
+      return evalBreakStmt(static_cast<Parser::BreakStmt*>(astNode), env);
     case Parser::NodeType::BlockStmt:
-      Serial.println("BlockStmt");
-      evalBlockStmt(static_cast<Parser::BlockStmt* >(astNode), env);
-      break;
+      return evalBlockStmt(static_cast<Parser::BlockStmt* >(astNode), env);
     case Parser::NodeType::LogicalExpr:
-      Serial.println("LogicalExpr");
       return evalLogicalExpr(static_cast<Parser::LogicalExpr* >(astNode), env);
     case Parser::NodeType::AssignmentExpr:
-      Serial.println("AssignmentExpr");
       return evalAssignmentExpr(static_cast<Parser::AssignmentExpr*>(astNode), env);
     case Parser::NodeType::CallExpr:
-      Serial.println("CallExpr");
       return evalCallExpr(static_cast<Parser::CallExpr*>(astNode), env);
     case Parser::NodeType::Program:
-      Serial.println("Program");
       return evalProgram(static_cast<Parser::Program*>(astNode), env);
     case Parser::NodeType::Undefined:
       GlobalFunctions::restart("Undefined NodeType found while interpreting");
@@ -58,6 +50,9 @@ Values::RuntimeVal* Interpreter::evalProgram(Parser::Program* program, Environme
 
   for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
     lastEvaluated = evaluate(program->body[i], env);
+    if(lastEvaluated->type == Values::ValueType::Break) {
+      GlobalFunctions::restart("A break statement may only be used within a loop");
+    }
   }
 
   return lastEvaluated;
@@ -68,7 +63,7 @@ Values::RuntimeVal* Interpreter::evalVarDeclaration(Parser::VarDeclaration* decl
   return env->declareVar(declaration->ident, val, declaration->constant);
 }
 
-void Interpreter::evalIfStmt(Parser::IfStmt* ifStmt, Environment* env) {
+Values::RuntimeVal* Interpreter::evalIfStmt(Parser::IfStmt* ifStmt, Environment* env) {
   Values::RuntimeVal* result = evaluate(ifStmt->test, env);
   Serial.println("Evaluated test of if statement");
   if (result->type != Values::ValueType::Boolean) {
@@ -76,21 +71,57 @@ void Interpreter::evalIfStmt(Parser::IfStmt* ifStmt, Environment* env) {
   } else {
     if (static_cast<Values::BooleanVal*>(result)->value) {
       Serial.println("Evaluating consequent block");
-      evalBlockStmt(ifStmt->consequent, env);
+      return evalBlockStmt(ifStmt->consequent, env);
     } else if (ifStmt->alternate != nullptr) {
       Serial.println("Evaluating alternate block");
-      evalBlockStmt(ifStmt->alternate, env);
+      return evalBlockStmt(ifStmt->alternate, env);
     }
   }
+  return env->values.newNullVal();
 }
 
-void Interpreter::evalBlockStmt(Parser::BlockStmt* blockStmt, Environment* parent) {
-  Environment env(parent);
-  for (size_t i = 0; i < maxBlockStatements && blockStmt->body[i] != nullptr; i++) {
-    Serial.print("In loop\nIndex: ");
-    Serial.println(i);
-    evaluate(blockStmt->body[i], &env);
+Values::RuntimeVal* Interpreter::evalWhileStmt(Parser::WhileStmt* whileStmt, Environment* env) {
+  Values::RuntimeVal* testResult = evaluate(whileStmt->test, env);
+
+  if (testResult->type != Values::ValueType::Boolean) {
+    GlobalFunctions::restart("Expected boolean value in while statement condition");
+  } else {
+    Environment* childEnv = new Environment(env);
+    Parser::Stmt** body = whileStmt->body->body; // get body of BlockStmt
+    Values::RuntimeVal* result = nullptr;
+
+    while (static_cast<Values::BooleanVal*>(evaluate(whileStmt->test, env))->value) {
+      Serial.println("While test evaluated to true");
+      for (size_t i = 0; i < maxBlockStatements && body[i] != nullptr; i++) {
+        result = evaluate(body[i], childEnv);
+
+        if(result->type == Values::ValueType::Break) {
+          Serial.println("\"break\" found in \"while\" loop, jumping...");
+          goto afterWhile;
+        }
+      }
+    }
+    afterWhile:
+
+    delete childEnv;
   }
+
+  return env->values.newNullVal();
+}
+
+Values::BreakVal* Interpreter::evalBreakStmt(Parser::BreakStmt* breakStmt, Environment* env) {
+  return env->values.newBreakVal();
+}
+
+Values::RuntimeVal* Interpreter::evalBlockStmt(Parser::BlockStmt* blockStmt, Environment* parent) {
+  Environment* env = new Environment(parent);
+  Values::RuntimeVal* lastEvaluated = nullptr;
+  for (size_t i = 0; i < maxBlockStatements && blockStmt->body[i] != nullptr; i++) {
+    lastEvaluated = evaluate(blockStmt->body[i], env);
+    if(lastEvaluated->type == Values::ValueType::Break) break;
+  }
+  delete env;
+  return lastEvaluated;
 }
 
 Values::BooleanVal* Interpreter::evalLogicalExpr(Parser::LogicalExpr* logicalExpr, Environment* env) {

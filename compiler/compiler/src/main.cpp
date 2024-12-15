@@ -122,6 +122,19 @@ void toStringIfStmt(const Parser::IfStmt *ifStmt) {
   Serial.print("}");
 }
 
+void toStringWhileStmt(const Parser::WhileStmt *whileStmt) {
+  Serial.print("{\"type\":\"whileStmt\",");
+  Serial.print("\"test\":");
+  toString(whileStmt->test);
+  Serial.print(",\"body\":");
+  toStringBlockStmt(whileStmt->body);
+  Serial.print("}");
+}
+
+void toStringBreakStmt(const Parser::BreakStmt *breakStmt) {
+  Serial.print("{\"type\":\"breakStmt\"}");
+}
+
 void toStringAssignmentExpr(const Parser::AssignmentExpr *assignmentExpr) {
   Serial.print("{\"type\":\"assignmentExpr\",\"assignee\":");
   toString(assignmentExpr->assignee);
@@ -160,6 +173,12 @@ void toString(const Parser::Stmt *stmt) {
       break;
     case Parser::NodeType::IfStmt:
       toStringIfStmt(static_cast<const Parser::IfStmt *>(stmt));
+      break;
+    case Parser::NodeType::WhileStmt:
+      toStringWhileStmt(static_cast<const Parser::WhileStmt *>(stmt));
+      break;
+    case Parser::NodeType::BreakStmt:
+      toStringBreakStmt(static_cast<const Parser::BreakStmt *>(stmt));
       break;
     case Parser::NodeType::BlockStmt:
       toStringBlockStmt(static_cast<const Parser::BlockStmt *>(stmt));
@@ -430,6 +449,12 @@ void loop() {
               case Lexer::TokenType::Else:
                 Serial.println("Else");
                 break;
+              case Lexer::TokenType::While:
+                Serial.println("While");
+                break;
+              case Lexer::TokenType::Break:
+                Serial.println("Break");
+                break;
               case Lexer::TokenType::Identifier:
                 Serial.println("Identifier");
                 break;
@@ -511,7 +536,7 @@ void loop() {
               char* code_cstr = new char[code.length() + 1];
               code.toCharArray(code_cstr, code.length() + 1, 0);
 
-              Parser::Program *program = parser.produceAST(code_cstr, maxCharsAllowed);
+              Parser::Program *program = parser.produceAST(code_cstr, code.length() + 1);
               toString(program);
               Serial.println("Successfully parsed program");
               GlobalFunctions::printMemoryStats("after AST printing");

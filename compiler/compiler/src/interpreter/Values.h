@@ -10,18 +10,19 @@ class Environment;
 class Values {
 public:
   ~Values() {
-    Serial.println("Values destructor");
-    delete[] nullValPool; 
+    delete[] nullValPool;
     delete[] booleanValPool;
     delete[] numberValPool;
     delete[] nativeFnPool;
+    delete[] breakPool;
   }
 
   enum class ValueType {
     Null,
     Boolean,
     Number,
-    NativeFn
+    NativeFn,
+    Break,
   };
 
   typedef struct RuntimeVal {
@@ -57,14 +58,17 @@ public:
 
   using FunctionCall = std::function<RuntimeVal*(RuntimeVal* args[maxFunctionArgs], Environment* env)>;
 
-  typedef struct NativeFnValue : Values::RuntimeVal {
+  typedef struct NativeFnValue : RuntimeVal {
     FunctionCall call;
 
     NativeFnValue()
-      : RuntimeVal(Values::ValueType::NativeFn) {}
+      : RuntimeVal(ValueType::NativeFn) {}
   } NativeFnValue;
 
-
+  typedef struct BreakVal : RuntimeVal {
+    BreakVal()
+      : RuntimeVal(ValueType::Break) {}
+  } BreakVal;
 
   NullVal* newNullVal() {
     if (nullValCount >= poolSize) {
@@ -90,9 +94,16 @@ public:
 
   NativeFnValue* newNativeFn() {
     if (nativeFnCount >= poolSize) {
-      GlobalFunctions::restart("Out of memory for NumberVal runtime values");
+      GlobalFunctions::restart("Out of memory for NativeFnVal runtime values");
     }
     return &nativeFnPool[nativeFnCount++];
+  }
+
+  BreakVal* newBreakVal() {
+    if (breakCount >= poolSize) {
+      GlobalFunctions::restart("Out of memory for BreakVal runtime values");
+    }
+    return &breakPool[breakCount++];
   }
 
 
@@ -102,21 +113,25 @@ public:
       booleanValPool[i] = BooleanVal();
       numberValPool[i] = NumberVal();
       nativeFnPool[i] = NativeFnValue();
+      breakPool[i] = BreakVal();
     }
 
     nullValCount = 0;
     booleanValCount = 0;
     numberValCount = 0;
     nativeFnCount = 0;
+    breakCount = 0;
   }
 private:
   NullVal* nullValPool = new NullVal[poolSize];
   BooleanVal* booleanValPool = new BooleanVal[poolSize];
   NumberVal* numberValPool = new NumberVal[poolSize];
   NativeFnValue* nativeFnPool = new NativeFnValue[poolSize];
+  BreakVal* breakPool = new BreakVal[poolSize];
 
   size_t nullValCount = 0;
   size_t booleanValCount = 0;
   size_t numberValCount = 0;
   size_t nativeFnCount = 0;
+  size_t breakCount = 0;
 };

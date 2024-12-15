@@ -16,24 +16,26 @@ public:
     Const,
     If,
     Else,
+    While,
+    Break,
 
     // Literal Types
     Identifier,
     Number,
 
     Equals,
-    ArithmeticOperator, // +, -, *, /, %
-    RelationalOperator, // <, <=, >, >=, ==, !=
-    LogicalOperator, // not, and, or
+    ArithmeticOperator,  // +, -, *, /, %
+    RelationalOperator,  // <, <=, >, >=, ==, !=
+    LogicalOperator,     // not, and, or
 
-    OpenParen, // (
-    CloseParen, // )
-    OpenBrace, // {
-    CloseBrace, // }
+    OpenParen,   // (
+    CloseParen,  // )
+    OpenBrace,   // {
+    CloseBrace,  // }
 
     Semicolon,
     Comma,
-    
+
     // End of file
     EndOfFile,
   };
@@ -51,7 +53,9 @@ public:
       : value(_value), type(_type) {}
 
     ~Token() {
-      delete[] value;
+      if (value != nullptr) {
+        delete[] value;
+      }
     }
   } Token;
 
@@ -59,15 +63,17 @@ public:
 private:
   std::queue<std::shared_ptr<Token>> tokens;
 
-  char keywordVal[keywordCount][6] = { "let", "const", "if", "else", "and", "or" };
+  char keywordVal[keywordCount][6] = { "let", "const", "if", "else", "while", "break", "and", "or" };
 
   const Token keywords[keywordCount]{
     Token(keywordVal[0], TokenType::Let),
     Token(keywordVal[1], TokenType::Const),
     Token(keywordVal[2], TokenType::If),
     Token(keywordVal[3], TokenType::Else),
-    Token(keywordVal[4], TokenType::LogicalOperator),
-    Token(keywordVal[5], TokenType::LogicalOperator),
+    Token(keywordVal[4], TokenType::While),
+    Token(keywordVal[5], TokenType::Break),
+    Token(keywordVal[6], TokenType::LogicalOperator),
+    Token(keywordVal[7], TokenType::LogicalOperator),
   };
 
   void addToken(const char* src, size_t srcLen, TokenType tokenType);

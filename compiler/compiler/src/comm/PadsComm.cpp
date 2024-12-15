@@ -175,6 +175,8 @@ void PadsComm::initEspNow(esp_now_send_cb_t OnDataSent, esp_now_recv_cb_t OnData
     Serial.println("Successfully initialized ESP-NOW");
   }
 
+  esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+
   esp_now_register_send_cb(OnDataSent);
   esp_now_register_recv_cb(OnDataRecv);
 
@@ -191,6 +193,7 @@ void PadsComm::initEspNow(esp_now_send_cb_t OnDataSent, esp_now_recv_cb_t OnData
     if (esp_now_add_peer(padMACAddrs[i], ESP_NOW_ROLE_COMBO, channel, key, keylen) != 0) {
       padsArray[i].isActive = false;
     } else {
+      printWithMac("Could not add pad ", padMACAddrs[i]);
     }
   }
 

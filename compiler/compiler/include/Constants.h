@@ -43,7 +43,7 @@ const int defaultBeat[paramLen] = {200, 200, 400, 400, 200, 200, 0, 0};
 // lexer
 const uint8_t maxCharsAllowed = 255;
 const uint8_t maxTokens = 128;
-const uint8_t keywordCount = 6;
+const uint8_t keywordCount = 8;
 const uint8_t intAsStrLen = 11;
 
 // parser

@@ -27,6 +27,8 @@ public:
     Program,
     VarDeclaration,
     IfStmt,
+    WhileStmt,
+    BreakStmt,
     BlockStmt,
     // expressions
     AssignmentExpr,
@@ -146,6 +148,19 @@ public:
       : Stmt(NodeType::IfStmt) {}
   } IfStmt;
 
+  typedef struct WhileStmt : Stmt {
+    Expr* test;
+    BlockStmt* body;
+
+    WhileStmt()
+      : Stmt(NodeType::WhileStmt) {}
+  } WhileStmt;
+
+  typedef struct BreakStmt : Stmt {
+    BreakStmt()
+      : Stmt(NodeType::BreakStmt) { }
+  } BreakStmt;
+
   Program* produceAST(char* code, size_t len);
 private:
   Program program;
@@ -163,6 +178,8 @@ private:
   LogicalExpr* logicalExprPool = new LogicalExpr[poolSize];
   BlockStmt* blockStmtPool = new BlockStmt[poolSize];
   IfStmt* ifStmtPool = new IfStmt[poolSize];
+  WhileStmt* whileStmtPool = new WhileStmt[poolSize];
+  BreakStmt* breakStmtPool = new BreakStmt[poolSize];
 
   size_t binaryExprCount = 0;
   size_t identifierCount = 0;
@@ -173,6 +190,8 @@ private:
   size_t logicalExprCount = 0;
   size_t blockStmtCount = 0;
   size_t ifStmtCount = 0;
+  size_t whileStmtCount = 0;
+  size_t breakStmtCount = 0;
 
   BinaryExpr* newBinaryExpr();
   Identifier* newIdentifier();
@@ -183,6 +202,8 @@ private:
   LogicalExpr* newLogicalExpr();
   BlockStmt* newBlockStmt();
   IfStmt* newIfStmt();
+  WhileStmt* newWhileStmt();
+  BreakStmt* newBreakStmt();
 
   void cleanup();
 
@@ -190,6 +211,8 @@ private:
   Expr* parseExpr();
   VarDeclaration* parseVarDeclaration();
   IfStmt* parseIfStmt();
+  WhileStmt* parseWhileStmt();
+  BreakStmt* parseBreakStmt();
   BlockStmt* parseBlockStmt();
   Expr* parseLogicalExpr();
   Expr* parseRelationalExpr();
