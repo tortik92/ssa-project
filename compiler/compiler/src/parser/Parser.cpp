@@ -14,8 +14,8 @@ Parser::Program* Parser::produceAST(char* code, size_t len) {
 }
 
 Parser::Stmt* Parser::parseStmt() {
-  Serial.println(at()->value);
-  switch (at()->type) {
+  Serial.println(at().value);
+  switch (at().type) {
     case Lexer::TokenType::Let:
     case Lexer::TokenType::Const:
       Serial.println("Parsing var decl");
@@ -36,14 +36,14 @@ Parser::Stmt* Parser::parseStmt() {
 }
 
 Parser::VarDeclaration* Parser::parseVarDeclaration() {
-  const bool isConstant = eat().get()->type == Lexer::TokenType::Const;
-  const char* ident = expect(Lexer::TokenType::Identifier, "identifier after let/const").get()->value;
+  const bool isConstant = eat().type == Lexer::TokenType::Const;
+  const char* ident = expect(Lexer::TokenType::Identifier, "identifier after let/const").value;
 
   VarDeclaration* varDecl = newVarDeclaration();
   varDecl->constant = isConstant;
   varDecl->ident = ident;
 
-  if (at()->type == Lexer::TokenType::Semicolon) {
+  if (at().type == Lexer::TokenType::Semicolon) {
     eat();
     if (isConstant) {
       GlobalFunctions::restart("Uninitialized const variable");
@@ -71,7 +71,7 @@ Parser::IfStmt* Parser::parseIfStmt() {
 
   ifStmt->consequent = parseBlockStmt();
   ifStmt->alternate = nullptr;
-  if (at()->type == Lexer::TokenType::Else) {
+  if (at().type == Lexer::TokenType::Else) {
     eat();  // consume 'else'
     ifStmt->alternate = parseBlockStmt();
   }
@@ -105,7 +105,7 @@ Parser::BlockStmt* Parser::parseBlockStmt() {
   BlockStmt* blockStmt = newBlockStmt();
 
   size_t lineCount = 0;
-  while (at()->type != Lexer::TokenType::CloseBrace) {
+  while (at().type != Lexer::TokenType::CloseBrace) {
     if (endOfFile()) {
       GlobalFunctions::restart("Reached end of file, expected '}'");
     }
@@ -131,8 +131,8 @@ Parser::Expr* Parser::parseExpr() {
 Parser::Expr* Parser::parseLogicalExpr() {
   Expr* left = parseRelationalExpr();
 
-  while (strcmp(at()->value, "and") == 0 || strcmp(at()->value, "or") == 0) {
-    char* op = eat().get()->value;
+  while (strcmp(at().value, "and") == 0 || strcmp(at().value, "or") == 0) {
+    char* op = eat().value;
 
     Expr* right = parseRelationalExpr();
 
@@ -150,8 +150,8 @@ Parser::Expr* Parser::parseLogicalExpr() {
 Parser::Expr* Parser::parseRelationalExpr() {
   Expr* left = parseAssignmentExpr();
 
-  while (strcmp(at()->value, "<") == 0 || strcmp(at()->value, "<=") == 0 || strcmp(at()->value, ">") == 0 || strcmp(at()->value, ">=") == 0 || strcmp(at()->value, "==") == 0 || strcmp(at()->value, "!=") == 0) {
-    char* op = eat().get()->value;
+  while (strcmp(at().value, "<") == 0 || strcmp(at().value, "<=") == 0 || strcmp(at().value, ">") == 0 || strcmp(at().value, ">=") == 0 || strcmp(at().value, "==") == 0 || strcmp(at().value, "!=") == 0) {
+    char* op = eat().value;
 
     Expr* right = parseAssignmentExpr();
 
@@ -169,7 +169,7 @@ Parser::Expr* Parser::parseRelationalExpr() {
 Parser::Expr* Parser::parseAssignmentExpr() {
   Expr* left = parseAdditiveExpr();
 
-  if (at()->type == Lexer::TokenType::Equals) {
+  if (at().type == Lexer::TokenType::Equals) {
     eat();
     if (left->kind != NodeType::Identifier) {
       GlobalFunctions::restart("Expected variable name for assignment");
@@ -190,8 +190,8 @@ Parser::Expr* Parser::parseAdditiveExpr() {
   Expr* leftMost = parseMultiplicativeExpr();
 
 
-  while (strcmp(at()->value, "+") == 0 || strcmp(at()->value, "-") == 0) {
-    char* op = eat().get()->value;
+  while (strcmp(at().value, "+") == 0 || strcmp(at().value, "-") == 0) {
+    char* op = eat().value;
 
     Expr* right = parseMultiplicativeExpr();
 
@@ -210,8 +210,8 @@ Parser::Expr* Parser::parseAdditiveExpr() {
 Parser::Expr* Parser::parseMultiplicativeExpr() {
   Expr* leftMost = parseCallMemberExpr();
 
-  while (strcmp(at()->value, "*") == 0 || strcmp(at()->value, "/") == 0 || strcmp(at()->value, "%") == 0) {
-    char* op = eat().get()->value;
+  while (strcmp(at().value, "*") == 0 || strcmp(at().value, "/") == 0 || strcmp(at().value, "%") == 0) {
+    char* op = eat().value;
 
     Expr* right = parseCallMemberExpr();
 
@@ -230,7 +230,7 @@ Parser::Expr* Parser::parseMultiplicativeExpr() {
 Parser::Expr* Parser::parseCallMemberExpr() {
   Expr* member = parsePrimaryExpr();
 
-  if (at()->type == Lexer::TokenType::OpenParen) {
+  if (at().type == Lexer::TokenType::OpenParen) {
     Serial.println("Found OpenParen");
     return parseCallExpr(member);
   }
@@ -244,7 +244,7 @@ Parser::Expr* Parser::parseCallExpr(Expr* caller) {
   callExpr->caller = caller;
   parseArgs(callExpr);
 
-  if (at()->type == Lexer::TokenType::OpenParen) {
+  if (at().type == Lexer::TokenType::OpenParen) {
     Serial.println("Parsing CallExpr in CallExpr");
     parseCallExpr(callExpr);
   }
@@ -259,9 +259,9 @@ void Parser::parseArgs(CallExpr* callExpr) {
 }
 
 void Parser::parseArgsList(CallExpr* callExpr) {
-  callExpr->args[0] = strcmp(at()->value, ")") != 0 ? parseAssignmentExpr() : nullptr;
+  callExpr->args[0] = strcmp(at().value, ")") != 0 ? parseAssignmentExpr() : nullptr;
 
-  for (size_t i = 1; at()->type == Lexer::TokenType::Comma; i++) {
+  for (size_t i = 1; at().type == Lexer::TokenType::Comma; i++) {
     if (i >= maxFunctionArgs) {
       GlobalFunctions::restart("Function argument list exceeds argument count limit");
     }
@@ -274,7 +274,7 @@ void Parser::parseArgsList(CallExpr* callExpr) {
 }
 
 Parser::Expr* Parser::parsePrimaryExpr() {
-  const Lexer::TokenType tokenType = at()->type;
+  const Lexer::TokenType tokenType = at().type;
 
   switch (tokenType) {
     case Lexer::TokenType::Identifier:
@@ -288,7 +288,7 @@ Parser::Expr* Parser::parsePrimaryExpr() {
       {
         Identifier* identifier = newIdentifier();
 
-        identifier->symbol = eat().get()->value;
+        identifier->symbol = eat().value;
 
         Serial.print("Found identifier ");
         Serial.println(identifier->symbol);
@@ -299,7 +299,7 @@ Parser::Expr* Parser::parsePrimaryExpr() {
       {
         NumericLiteral* number = newNumericLiteral();
 
-        number->num = strtof(eat().get()->value, nullptr);
+        number->num = strtof(eat().value, nullptr);
 
         Serial.print("Found number ");
         Serial.println(number->num);
@@ -315,34 +315,34 @@ Parser::Expr* Parser::parsePrimaryExpr() {
         return val;
       }
     default:
-      GlobalFunctions::restart("Unexpected token \"", at()->value, "\" found!");
+      GlobalFunctions::restart("Unexpected token \"", at().value, "\" found!");
       return nullptr;
   }
 }
 
-Lexer::Token* Parser::at() {
+Lexer::Token Parser::at() {
   if (tokens.empty()) {
-    GlobalFunctions::restart("Trying to access empty queue");
+    GlobalFunctions::restart("Trying to access empty tokens queue");
   }
-  return tokens.front().get();
+  return tokens.front();
 }
 
-std::shared_ptr<Lexer::Token> Parser::eat() {
-  std::shared_ptr<Lexer::Token> returnValue = tokens.front();
+Lexer::Token Parser::eat() {
+  Lexer::Token returnValue = tokens.front();
   tokens.pop();
   return returnValue;
 }
 
-std::shared_ptr<Lexer::Token> Parser::expect(Lexer::TokenType type, const char* expectedVal) {
-  std::shared_ptr<Lexer::Token> prev = eat();
-  if (prev.get()->type != type) {
-    GlobalFunctions::restart(expectedVal, (const char*)prev.get()->value);
+Lexer::Token Parser::expect(Lexer::TokenType type, const char* expectedVal) {
+  Lexer::Token prev = eat();
+  if (prev.type != type) {
+    GlobalFunctions::restart(expectedVal, (const char*)prev.value);
   }
   return prev;
 }
 
 bool Parser::endOfFile() {
-  return tokens.front().get()->type == Lexer::TokenType::EndOfFile;
+  return tokens.front().type == Lexer::TokenType::EndOfFile;
 }
 
 void Parser::push(Stmt* stmt) {

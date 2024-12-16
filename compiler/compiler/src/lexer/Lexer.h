@@ -1,7 +1,6 @@
 #pragma once
 
 #include <queue>
-#include <memory>
 
 #include <Arduino.h>
 
@@ -44,13 +43,30 @@ public:
     char* value;
     TokenType type;
 
-    Token() {
-      value = nullptr;
-      type = TokenType::Identifier;
-    }
+    // Default constructor
+    Token()
+      : value(nullptr), type(TokenType::Identifier) {}
 
+    // Parameterized constructor
     Token(char* _value, TokenType _type)
       : value(_value), type(_type) {}
+
+    // Copy constructor
+    Token(const Token& other)
+      : type(other.type) {
+      if (other.value) {
+        value = new char[strlen(other.value) + 1];
+        strcpy(value, other.value);
+      } else {
+        value = nullptr;
+      }
+    }
+
+    // Move constructor
+    Token(Token&& other) noexcept
+      : value(other.value), type(other.type) {
+      other.value = nullptr;  // Transfer ownership
+    }
 
     ~Token() {
       if (value != nullptr) {
@@ -59,9 +75,9 @@ public:
     }
   } Token;
 
-  std::queue<std::shared_ptr<Token>> tokenize(char* code, size_t len);
+  std::queue<Token> tokenize(char* code, size_t len);
 private:
-  std::queue<std::shared_ptr<Token>> tokens;
+  std::queue<Token> tokens;
 
   char keywordVal[keywordCount][6] = { "let", "const", "if", "else", "while", "break", "and", "or" };
 

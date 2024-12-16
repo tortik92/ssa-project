@@ -1,7 +1,7 @@
 #include "Lexer.h"
 
 
-std::queue<std::shared_ptr<Lexer::Token>> Lexer::tokenize(char* code, size_t len) {
+std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
   while (!tokens.empty()) {
     tokens.pop();
   }
@@ -93,7 +93,7 @@ std::queue<std::shared_ptr<Lexer::Token>> Lexer::tokenize(char* code, size_t len
   addToken(endOfFile, strlen(endOfFile), TokenType::EndOfFile);
 
   Serial.println("Front in Lexer: ");
-  Serial.println(tokens.front().get()->value);
+  Serial.println(tokens.front().value);
 
   return tokens;
 }
@@ -105,7 +105,7 @@ void Lexer::addToken(const char* src, size_t srcLen, TokenType tokenType) {
   value[srcLen] = '\0';
   
   if(tokens.size() < maxTokens) {
-    tokens.push(std::make_shared<Token>(value, tokenType));
+    tokens.emplace(value, tokenType);
   } else {
     GlobalFunctions::restart("Too many tokens in program!");
   }

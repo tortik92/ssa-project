@@ -166,7 +166,7 @@ private:
   Program program;
   Lexer* lexer;
 
-  std::queue<std::shared_ptr<Lexer::Token>> tokens;
+  std::queue<Lexer::Token> tokens;
   size_t currentStmtIndex;
 
   BinaryExpr* binaryExprPool = new BinaryExpr[poolSize];
@@ -228,7 +228,7 @@ private:
   bool endOfFile();
   void push(Stmt* stmt);
 
-  Lexer::Token* at();
-  std::shared_ptr<Lexer::Token> eat();
-  std::shared_ptr<Lexer::Token> expect(Lexer::TokenType type, const char* expectedVal);
+  Lexer::Token at();
+  Lexer::Token eat();
+  Lexer::Token expect(Lexer::TokenType type, const char* expectedVal);
 };

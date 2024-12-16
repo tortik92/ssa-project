@@ -426,17 +426,17 @@ void loop() {
 
           Serial.println(code);
 
-          std::queue<std::shared_ptr<Lexer::Token>> tokens = lexer.tokenize(code, sizeof(code));
+          std::queue<Lexer::Token> tokens = lexer.tokenize(code, sizeof(code));
 
           Serial.println("Tokenized!");
 
           while (!tokens.empty()) {
-            Lexer::Token *token = tokens.front().get();
+            Lexer::Token token = tokens.front();
             tokens.pop();
             Serial.print("Value: \"");
-            Serial.print(token->value);
+            Serial.print(token.value);
             Serial.print("\"\nTokenType: ");
-            switch (token->type) {
+            switch (token.type) {
               case Lexer::TokenType::Let:
                 Serial.println("Let");
                 break;
