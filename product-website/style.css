@@ -1,0 +1,253 @@
+/* Reset CSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Global styles */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+header {
+
+    color: #333;
+    padding: 20px;
+}
+
+header h1 {
+    margin: 0;
+}
+
+nav ul {
+    list-style: none;
+    text-align: center;
+
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 20px;
+    list-style: none;
+}
+li{
+    list-style: none;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    width: 80%; /* Increased width for a bigger gray box */
+    max-width: 1400px; /* Adjusted max width */
+    margin: 0 auto;
+}
+
+nav ul li a {
+    color: #333;
+    text-decoration: none;
+}
+
+.nav-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin: 0.5rem 0;
+}
+
+.nav-link {
+    color: black;
+    text-decoration: none;
+    font-size: 22px; /* Slightly increased font size */
+
+    font-family: sans-serif; /* Updated font family here as well */
+}
+
+.nav-link:hover {
+    text-decoration: underline;
+}
+
+.hero {
+    background-color: #f4f4f4;
+    padding: 50px;
+    text-align: center;
+}
+
+.features {
+    padding: 50px;
+}
+
+.features ul {
+    list-style-type: none;
+}
+
+.pricing {
+    background-color: #f4f4f4;
+    padding: 50px;
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.description {
+    background-color: #fff;
+    padding: 50px;
+    text-align: center;
+}
+
+.description h2 {
+    margin-bottom: 30px;
+}
+
+.section-content {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 30px;
+}
+
+.section-content > div {
+    flex: 1;
+    margin: 0 20px;
+}
+
+.section-content h3 {
+    margin-bottom: 10px;
+}
+
+.app {
+    background-color: #f9f9f9;
+    padding: 50px;
+    text-align: center;
+}
+
+.app h2 {
+    margin-bottom: 30px;
+}
+
+.app-content {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.app-text {
+    flex: 1;
+    text-align: left;
+}
+
+.app-image {
+    flex: 1;
+    text-align: center;
+}
+
+.app-image img {
+    max-width: 100%;
+    height: auto;
+}
+
+.product {
+    background-color: #fff;
+    padding: 50px;
+    text-align: center;
+}
+
+.product h2 {
+    margin-bottom: 30px;
+}
+
+.product-content {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.product-text {
+    flex: 1;
+    text-align: left;
+}
+
+.product-image {
+    flex: 1;
+    text-align: center;
+}
+
+.product-image img {
+    max-width: 100%;
+    height: auto;
+}
+
+.language-dropdown {
+    position: relative;
+    float: right;
+}
+
+.language-dropdown .dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    z-index: 1;
+}
+
+.language-dropdown .dropdown-content a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+}
+
+.language-dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.rights{
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    bottom: 0;
+    width: 100%;
+}
+
+b{
+    color: black;
+    font-weight: normal;
+    font-size: 22px;
+    margin-left:3px;
+    margin-right:3px;
+    font-family: sans-serif;
+}
+a{
+    color: black;
+    text-decoration: none;
+    font-size: 22px; /* Slightly increased font size */
+
+    font-family: sans-serif; /* Updated font family here as well */
+}
+
+u{
+    color: black;
+    text-decoration: none;
+    font-size: 22px; /* Slightly increased font size */
+
+    font-family: sans-serif; /* Updated font family here as well */
+}
+.navigation{
+    color: black;
+    padding: 1.5rem 0; /* Increased padding for larger gray box */
+    background-color: #e0e0e0; /* Adding explicit background for clarity */
+}

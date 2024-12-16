@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport">
+    <title>Kaufen Sie SoundLeap!</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+
+</header>
+
+<section class="hero">
+    <div class="hero-section">
+        <div class="content">
+            <h1>SoundLeap</h1>
+            <ul>
+                <li>✔ Intelligente Technologie für den Sport</li>
+                <li>✔ Rund um die Uhr einsatzbereit</li>
+                <li>✔ Inklusives Design für alle</li>
+            </ul>
+        </div>
+    </div>
+</section>
+<section class="navigation">
+        <nav class="nav-nav" role="navigation" aria-label="Main navigation">
+            <!-- Left Column -->
+            <div class="nav-column">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#dasprodukt" class="nav-link" role="menuitem">Das Produkt</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#dieapp" class="nav-link" role="menuitem">App</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#support" class="nav-link">Hilfe</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Right Column -->
+            <div class="nav-column">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#doityourself" class="nav-link">Do it yourself</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#deinwerk" class="nav-link" role="menuitem">Dein Werk</a>
+                    </li>
+                    <li class="nav-item">
+                        <u>Sprache: </u>
+                        <a href="#language" class="nav-link">Deutsch</a> <b>/</b>
+                        <a href="#language" class="nav-link">Englisch</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+</section>
+
+
+<section class="product">
+    <h2>Unser Produkt</h2>
+    <div class="product-content">
+        <div class="product-text">
+            <p>Unser Produkt ist eine innovative Lösung, die entwickelt wurde, um die Bedürfnisse unserer Kunden zu erfüllen. Es bietet eine Vielzahl von Funktionen und Vorteilen, darunter:</p>
+            <p>Mit unserem Produkt können Sie Ihr Leben vereinfachen und Ihre Produktivität steigern.</p>
+        </div>
+        <div class="product-image">
+            <img src="Matten.png" alt="Produktbild"style="height: 200px;"style="width: 200px">
+        </div>
+    </div>
+</section>
+
+<section id="problemdarstellung" class="description">
+    <h2 >Problemdarstellung</h2>
+    <div class="section-content">
+        <div>
+            <h3>Das Problem</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed gravida felis et libero sodales, at consectetur purus luctus. Nullam malesuada velit a dolor ullamcorper, ac congue dolor molestie.</p>
+        </div>
+        <div>
+            <h3>Die Lösung</h3>
+            <p>Integer vehicula erat nec sapien efficitur, eget bibendum magna ultricies. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Curabitur vehicula eros et metus iaculis fermentum.</p>
+        </div>
+    </div>
+</section>
+
+<section id="soundleap-app" class="app">
+    <h2>SoundLeap-App</h2>
+    <div class="app-content">
+        <div class="app-image">
+            <img src="App.png" alt="App Bild"style="height: 500px;"style="width: 500px">
+        </div>
+        <div class="app-text">
+            <p>Unsere innovative App bietet Ihnen zahlreiche Funktionen, um Ihr Leben einfacher zu machen. Sie können damit...</p>
+            <ul>
+                <li>audio-geführten Fitnessübungen profitieren</li>
+                <li>markierte Spielunterlagen nutzen </li>
+                <li>Audio-Feedback für Bewegungstechniken erhalten</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <h2>Produkteigenschaften</h2>
+    <ul>
+        <li>Inklusivität</li>
+        <li>Innovation</li>
+        <li>Barrierefreiheit</li>
+        <li>Stärkung</li>
+    </ul>
+</section>
+
+<section class="pricing">
+    <h2>Preise</h2>
+    <p>Kontaktieren Sie uns für Preisinformationen.</p>
+</section>
+
+<section class="rights">
+    <p>&copy; 2024 SoundLeap. Alle Rechte vorbehalten.</p>
+</section>
+
+<script>
+    function changeLanguage(lang) {
+        var currentPage = window.location.href.split('/').pop(); // Get current page without path
+        if (lang === 'en' && currentPage !== 'test.html') {
+            window.location.href = 'test.html';
+        } else {
+            var newUrl = currentPage + '?lang=' + lang;
+            window.location.href = newUrl;
+        }
+    }
+</script>
+</body>
+</html>

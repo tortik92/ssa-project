@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy SoundLeap now!</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <nav>
+        <ul>
+            <li style="padding-top: 10px"><a href="#"><img src="../SoundLeap/Website/public/Logo.png" style="width: 50px; height: 50px;"></a></li>
+            <li><a href="#produkt">Product</a></li>
+            <li><a href="#problemdarstellung">Problem Statement</a></li>
+            <li><a href="#soundleap-app">SoundLeap-App</a></li>
+            <li><a href="#">Contact</a></li>
+            <li class="language-dropdown"style="float: right; padding-top: 33px;">
+                <a href="#">Language</a>
+                <div class="dropdown-content" id="dropdownContent">
+                    <a href="#" onclick="changeLanguage('de')">German</a>
+                    <a href="#" onclick="changeLanguage('en')">English</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<section class="hero">
+    <h2>Welcome to our SoundLeap product website!</h2>
+    <p>Here you can learn all about our product.</p>
+</section>
+
+<section class="product">
+    <h2>Our Product</h2>
+    <div class="product-content">
+        <div class="product-text">
+            <p>Our product is an innovative solution designed to meet the needs of our customers. It offers a variety of features and benefits, including:</p>
+            <p>With our product, you can simplify your life and increase your <productivity class=""></productivity></p>
+        </div>
+        <div class="product-image">
+            <img src="../../product-website/Matten.png" alt="Produktbild"style="height: 200px;"style="width: 200px">
+        </div>
+    </div>
+</section>
+
+<section id="problemdarstellung" class="description">
+    <h2 >Problem statement</h2>
+    <div class="section-content">
+        <div>
+            <h3>The Problem</h3>
+            <p>Visually impaired people are partially excluded from classic sports and fitness activities. There are enough limitations which are not yet solved. Health is wealth: They need physical activities to further improve overall health
+            </p>
+        </div>
+        <div>
+            <h3>The Solution</h3>
+            <p>Creation of digital sports equipment to provide access to sports. Developing of easily accessible usage options. Using the concepts of Open-Source and DIY
+            </p>
+        </div>
+    </div>
+</section>
+
+<section id="soundleap-app" class="app">
+    <h2>SoundLeap-App</h2>
+    <div class="app-content">
+        <div class="app-image">
+            <img src="../../product-website/App.png" alt="App Bild"style="height: 500px;"style="width: 500px">
+        </div>
+        <div class="app-text">
+            <p>Our innovative app offers you numerous features to make your life easier. With it, you can enjoy ...</p>
+            <ul>
+                <li>Audio-guided fitness exercises</li>
+                <li>use marked playing mats</li>
+                <li>Audio feedback for movement techniques</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <h2>Project characteristics</h2>
+    <ul>
+        <li>Inclusivity</li>
+        <li>Innovation</li>
+        <li>Accessibility</li>
+        <li>Empowerment</li>
+    </ul>
+</section>
+
+<section class="pricing">
+    <h2>Price</h2>
+    <p>Contact us for price informations</p>
+</section>
+
+<footer>
+    <p>&copy; 2024 SoundLeap. All rights are available.</p>
+</footer>
+
+<script>
+    function changeLanguage(lang) {
+        var currentPage = window.location.href.split('/').pop(); // Get current page without path
+        if (lang === 'de' && currentPage !== 'index.html') {
+            window.location.href = 'index.html';
+        } else {
+            var newUrl = currentPage + '?lang=' + lang;
+            window.location.href = newUrl;
+        }
+    }
+</script>
+</body>
+</html>
