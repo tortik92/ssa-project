@@ -1,9 +1,11 @@
 #pragma once
 
 #include <functional>
+#include <array>
+#include <forward_list>
 
 #include "Constants.h"
-#include "GlobalFunctions.h"
+#include "ErrorHandler.h"
 
 class Environment;
 
@@ -70,16 +72,29 @@ public:
       : RuntimeVal(ValueType::Break) {}
   } BreakVal;
 
+  template<typename T>
+  T* newRuntimeVal(ValueType vt) {
+    switch (vt)
+    {
+    case ValueType::Boolean :
+      /* code */
+      break;
+    
+    default:
+      break;
+    }
+  }
+
   NullVal* newNullVal() {
     if (nullValCount >= poolSize) {
-      GlobalFunctions::restart("Out of memory for NullVal runtime values");
+      ErrorHandler::restart("Out of memory for NullVal runtime values");
     }
     return &nullValPool[nullValCount++];
   }
 
   BooleanVal* newBooleanVal(bool value = true) {
     if (booleanValCount >= poolSize) {
-      GlobalFunctions::restart("Out of memory for BooleanVal runtime values");
+      ErrorHandler::restart("Out of memory for BooleanVal runtime values");
     }
     booleanValPool[booleanValCount] = value;
     return &booleanValPool[booleanValCount++];
@@ -87,21 +102,21 @@ public:
 
   NumberVal* newNumberVal() {
     if (numberValCount >= poolSize) {
-      GlobalFunctions::restart("Out of memory for NumberVal runtime values");
+      ErrorHandler::restart("Out of memory for NumberVal runtime values");
     }
     return &numberValPool[numberValCount++];
   }
 
   NativeFnValue* newNativeFn() {
     if (nativeFnCount >= poolSize) {
-      GlobalFunctions::restart("Out of memory for NativeFnVal runtime values");
+      ErrorHandler::restart("Out of memory for NativeFnVal runtime values");
     }
     return &nativeFnPool[nativeFnCount++];
   }
 
   BreakVal* newBreakVal() {
     if (breakCount >= poolSize) {
-      GlobalFunctions::restart("Out of memory for BreakVal runtime values");
+      ErrorHandler::restart("Out of memory for BreakVal runtime values");
     }
     return &breakPool[breakCount++];
   }

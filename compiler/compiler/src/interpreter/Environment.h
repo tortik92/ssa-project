@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Constants.h"
-#include "GlobalFunctions.h"
+#include "ErrorHandler.h"
 #include "Values.h"
 #include "comm/PadsComm.h"
 
@@ -34,7 +34,7 @@ public:
           Serial.println((unsigned int)&static_cast<const Values::NativeFnValue*>(args[0])->call);  // print memory address
           break;
         default:
-          GlobalFunctions::restart("Undefined Value Type");
+          ErrorHandler::restart("Undefined Value Type");
           break;
       }
 
@@ -55,14 +55,14 @@ public:
       for (uint8_t i = 0; i < argsLen; i++) {
         if (args[i] == nullptr) {
           if (required[i]) {
-            GlobalFunctions::restart("Required argument '", argNames[i], "' not given for 'playSound(soundVal, soundLen)'");
+            ErrorHandler::restart("Required argument '", argNames[i], "' not given for 'playSound(soundVal, soundLen)'");
           } else {
             continue;
           }
         } 
         
         if (args[i]->type != Values::ValueType::Number) {
-          GlobalFunctions::restart("Expected Number for '", argNames[i], "' of 'playSound(soundVal, soundLen)'");
+          ErrorHandler::restart("Expected Number for '", argNames[i], "' of 'playSound(soundVal, soundLen)'");
         }
 
         parsedArgs[i] = static_cast<const Values::NumberVal*>(args[i])->value;
@@ -81,7 +81,7 @@ public:
 
       if(args[0] != nullptr) {
         if (args[0]->type != Values::ValueType::Number) {
-          GlobalFunctions::restart("Expected Number for 'padIndex' of 'playCorrectActionJingle(padIndex)'");
+          ErrorHandler::restart("Expected Number for 'padIndex' of 'playCorrectActionJingle(padIndex)'");
         }
         padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
       }
@@ -99,7 +99,7 @@ public:
 
       if(args[0] != nullptr) {
         if (args[0]->type != Values::ValueType::Number) {
-          GlobalFunctions::restart("Expected Number for 'padIndex' of 'playWrongActionJingle(padIndex)'");
+          ErrorHandler::restart("Expected Number for 'padIndex' of 'playWrongActionJingle(padIndex)'");
         }
         padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
       }
@@ -117,7 +117,7 @@ public:
 
       if(args[0] != nullptr) {
         if (args[0]->type != Values::ValueType::Number) {
-          GlobalFunctions::restart("Expected Number for 'padIndex' of 'playWinnerJingle(padIndex)'");
+          ErrorHandler::restart("Expected Number for 'padIndex' of 'playWinnerJingle(padIndex)'");
         }
         padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
       }
@@ -135,7 +135,7 @@ public:
 
       if(args[0] != nullptr) {
         if (args[0]->type != Values::ValueType::Number) {
-          GlobalFunctions::restart("Expected Number for 'padIndex' of 'playLoserJingle(padIndex)'");
+          ErrorHandler::restart("Expected Number for 'padIndex' of 'playLoserJingle(padIndex)'");
         }
         padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
       }
@@ -153,7 +153,7 @@ public:
 
       if(args[0] != nullptr) {
         if (args[0]->type != Values::ValueType::Number) {
-          GlobalFunctions::restart("Expected Number for 'padIndex' of 'waitForPlayerOnPad(padIndex)'");
+          ErrorHandler::restart("Expected Number for 'padIndex' of 'waitForPlayerOnPad(padIndex)'");
         }
         padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
       }
@@ -169,7 +169,7 @@ public:
       PadsComm* padsComm = PadsComm::getInstance();
 
       if(args[0] != nullptr) {
-        GlobalFunctions::restart("No parameter expected for 'waitForPlayerOnAnyPad()'");
+        ErrorHandler::restart("No parameter expected for 'waitForPlayerOnAnyPad()'");
       }
 
       padsComm->waitForPlayerOnAnyPad();
@@ -183,7 +183,7 @@ public:
       PadsComm* padsComm = PadsComm::getInstance();
 
       if(args[0] != nullptr) {
-        GlobalFunctions::restart("No parameter expected for 'waitForPlayersOnAllActivePads()'");
+        ErrorHandler::restart("No parameter expected for 'waitForPlayersOnAllActivePads()'");
       }
 
       padsComm->waitForPlayersOnAllActivePads();

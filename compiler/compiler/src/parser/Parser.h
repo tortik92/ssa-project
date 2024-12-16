@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lexer/Lexer.h"
-#include "GlobalFunctions.h"
+#include "ErrorHandler.h"
 
 class Parser {
 public:

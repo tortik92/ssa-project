@@ -40,7 +40,7 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
           addToken(&code[i], 2, TokenType::RelationalOperator);
           i++;
         } else {
-          GlobalFunctions::restart("Character '!' not recognized");
+          ErrorHandler::restart("Character '!' not recognized");
         }
         break;
       case '=':
@@ -81,7 +81,7 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
         } else if (!isSpace(code[i]) && code[i] != '\0') {
           char err[50];
           snprintf(err, 49, "Character \"%s\" not recognized", &code[i]);
-          GlobalFunctions::restart(err);
+          ErrorHandler::restart(err);
           return tokens;
         }
         break;
@@ -107,7 +107,7 @@ void Lexer::addToken(const char* src, size_t srcLen, TokenType tokenType) {
   if(tokens.size() < maxTokens) {
     tokens.emplace(value, tokenType);
   } else {
-    GlobalFunctions::restart("Too many tokens in program!");
+    ErrorHandler::restart("Too many tokens in program!");
   }
 }
 

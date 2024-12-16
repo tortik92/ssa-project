@@ -35,10 +35,10 @@ Values::RuntimeVal* Interpreter::evaluate(Parser::Stmt* astNode, Environment* en
     case Parser::NodeType::Program:
       return evalProgram(static_cast<Parser::Program*>(astNode), env);
     case Parser::NodeType::Undefined:
-      GlobalFunctions::restart("Undefined NodeType found while interpreting");
+      ErrorHandler::restart("Undefined NodeType found while interpreting");
       break;
     default:
-      GlobalFunctions::restart("AST node not set up for interpretation (should not happen)");
+      ErrorHandler::restart("AST node not set up for interpretation (should not happen)");
       break;
   }
 
@@ -51,7 +51,7 @@ Values::RuntimeVal* Interpreter::evalProgram(Parser::Program* program, Environme
   for (size_t i = 0; i < maxProgramStatements && program->body[i] != nullptr; i++) {
     lastEvaluated = evaluate(program->body[i], env);
     if(lastEvaluated->type == Values::ValueType::Break) {
-      GlobalFunctions::restart("A break statement may only be used within a loop");
+      ErrorHandler::restart("A break statement may only be used within a loop");
     }
   }
 
@@ -67,7 +67,7 @@ Values::RuntimeVal* Interpreter::evalIfStmt(Parser::IfStmt* ifStmt, Environment*
   Values::RuntimeVal* result = evaluate(ifStmt->test, env);
   Serial.println("Evaluated test of if statement");
   if (result->type != Values::ValueType::Boolean) {
-    GlobalFunctions::restart("Expected boolean value in if statement condition");
+    ErrorHandler::restart("Expected boolean value in if statement condition");
   } else {
     if (static_cast<Values::BooleanVal*>(result)->value) {
       Serial.println("Evaluating consequent block");
@@ -84,7 +84,7 @@ Values::RuntimeVal* Interpreter::evalWhileStmt(Parser::WhileStmt* whileStmt, Env
   Values::RuntimeVal* testResult = evaluate(whileStmt->test, env);
 
   if (testResult->type != Values::ValueType::Boolean) {
-    GlobalFunctions::restart("Expected boolean value in while statement condition");
+    ErrorHandler::restart("Expected boolean value in while statement condition");
   } else {
     Environment* childEnv = new Environment(env);
     Parser::Stmt** body = whileStmt->body->body; // get body of BlockStmt
@@ -131,7 +131,7 @@ Values::BooleanVal* Interpreter::evalLogicalExpr(Parser::LogicalExpr* logicalExp
   Serial.println("Evaluated left and right part of logical expression");
 
   if (left->type != Values::ValueType::Boolean || right->type != Values::ValueType::Boolean) {
-    GlobalFunctions::restart("Cannot use \"", logicalExpr->op, "\" on non-boolean values");
+    ErrorHandler::restart("Cannot use \"", logicalExpr->op, "\" on non-boolean values");
     return nullptr;
   } else {
     Values::BooleanVal* leftBool = static_cast<Values::BooleanVal*>(left);
@@ -169,7 +169,7 @@ Values::RuntimeVal* Interpreter::evalBinaryExpr(Parser::BinaryExpr* binExp, Envi
 
     return evalBooleanBinaryExpr(leftBool, rightBool, binExp->op, env);
   } else {
-    GlobalFunctions::restart("Value types not compatible");
+    ErrorHandler::restart("Value types not compatible");
   }
 
   return env->values.newNullVal();
@@ -195,7 +195,7 @@ Values::RuntimeVal* Interpreter::evalNumericBinaryExpr(Values::NumberVal* left, 
       break;
     case '/':
       if (right->value == 0) {
-        GlobalFunctions::restart("Attempted to divide by 0");
+        ErrorHandler::restart("Attempted to divide by 0");
       } else {
         numberVal->value = left->value / right->value;
       }
@@ -219,7 +219,7 @@ Values::RuntimeVal* Interpreter::evalNumericBinaryExpr(Values::NumberVal* left, 
         } else if (strcmp(op, "!=") == 0) {
           boolVal->value = left->value != right->value;
         } else {
-          GlobalFunctions::restart("Unknown operator \"", op, "\" encountered while interpreting");
+          ErrorHandler::restart("Unknown operator \"", op, "\" encountered while interpreting");
         }
         return boolVal;
       }
@@ -237,7 +237,7 @@ Values::BooleanVal* Interpreter::evalBooleanBinaryExpr(Values::BooleanVal* left,
   } else if (strcmp(op, "!=") == 0) {
     boolVal->value = left->value != right->value;
   } else {
-    GlobalFunctions::restart("Cannot compare two Booleans with \"", op, "\"");
+    ErrorHandler::restart("Cannot compare two Booleans with \"", op, "\"");
   }
 
   return boolVal;
@@ -245,7 +245,7 @@ Values::BooleanVal* Interpreter::evalBooleanBinaryExpr(Values::BooleanVal* left,
 
 Values::RuntimeVal* Interpreter::evalAssignmentExpr(Parser::AssignmentExpr* node, Environment* env) {
   if (node->assignee->kind != Parser::NodeType::Identifier) {
-    GlobalFunctions::restart("Expected identifier on left side of assignment expression");
+    ErrorHandler::restart("Expected identifier on left side of assignment expression");
   }
 
   const char* varname = static_cast<Parser::Identifier*>(node->assignee)->symbol;
@@ -263,7 +263,7 @@ Values::RuntimeVal* Interpreter::evalCallExpr(Parser::CallExpr* expr, Environmen
   Values::RuntimeVal* fn = evaluate(expr->caller, env);
 
   if (fn->type != Values::ValueType::NativeFn) {
-    GlobalFunctions::restart("Cannot call value that is not a function");
+    ErrorHandler::restart("Cannot call value that is not a function");
   }
 
   Values::RuntimeVal* result = static_cast<Values::NativeFnValue*>(fn)->call(args, env);

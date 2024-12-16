@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GlobalFunctions.h"
+#include "ErrorHandler.h"
 #include "parser/Parser.h"
 #include "Values.h"
 #include "Environment.h"

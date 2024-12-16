@@ -4,7 +4,7 @@ Parser::Program* Parser::produceAST(char* code, size_t len) {
   cleanup();
   tokens = lexer->tokenize(code, len);
 
-  GlobalFunctions::printMemoryStats("before producing AST");
+  ErrorHandler::printMemoryStats("before producing AST");
 
   while (!endOfFile()) {
     push(parseStmt());
@@ -46,7 +46,7 @@ Parser::VarDeclaration* Parser::parseVarDeclaration() {
   if (at().type == Lexer::TokenType::Semicolon) {
     eat();
     if (isConstant) {
-      GlobalFunctions::restart("Uninitialized const variable");
+      ErrorHandler::restart("Uninitialized const variable");
     }
 
     varDecl->value = nullptr;
@@ -107,12 +107,12 @@ Parser::BlockStmt* Parser::parseBlockStmt() {
   size_t lineCount = 0;
   while (at().type != Lexer::TokenType::CloseBrace) {
     if (endOfFile()) {
-      GlobalFunctions::restart("Reached end of file, expected '}'");
+      ErrorHandler::restart("Reached end of file, expected '}'");
     }
     if (lineCount >= maxBlockStatements) {
       char errmsg[64];
       sprintf(errmsg, "Maximum of %d statements in {} exceeded", maxBlockStatements);
-      GlobalFunctions::restart(errmsg);
+      ErrorHandler::restart(errmsg);
     }
 
     blockStmt->body[lineCount] = parseStmt();
@@ -172,7 +172,7 @@ Parser::Expr* Parser::parseAssignmentExpr() {
   if (at().type == Lexer::TokenType::Equals) {
     eat();
     if (left->kind != NodeType::Identifier) {
-      GlobalFunctions::restart("Expected variable name for assignment");
+      ErrorHandler::restart("Expected variable name for assignment");
     }
     Expr* value = parseAssignmentExpr();
 
@@ -263,7 +263,7 @@ void Parser::parseArgsList(CallExpr* callExpr) {
 
   for (size_t i = 1; at().type == Lexer::TokenType::Comma; i++) {
     if (i >= maxFunctionArgs) {
-      GlobalFunctions::restart("Function argument list exceeds argument count limit");
+      ErrorHandler::restart("Function argument list exceeds argument count limit");
     }
 
     eat();
@@ -315,14 +315,14 @@ Parser::Expr* Parser::parsePrimaryExpr() {
         return val;
       }
     default:
-      GlobalFunctions::restart("Unexpected token \"", at().value, "\" found!");
+      ErrorHandler::restart("Unexpected token \"", at().value, "\" found!");
       return nullptr;
   }
 }
 
 Lexer::Token Parser::at() {
   if (tokens.empty()) {
-    GlobalFunctions::restart("Trying to access empty tokens queue");
+    ErrorHandler::restart("Trying to access empty tokens queue");
   }
   return tokens.front();
 }
@@ -336,7 +336,7 @@ Lexer::Token Parser::eat() {
 Lexer::Token Parser::expect(Lexer::TokenType type, const char* expectedVal) {
   Lexer::Token prev = eat();
   if (prev.type != type) {
-    GlobalFunctions::restart(expectedVal, (const char*)prev.value);
+    ErrorHandler::restart(expectedVal, (const char*)prev.value);
   }
   return prev;
 }
@@ -351,7 +351,7 @@ void Parser::push(Stmt* stmt) {
   if (currentStmtIndex < maxProgramStatements) {
     currentStmtIndex++;
   } else {
-    GlobalFunctions::restart("Too many statements in program");
+    ErrorHandler::restart("Too many statements in program");
   }
 }
 
@@ -388,77 +388,77 @@ void Parser::cleanup() {
 
 Parser::BinaryExpr* Parser::newBinaryExpr() {
   if (binaryExprCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for BinaryExpr nodes");
+    ErrorHandler::restart("Out of memory for BinaryExpr nodes");
   }
   return &binaryExprPool[binaryExprCount++];
 }
 
 Parser::Identifier* Parser::newIdentifier() {
   if (identifierCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for Identifier nodes");
+    ErrorHandler::restart("Out of memory for Identifier nodes");
   }
   return &identifierPool[identifierCount++];
 }
 
 Parser::NumericLiteral* Parser::newNumericLiteral() {
   if (numericLiteralCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for NumericLiteral nodes");
+    ErrorHandler::restart("Out of memory for NumericLiteral nodes");
   }
   return &numericLiteralPool[numericLiteralCount++];
 }
 
 Parser::VarDeclaration* Parser::newVarDeclaration() {
   if (varDeclarationCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for VarDeclaration nodes");
+    ErrorHandler::restart("Out of memory for VarDeclaration nodes");
   }
   return &varDeclarationPool[varDeclarationCount++];
 }
 
 Parser::AssignmentExpr* Parser::newAssignmentExpr() {
   if (assignmentExprCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for BinaryExpr nodes");
+    ErrorHandler::restart("Out of memory for BinaryExpr nodes");
   }
   return &assignmentExprPool[assignmentExprCount++];
 }
 
 Parser::CallExpr* Parser::newCallExpr() {
   if (callExprCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for CallExpr nodes");
+    ErrorHandler::restart("Out of memory for CallExpr nodes");
   }
   return &callExprPool[callExprCount++];
 }
 
 Parser::LogicalExpr* Parser::newLogicalExpr() {
   if (logicalExprCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for LogicalExpr nodes");
+    ErrorHandler::restart("Out of memory for LogicalExpr nodes");
   }
   return &logicalExprPool[logicalExprCount++];
 }
 
 Parser::BlockStmt* Parser::newBlockStmt() {
   if (blockStmtCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for BlockStmt nodes");
+    ErrorHandler::restart("Out of memory for BlockStmt nodes");
   }
   return &blockStmtPool[blockStmtCount++];
 }
 
 Parser::IfStmt* Parser::newIfStmt() {
   if (ifStmtCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for IfStmt nodes");
+    ErrorHandler::restart("Out of memory for IfStmt nodes");
   }
   return &ifStmtPool[ifStmtCount++];
 }
 
 Parser::WhileStmt* Parser::newWhileStmt() {
   if (whileStmtCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for WhileStmt nodes");
+    ErrorHandler::restart("Out of memory for WhileStmt nodes");
   }
   return &whileStmtPool[whileStmtCount++];
 }
 
 Parser::BreakStmt* Parser::newBreakStmt() {
   if (breakStmtCount >= poolSize) {
-    GlobalFunctions::restart("Out of memory for BreakStmt nodes");
+    ErrorHandler::restart("Out of memory for BreakStmt nodes");
   }
   return &breakStmtPool[breakStmtCount++];
 }

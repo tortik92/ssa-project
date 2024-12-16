@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #include "BLEComm.h"
-#include "GlobalFunctions.h"
+#include "ErrorHandler.h"
 #include "Constants.h"
 
 class PadsComm {
@@ -112,7 +112,7 @@ public:
               eventOrder[emptySlot] = padIndex;
               break;
             } else {
-              GlobalFunctions::restart("eventOrder array overflow detected");
+              ErrorHandler::restart("eventOrder array overflow detected");
             }
           }
         }

@@ -4,7 +4,7 @@
 #include <espnow.h>
 
 #include "Constants.h"
-#include "GlobalFunctions.h"
+#include "ErrorHandler.h"
 #include "comm/PadsComm.h"
 #include "comm/BLEComm.h"
 #include "lexer/Lexer.h"
@@ -190,12 +190,12 @@ void toString(const Parser::Stmt *stmt) {
       toStringCallExpr(static_cast<const Parser::CallExpr *>(stmt));
       break;
     case Parser::NodeType::Program:
-      GlobalFunctions::restart("Found Program in Program, don't know what to do with it");
+      ErrorHandler::restart("Found Program in Program, don't know what to do with it");
       break;
     case Parser::NodeType::Undefined:
-      GlobalFunctions::restart("Undefined node found");
+      ErrorHandler::restart("Undefined node found");
     default:
-      GlobalFunctions::restart("Undefined statement found while printing AST");
+      ErrorHandler::restart("Undefined statement found while printing AST");
       break;
   }
 }
@@ -515,7 +515,7 @@ void loop() {
         }
       case phoneInput_interpret:
         {
-          GlobalFunctions::printMemoryStats("before program");
+          ErrorHandler::printMemoryStats("before program");
 
           Environment env;
 
@@ -539,11 +539,11 @@ void loop() {
               Parser::Program *program = parser.produceAST(code_cstr, code.length() + 1);
               toString(program);
               Serial.println("Successfully parsed program");
-              GlobalFunctions::printMemoryStats("after AST printing");
+              ErrorHandler::printMemoryStats("after AST printing");
               ESP.wdtFeed();
 
               Values::RuntimeVal *val = interpreter.evaluate(program, &env);
-              GlobalFunctions::printMemoryStats("after evaluation");
+              ErrorHandler::printMemoryStats("after evaluation");
               ESP.wdtFeed();
 
 
@@ -570,13 +570,13 @@ void loop() {
                   Serial.println("NativeFn");
                   break;
                 default:
-                  GlobalFunctions::restart("Undefined ValueType");
+                  ErrorHandler::restart("Undefined ValueType");
                   break;
               }
 
               delete[] code_cstr;
 
-              GlobalFunctions::printMemoryStats("after program");
+              ErrorHandler::printMemoryStats("after program");
             }
           }
 

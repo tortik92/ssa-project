@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #include "Constants.h"
-#include "GlobalFunctions.h"
+#include "ErrorHandler.h"
 
 class Lexer {
 public:

@@ -133,7 +133,7 @@ PadsComm::WaitResult PadsComm::waitWithEventChecks(unsigned long ms) {
 
       if (incomingByte == phoneInput_cancel) {
         cancelOperation();
-        GlobalFunctions::restart("Received abort signal from phone");
+        ErrorHandler::restart("Received abort signal from phone");
       }
     }
 
