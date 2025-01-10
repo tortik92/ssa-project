@@ -14,190 +14,286 @@ body {
     background-color: #f4f4f4;
 }
 
-header {
-
-    color: #333;
-    padding: 20px;
+/* Navigation Styles */
+.navigation {
+    background-color: #333; /* Dark background for navigation */
+    color: #fff;
+    padding: 20px 100px; /* Optimiertes Padding */
+    display: flex;
+    justify-content: center; /* Center the navigation items horizontally */
+    align-items: center; /* Center the navigation items vertically */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+    position: relative;
+    width: 100%; /* Make navigation take the full width */
 }
-
-header h1 {
-    margin: 0;
-}
-
 
 nav {
     display: flex;
-    justify-content: space-between;
-    width: 80%; /* Increased width for a bigger gray box */
-    max-width: 1400px; /* Adjusted max width */
-    margin: 0 auto;
+    justify-content: center; /* Center the nav items */
+    width: 100%; /* Ensure the nav stretches across the full width */
 }
 
-.nav-column {
-    flex: 1;
+nav ul {
     display: flex;
-    flex-direction: column;
+    list-style: none;
+    align-items: center; /* Ensures all items are aligned vertically */
 }
 
-.nav-list {
-    list-style: disc;
-    font-size: 10px;
-    padding: 0;
-    margin: 0;
-
+nav ul li {
+    margin-right: 25px; /* Adjust margin for spacing */
 }
 
-.nav-item {
-    margin: 0.5rem 0;
+nav ul li:last-child {
+    margin-right: 0; /* Remove margin from last item */
 }
 
-.nav-link {
-    color: black;
+nav ul li a {
+    color: #fff;
     text-decoration: none;
-    font-size: 22px; /* Slightly increased font size */
-
-    font-family: sans-serif; /* Updated font family here as well */
+    font-size: 1.1rem; /* Adjusted font size for readability */
+    font-weight: 500;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease; /* Smooth background transition */
 }
 
-.nav-link:hover {
-    text-decoration: underline;
+.no-hover {
+    text-decoration: none;
+    pointer-events: none;
+    font-weight: normal; /* Set normal font weight for 'Sprache:' */
+    padding: 8px 15px; /* Same padding as the other links */
+    display: inline-block; /* Ensures the text is treated like an inline element */
+    align-self: center; /* Vertically center the "Sprache:" text */
 }
 
-.hero {
-    background-color: #f4f4f4;
-    padding: 50px;
-    text-align: center;
+/* Hover effect for other links */
+nav ul li a:hover {
+    background-color: #555; /* Darken on hover */
 }
 
-.features {
-    padding: 50px;
-}
-
-.features ul {
-    list-style-type: circle;
-}
-
-.pricing {
-    background-color: #f4f4f4;
-    padding: 50px;
-    text-align: center;
-    margin-bottom: 50px;
-}
-
-.description {
-    background-color: #fff;
-    padding: 50px;
-    text-align: center;
-}
-
-.description h2 {
-    margin-bottom: 30px;
-}
-
-.section-content {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 30px;
-}
-
-.section-content > div {
+#patts{
     flex: 1;
-    margin: 0 20px;
+    max-width: 200px;
 }
 
-.section-content h3 {
-    margin-bottom: 10px;
-}
-
-.app {
-    background-color: #f9f9f9;
-    padding: 50px;
-    text-align: center;
-}
-
-.app h2 {
-    margin-bottom: 30px;
-}
-
-.app-content {
+/* intro Section */
+.intro {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
+    padding: 50px;  /* Etwas Abstand rundum */
+    margin-left: 150px; /* Verschiebung nach links für den Text */
 }
 
-.app-text {
-    flex: 1;
+.intro-section {
+    flex: 1;  /* Der Textbereich nimmt den verfügbaren Platz ein */
+    margin-right: 20px;  /* Etwas Abstand zwischen Text und Bild */
+}
+
+.intro .content h1 {
+    font-size: 3vw;
+    margin-bottom: 15px;
+    margin-left: 90px;
+}
+
+.intro .content ul {
+    list-style: none;  /* Entfernt Aufzählungszeichen */
+    font-size: 1.3rem;  /* Etwas größere Schrift */
+}
+
+.intro .content ul li {
+    font-size: 1.5vw;
+    flex: 2;
+    margin-right: 30px;
     text-align: left;
+    margin-left: 90px;
 }
-
-.app-image {
+.intro-image {
     flex: 1;
-    text-align: center;
-}
-
-.app-image img {
-    max-width: 100%;
-    height: auto;
-}
-
-.product {
-    background-color: #fff;
-    padding: 50px;
-    text-align: center;
-}
-
-.product h2 {
-    margin-bottom: 30px;
-}
-
-.product-content {
+    max-width: 400px;
     display: flex;
-    justify-content: space-around;
-    align-items: center;
+    justify-content: center;
+}
+
+.intro-image img {
+    width: 70%;
+    border-radius: 15px;
+    object-fit: cover;
+}
+
+/* Produktbeschreibung - Barrierefreies Layout */
+.product-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 50px 0;
+    padding: 20px;
 }
 
 .product-text {
-    flex: 1;
+    font-size: 5vw;
+    flex: 2;
+    margin-right: 30px;
     text-align: left;
+}
+
+.product-text h2 {
+    font-size: 3vw;
+    margin-bottom: 15px;
+    margin-left: 90px;
+}
+.product-text h3 {
+    font-size: 3vw;
+    margin-bottom: 15px;
+    margin-left: 90px;
+}
+
+.product-text p {
+    font-size: 1.5vw;
+    line-height: 1.6;
+    color: #333;
+    margin-left: 90px;
 }
 
 .product-image {
     flex: 1;
-    text-align: center;
+    height:auto;
+    max-width: 100%;
 }
 
 .product-image img {
-    max-width: 100%;
-    height: auto;
+    width: 90%;
+    border-radius: 15px;
+    object-fit: cover;
 }
 
-.language-dropdown {
-    position: relative;
-    float: right;
+
+.app-section{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 50px 0;
+    padding: 20px;
+}
+.app-text{
+    flex: 2;
+    margin-right: 30px;
+    text-align: left;
+}
+.app-text h2 {
+    font-size: 3vw;
+    margin-bottom: 15px;
+    margin-left: 90px;
+}
+.app-text h3 {
+    font-size: 3vw;
+    margin-bottom: 15px;
+    margin-left: 90px;
+
 }
 
-.language-dropdown .dropdown-content {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    z-index: 1;
-}
-
-.language-dropdown .dropdown-content a {
-    display: block;
-    padding: 10px;
-    text-decoration: none;
+.app-text p {
+    font-size: 1.5vw;
+    line-height: 1.6;
     color: #333;
+    margin-left: 90px;
 }
 
-.language-dropdown:hover .dropdown-content {
-    display: block;
+.app-image {
+    height: auto;
+    border-radius: 10px; /* Deutlich abgerundete Ecken */
+    object-fit: contain;
+    max-height: 300px;
 }
 
-.rights{
+.app-image img {
+    width: 100%;
+    border-radius: 15px;
+    object-fit: cover;
+}
+.deinwerk-section{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 50px 0;
+    padding: 20px;
+}
+.deinwerk-text {
+    flex: 2;
+    margin-right: 30px;
+    text-align: left;
+}
+.deinwerk-text h2 {
+    font-size: 3vw;
+    margin-bottom: 15px;
+    margin-left: 90px;
+}
+.deinwerk-text h3 {
+    font-size: 3vw;
+    margin-bottom: 15px;
+    margin-left: 90px;
+}
+
+.deinwerk-text p {
+    font-size: 1.5vw;
+    line-height: 1.6;
+    color: #333;
+    margin-left: 90px;
+}
+
+.deinwerk-image {
+    flex: 1;
+    max-width: 200px;
+}
+
+.deinwerk-image img {
+    width: 100%;
+    border-radius: 15px;
+    object-fit: cover;
+}
+.support-section{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 50px 0;
+    padding: 20px;
+}
+.support-text {
+    flex: 2;
+    margin-right: 30px;
+    text-align: left;
+}
+.support-text h2 {
+    font-size: 3vw;
+    margin-bottom: 15px;
+    margin-left: 90px;
+}
+.support-text h3 {
+    font-size: 3vw;
+    margin-bottom: 15px;
+    margin-left: 90px;
+}
+
+.support-text p {
+    font-size: 1.5vw;
+    line-height: 1.6;
+    color: #333;
+    margin-left: 90px;
+}
+
+.support-image {
+    flex: 1;
+    max-width: 200px;
+}
+
+.support-image img {
+    width: 100%;
+    border-radius: 15px;
+    object-fit: cover;
+}
+
+/* Footer Styles */
+.rights {
     background-color: #333;
     color: #fff;
     text-align: center;
@@ -205,33 +301,28 @@ nav {
     bottom: 0;
     width: 100%;
 }
-
-b{
+/* Link and Typography Styles */
+b {
     color: black;
     font-weight: normal;
     font-size: 22px;
-    margin-left:3px;
-    margin-right:3px;
+    margin-left: 3px;
+    margin-right: 3px;
     font-family: sans-serif;
 }
-a{
+
+a, u {
     color: black;
     text-decoration: none;
-    font-size: 22px; /* Slightly increased font size */
-
-    font-family: sans-serif; /* Updated font family here as well */
+    font-size: 22px;
+    font-family: sans-serif;
 }
 
-u{
-    color: black;
-    text-decoration: none;
-    font-size: 22px; /* Slightly increased font size */
+u {
+    text-decoration: underline;
 
-    font-family: sans-serif; /* Updated font family here as well */
-}
-.navigation{
-    color: black;
-    padding: 1.5rem 0; /* Increased padding for larger gray box */
-    background-color: #e0e0e0; /* Adding explicit background for clarity */
 }
 
+.sr-only{
+    color:#333;
+}
