@@ -24,20 +24,6 @@ header h1 {
     margin: 0;
 }
 
-nav ul {
-    list-style: none;
-    text-align: center;
-
-}
-
-nav ul li {
-    display: inline;
-    margin-right: 20px;
-    list-style: none;
-}
-li{
-    list-style: none;
-}
 
 nav {
     display: flex;
@@ -47,11 +33,6 @@ nav {
     margin: 0 auto;
 }
 
-nav ul li a {
-    color: #333;
-    text-decoration: none;
-}
-
 .nav-column {
     flex: 1;
     display: flex;
@@ -59,9 +40,11 @@ nav ul li a {
 }
 
 .nav-list {
-    list-style: none;
+    list-style: disc;
+    font-size: 10px;
     padding: 0;
     margin: 0;
+
 }
 
 .nav-item {
@@ -91,7 +74,7 @@ nav ul li a {
 }
 
 .features ul {
-    list-style-type: none;
+    list-style-type: circle;
 }
 
 .pricing {
@@ -251,3 +234,4 @@ u{
     padding: 1.5rem 0; /* Increased padding for larger gray box */
     background-color: #e0e0e0; /* Adding explicit background for clarity */
 }
+
