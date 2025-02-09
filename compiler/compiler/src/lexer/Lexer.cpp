@@ -2,10 +2,9 @@
 
 
 std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
-  while (!tokens.empty()) {
-    tokens.pop();
-  }
-  
+  // clean up for fresh tokens
+  tokens = {};
+
   for (size_t i = 0; i < len; i++) {
     switch (code[i]) {
       case '(':
@@ -70,18 +69,24 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
           i += numLen - 1;
         } else if (isAlpha(code[i])) {
           // identifier
-
           size_t identLen = 1;
           while (i + identLen < len && isAlphaNumeric(code[i + identLen])) {
             identLen++;
           }
 
-          addToken(&code[i], identLen, getIdentTokenType(&code[i], identLen));
+          TokenType tokenType = TokenType::Identifier;
+          for (size_t j = 0; j < keywordCount; j++) {
+            if (strlen(keywords[j].value) == identLen && strncmp(keywords[j].value, &code[i], identLen) == 0) {
+              tokenType = keywords[j].type;
+              Serial.println(keywords[j].value);
+              break;
+            }
+          }
+
+          addToken(&code[i], identLen, tokenType);
           i += identLen - 1;
         } else if (!isSpace(code[i]) && code[i] != '\0') {
-          char err[50];
-          snprintf(err, 49, "Character \"%s\" not recognized", &code[i]);
-          ErrorHandler::restart(err);
+          ErrorHandler::restart("Character \"", &code[i], "\" not recognized");
           return tokens;
         }
         break;
@@ -89,11 +94,7 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
   }
 
   char endOfFile[] = "EOF";
-
   addToken(endOfFile, strlen(endOfFile), TokenType::EndOfFile);
-
-  Serial.println("Front in Lexer: ");
-  Serial.println(tokens.front().value);
 
   return tokens;
 }
@@ -103,20 +104,10 @@ void Lexer::addToken(const char* src, size_t srcLen, TokenType tokenType) {
   char* value = new char[srcLen + 1];
   strncpy(value, src, srcLen);
   value[srcLen] = '\0';
-  
-  if(tokens.size() < maxTokens) {
+
+  if (tokens.size() < maxTokens) {
     tokens.emplace(value, tokenType);
   } else {
     ErrorHandler::restart("Too many tokens in program!");
   }
-}
-
-Lexer::TokenType Lexer::getIdentTokenType(const char* ident, size_t len) {
-  for (size_t i = 0; i < keywordCount; i++) {
-    if (strlen(keywords[i].value) == len && strncmp(keywords[i].value, ident, len) == 0) {
-      return keywords[i].type;
-    }
-  }
-
-  return Lexer::TokenType::Identifier;
 }

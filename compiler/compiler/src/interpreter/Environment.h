@@ -1,224 +1,89 @@
 #pragma once
 
+#include <map>
+#include <set>
+
 #include "Constants.h"
 #include "ErrorHandler.h"
 #include "Values.h"
 #include "comm/PadsComm.h"
 
+/**
+ * @class Environment
+ * @brief Represents an environment for managing variables, functions, and scope resolution.
+ * 
+ * It supports variable declarations, assignments, lookups, and handles parent-child environment resolution.
+ */
 class Environment {
 public:
+  /**
+   * @brief Default constructor. Initializes an environment with no parent and creates global variables.
+   */
   Environment()
     : parent(nullptr) {
-    declareVar("true", values.newBooleanVal(true), true);
-    declareVar("false", values.newBooleanVal(false), true);
-    declareVar("null", values.newNullVal(), true);
-    Values::NativeFnValue* print = values.newNativeFn();
-
-
-    print->call = [](Values::RuntimeVal** args, Environment* scope) -> Values::RuntimeVal* {
-      switch (args[0]->type) {
-        case Values::ValueType::Boolean:
-          if (static_cast<const Values::BooleanVal*>(args[0])->value) {
-            Serial.println("true");
-          } else {
-            Serial.println("false");
-          }
-          break;
-        case Values::ValueType::Null:
-          Serial.println("null");
-          break;
-        case Values::ValueType::Number:
-          Serial.println(static_cast<const Values::NumberVal*>(args[0])->value);
-          break;
-        case Values::ValueType::NativeFn:
-          Serial.println((unsigned int)&static_cast<const Values::NativeFnValue*>(args[0])->call);  // print memory address
-          break;
-        default:
-          ErrorHandler::restart("Undefined Value Type");
-          break;
-      }
-
-      return scope->values.newNullVal();
-    };
-
-    declareVar("print", print, true);
-
-    Values::NativeFnValue* playSound = values.newNativeFn();
-    playSound->call = [](Values::RuntimeVal** args, Environment* env) -> Values::RuntimeVal* {
-      PadsComm* padsComm = PadsComm::getInstance();
-
-      uint8_t argsLen = 3;
-      char argNames[argsLen][9] = { "soundVal", "soundLen", "padIndex" };
-      bool required[argsLen] = { true, true, false };
-      int parsedArgs[argsLen] = {0, 0, UINT8_MAX};
-
-      for (uint8_t i = 0; i < argsLen; i++) {
-        if (args[i] == nullptr) {
-          if (required[i]) {
-            ErrorHandler::restart("Required argument '", argNames[i], "' not given for 'playSound(soundVal, soundLen)'");
-          } else {
-            continue;
-          }
-        } 
-        
-        if (args[i]->type != Values::ValueType::Number) {
-          ErrorHandler::restart("Expected Number for '", argNames[i], "' of 'playSound(soundVal, soundLen)'");
-        }
-
-        parsedArgs[i] = static_cast<const Values::NumberVal*>(args[i])->value;
-      }
-
-      padsComm->playSingleSound(parsedArgs[0], parsedArgs[1], parsedArgs[2]);
-
-      return env->values.newBooleanVal(true);
-    };
-    declareVar("playSound", playSound, true);
-
-    Values::NativeFnValue* playCorrectActionJingle = values.newNativeFn();
-    playCorrectActionJingle->call = [](Values::RuntimeVal** args, Environment* env) -> Values::RuntimeVal* {
-      PadsComm* padsComm = PadsComm::getInstance();
-      uint8_t padIndex = UINT8_MAX;
-
-      if(args[0] != nullptr) {
-        if (args[0]->type != Values::ValueType::Number) {
-          ErrorHandler::restart("Expected Number for 'padIndex' of 'playCorrectActionJingle(padIndex)'");
-        }
-        padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
-      }
-
-      padsComm->playCorrectActionJingle(padIndex);
-
-      return env->values.newBooleanVal(true);
-    };
-    declareVar("playCorrectActionJingle", playCorrectActionJingle, true);
-
-    Values::NativeFnValue* playWrongActionJingle = values.newNativeFn();
-    playWrongActionJingle->call = [](Values::RuntimeVal** args, Environment* env) -> Values::RuntimeVal* {
-      PadsComm* padsComm = PadsComm::getInstance();
-      uint8_t padIndex = UINT8_MAX;
-
-      if(args[0] != nullptr) {
-        if (args[0]->type != Values::ValueType::Number) {
-          ErrorHandler::restart("Expected Number for 'padIndex' of 'playWrongActionJingle(padIndex)'");
-        }
-        padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
-      }
-
-      padsComm->playWrongActionJingle(padIndex);
-
-      return env->values.newBooleanVal(true);
-    };
-    declareVar("playWrongActionJingle", playWrongActionJingle, true);
-
-    Values::NativeFnValue* playWinnerJingle = values.newNativeFn();
-    playWinnerJingle->call = [](Values::RuntimeVal** args, Environment* env) -> Values::RuntimeVal* {
-      PadsComm* padsComm = PadsComm::getInstance();
-      uint8_t padIndex = UINT8_MAX;
-
-      if(args[0] != nullptr) {
-        if (args[0]->type != Values::ValueType::Number) {
-          ErrorHandler::restart("Expected Number for 'padIndex' of 'playWinnerJingle(padIndex)'");
-        }
-        padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
-      }
-
-      padsComm->playWinnerJingle(padIndex);
-
-      return env->values.newBooleanVal(true);
-    };
-    declareVar("playWinnerJingle", playWinnerJingle, true);
-
-    Values::NativeFnValue* playLoserJingle = values.newNativeFn();
-    playLoserJingle->call = [](Values::RuntimeVal** args, Environment* env) -> Values::RuntimeVal* {
-      PadsComm* padsComm = PadsComm::getInstance();
-      uint8_t padIndex = UINT8_MAX;
-
-      if(args[0] != nullptr) {
-        if (args[0]->type != Values::ValueType::Number) {
-          ErrorHandler::restart("Expected Number for 'padIndex' of 'playLoserJingle(padIndex)'");
-        }
-        padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
-      }
-
-      padsComm->playLoserJingle(padIndex);
-
-      return env->values.newBooleanVal(true);
-    };
-    declareVar("playLoserJingle", playLoserJingle, true);
-
-    Values::NativeFnValue* waitForPlayerOnPad = values.newNativeFn();
-    waitForPlayerOnPad->call = [](Values::RuntimeVal** args, Environment* env) -> Values::RuntimeVal* {
-      PadsComm* padsComm = PadsComm::getInstance();
-      uint8_t padIndex = UINT8_MAX;
-
-      if(args[0] != nullptr) {
-        if (args[0]->type != Values::ValueType::Number) {
-          ErrorHandler::restart("Expected Number for 'padIndex' of 'waitForPlayerOnPad(padIndex)'");
-        }
-        padIndex = (uint8_t) static_cast<const Values::NumberVal*>(args[0])->value;
-      }
-
-      padsComm->waitForPlayerOnPad(padIndex);
-
-      return env->values.newBooleanVal(true);
-    };
-    declareVar("waitForPlayerOnPad", waitForPlayerOnPad, true);
-
-    Values::NativeFnValue* waitForPlayerOnAnyPad = values.newNativeFn();
-    waitForPlayerOnPad->call = [](Values::RuntimeVal** args, Environment* env) -> Values::RuntimeVal* {
-      PadsComm* padsComm = PadsComm::getInstance();
-
-      if(args[0] != nullptr) {
-        ErrorHandler::restart("No parameter expected for 'waitForPlayerOnAnyPad()'");
-      }
-
-      padsComm->waitForPlayerOnAnyPad();
-
-      return env->values.newBooleanVal(true);
-    };
-    declareVar("waitForPlayerOnAnyPad", waitForPlayerOnAnyPad, true);
-
-    Values::NativeFnValue* waitForPlayersOnAllActivePads = values.newNativeFn();
-    waitForPlayersOnAllActivePads->call = [](Values::RuntimeVal** args, Environment* env) -> Values::RuntimeVal* {
-      PadsComm* padsComm = PadsComm::getInstance();
-
-      if(args[0] != nullptr) {
-        ErrorHandler::restart("No parameter expected for 'waitForPlayersOnAllActivePads()'");
-      }
-
-      padsComm->waitForPlayersOnAllActivePads();
-
-      return env->values.newBooleanVal(true);
-    };
-    declareVar("waitForPlayersOnAllActivePads", waitForPlayersOnAllActivePads, true);
+    createGlobalEnv();
   }
+
+  /**
+   * @brief Constructor with parent environment.
+   * 
+   * @param _parent The parent environment this instance is resolving from.
+   */
   Environment(Environment* _parent)
     : parent(_parent) {
   }
 
-  ~Environment() {
-    for (size_t i = 0; i < varIndex; i++) {
-      delete[] varNames[i];
-    }
-  }
+  /**
+   * @brief Declares a variable with a given name, value, and constant flag.
+   * 
+   * @param varName The name of the variable.
+   * @param value The value of the variable.
+   * @param constant Boolean flag indicating whether the variable is constant.
+   * @return The declared variable's value.
+   * @throws ErrorHandler::restart if the variable already exists in the current environment.
+   */
+  Values::RuntimeVal declareVar(const char* varName, const Values::RuntimeVal& value, bool constant);
 
-  Values::RuntimeVal* declareVar(const char* varName, Values::RuntimeVal* value, bool constant);
-  Values::RuntimeVal* assignVar(const char* varName, Values::RuntimeVal* value);
-  Values::RuntimeVal* lookupVar(const char* varName);
+  /**
+   * @brief Assigns a value to an existing variable in the environment.
+   * 
+   * @param varName The name of the variable.
+   * @param value The new value to assign to the variable.
+   * @return The assigned value.
+   * @throws ErrorHandler::restart if attempting to reassign a constant variable.
+   */
+  Values::RuntimeVal assignVar(const char* varName, const Values::RuntimeVal& value);
+
+  /**
+   * @brief Looks up the value of a variable.
+   * 
+   * @param varName The name of the variable.
+   * @return The value of the variable.
+   * @throws ErrorHandler::restart if the variable cannot be resolved in the current or parent environments.
+   */
+  Values::RuntimeVal lookupVar(const char* varName);
+
+  /**
+   * @brief Resolves a variable from the current environment or any parent environment.
+   * 
+   * @param varName The name of the variable.
+   * @return The environment in which the variable is found.
+   * @throws ErrorHandler::restart if the variable cannot be resolved in any environment.
+   */
   Environment* resolve(const char* varName);
 
-  Values values;
+  Values values; /**< The container for values in the environment. */
 private:
-  size_t varIndex = 0;
-  Environment* parent;
+  /**
+   * @brief  Creates global environment variables and functions.
+   * 
+   * Initializes the built-in variables like 'true', 'false', and 'null',
+   * and declares the native functions like 'print', 'playSound', etc.
+   */
+  void createGlobalEnv();
 
-  char* varNames[maxVariables];
-  Values::RuntimeVal* valuesArray[maxVariables];
+  Environment* parent; /**< The parent environment for resolution of variables. */
 
-  bool isConstant[maxVariables] = { 0 };
-
-  bool has(const char* varName);
-  void set(const char* varName, Values::RuntimeVal* value);
-  Values::RuntimeVal* get(const char* varName);
-  int getIndex(const char* varName);
+  std::map<String, Values::RuntimeVal> variables; /**< Map of variables in the environment. */
+  std::set<String> constants;                     /**< Set of constant variables that cannot be reassigned. */
 };

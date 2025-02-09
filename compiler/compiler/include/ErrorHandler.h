@@ -2,10 +2,16 @@
 
 #include <Arduino.h>
 
-#include "interpreter/Values.h"
-
+/**
+ * @class ErrorHandler
+ * @brief A utility class for handling errors and memory diagnostics in an Arduino/ESP-based system.
+ */
 class ErrorHandler {
 public:
+  /**
+   * @brief Prints memory statistics for debugging purposes.
+   * @param location A string indicating where the memory stats are being logged.
+   */
   static void printMemoryStats(const char* location) {
     Serial.print("\n-----");
     Serial.print(location);
@@ -26,6 +32,10 @@ public:
     Serial.println("%");
   }
 
+  /**
+   * @brief Handles out-of-memory errors for a specific node type.
+   * @param nodeType The type of node that ran out of memory.
+   */
   static void outOfMemoryForNodes(const char* nodeType) {
     Serial.print("Out of memory for ");
     Serial.print(nodeType);
@@ -33,47 +43,21 @@ public:
     actualRestart();
   }
 
-  static void outOfMemoryForRuntimeVal(Values::ValueType valueType) {
-    Serial.print("Out of memory for ");
-    switch (valueType)
-    {
-    case Values::ValueType::Null:
-      Serial.print("NullVal");
-      break;
-    case Values::ValueType::Boolean:
-      Serial.print("BooleanVal");
-      break;
-    case Values::ValueType::Number:
-      Serial.print("NumberVal");
-      break;
-    case Values::ValueType::NativeFn:
-      Serial.print("NativeFnVal");
-      break;
-    case Values::ValueType::Break:
-      Serial.print("BreakVal");
-      break;
-    }
-    Serial.println(" runtime values");
-  }
-
-  static void expectedType(Values::ValueType valueType, const char* location) {
-    Serial.println();
-    switch (valueType)
-    {
-    case Values::ValueType::Number:
-      /* code */
-      break;
-    
-    default:
-      break;
-    }
-  }
-
+  /**
+   * @brief Restarts the system with an error message.
+   * @param err The error message to be printed before restarting.
+   */
   static void restart(const char* err) {
     Serial.println(err);
     actualRestart();
   }
 
+  /**
+   * @brief Restarts the system with a formatted message.
+   * @param before Text to print before the value.
+   * @param val The main value to be displayed.
+   * @param after Text to print after the value.
+   */
   static void restart(const char* before, const char* val, const char* after) {
     Serial.print(before);
     Serial.print(val);
@@ -81,6 +65,11 @@ public:
     actualRestart();
   }
 
+  /**
+   * @brief Restarts the system with an expected vs actual value message.
+   * @param expected The expected value.
+   * @param actual The actual value that was received.
+   */
   static void restart(const char* expected, const char* actual) {
     Serial.print("Expected \"");
     Serial.print(expected);
@@ -91,6 +80,9 @@ public:
   }
 
 private:
+  /**
+   * @brief Performs the actual system restart after a delay.
+   */
   static void actualRestart() {
     Serial.println("\nRestarting...");
     delay(5000);

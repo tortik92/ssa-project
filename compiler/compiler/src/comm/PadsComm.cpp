@@ -1,8 +1,70 @@
 #include "PadsComm.h"
 
-PadsComm* PadsComm::instance = nullptr;
+PadsComm *PadsComm::instance = nullptr;
 
-// ----------ABSTRACTED PAD CALL FUNCTIONS-----------
+PadsComm::WaitResult PadsComm::playSingleSound(const int soundVal, const int soundLenMs, uint8_t padIndex) {
+  uint8_t *macAddr = padIndex < maxAllowedPads ? padsArray[padIndex].macAddr : broadcastAddress;
+  prepareSend();
+
+  toSendMsg.function = padOutput_playSound8Val;
+  toSendMsg.param1[0] = soundVal;
+  toSendMsg.param2[0] = soundLenMs;
+
+  printWithMac("Playing single sound on pad", macAddr);
+  Serial.println(soundVal);
+
+  esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
+
+  return waitWithEventChecks(soundLenMs + mandatorySendDelay);
+}
+
+PadsComm::WaitResult PadsComm::play8Sounds(const int soundVal[paramLen], const int soundLenMs[paramLen], uint8_t padIndex) {
+  uint8_t *macAddr = padIndex < maxAllowedPads ? padsArray[padIndex].macAddr : broadcastAddress;
+  toSendMsg.function = padOutput_playSound8Val;
+  memcpy(toSendMsg.param1, soundVal, sizeof(toSendMsg.param1));
+  memcpy(toSendMsg.param2, soundLenMs, sizeof(toSendMsg.param2));
+
+  printWithMac("Playing 8 sounds on pad", macAddr);
+  Serial.print("Sounds: [");
+  for (int i = 0; i < paramLen; i++) {
+    Serial.print(toSendMsg.param1[i]);
+    if (i < paramLen - 1) Serial.print(", ");
+    else Serial.println("]");
+  }
+
+  Serial.print("Lengths: [");
+  for (int i = 0; i < paramLen; i++) {
+    Serial.print(toSendMsg.param2[i]);
+    if (i < paramLen - 1) Serial.print(", ");
+    else Serial.println("]");
+  }
+
+  esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
+
+  unsigned long delay = mandatorySendDelay;
+  for (int i = 0; i < paramLen; i++) {
+    delay += soundLenMs[i];
+  }
+
+  return waitWithEventChecks(delay);
+}
+
+PadsComm::WaitResult PadsComm::playCorrectActionJingle(uint8_t padIndex) {
+  return play8Sounds(correctActionTones, correctActionDurations, padIndex);
+}
+
+PadsComm::WaitResult PadsComm::playWrongActionJingle(uint8_t padIndex) {
+  return play8Sounds(wrongActionTones, wrongActionDurations, padIndex);
+}
+
+PadsComm::WaitResult PadsComm::playWinnerJingle(uint8_t padIndex) {
+  return play8Sounds(winnerTones, winnerToneDurations, padIndex);
+}
+
+PadsComm::WaitResult PadsComm::playLoserJingle(uint8_t padIndex) {
+  return play8Sounds(loserTones, loserToneDurations, padIndex);
+}
+
 PadsComm::WaitResult PadsComm::waitForPlayerOnPad(uint8_t padIndex) {
   padsArray[padIndex].isOccupied = false;
   prepareSend();
@@ -59,71 +121,6 @@ PadsComm::WaitResult PadsComm::waitForPlayersOnAllActivePads() {
   return waitWithEventChecks(defaultDelay);
 }
 
-PadsComm::WaitResult PadsComm::playSingleSound(const int soundVal, const int soundLenMs, uint8_t padIndex) {
-  uint8_t *macAddr = padIndex < maxAllowedPads ? padsArray[padIndex].macAddr : broadcastAddress;
-  prepareSend();
-
-  toSendMsg.function = padOutput_playSound8Val;
-  toSendMsg.param1[0] = soundVal;
-  toSendMsg.param2[0] = soundLenMs;
-
-  printWithMac("Playing single sound on pad", macAddr);
-  Serial.println(soundVal);
-
-  esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
-
-  return waitWithEventChecks(soundLenMs);
-}
-
-PadsComm::WaitResult PadsComm::play8Sounds(const int soundVal[paramLen], const int soundLenMs[paramLen], uint8_t padIndex) {
-  uint8_t *macAddr = padIndex < maxAllowedPads ? padsArray[padIndex].macAddr : broadcastAddress;
-
-  toSendMsg.function = padOutput_playSound8Val;
-  memcpy(toSendMsg.param1, soundVal, paramLen);
-  memcpy(toSendMsg.param2, soundLenMs, paramLen);
-
-  printWithMac("Playing 8 sounds on pad", macAddr);
-  Serial.print("Sounds: [");
-  for (int i = 0; i < paramLen; i++) {
-    Serial.print(soundVal[i]);
-    if (i < paramLen - 1) Serial.print(", ");
-    else Serial.println("]");
-  }
-
-  esp_now_send(macAddr, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
-
-  unsigned long delay = 0;
-  for (int i = 0; i < paramLen; i++) {
-    delay += soundLenMs[i];
-  }
-
-  return waitWithEventChecks(delay);
-}
-
-PadsComm::WaitResult PadsComm::playCorrectActionJingle(uint8_t padIndex) {
-  return play8Sounds(gameActionTones, gameActionDurations, padIndex);
-}
-
-PadsComm::WaitResult PadsComm::playWrongActionJingle(uint8_t padIndex) {
-  int reverseTones[paramLen] = { 0 };
-  for (size_t i = 0; i < paramLen; i++) {
-    reverseTones[paramLen - 1 - i] = gameActionTones[i];
-  }
-  return play8Sounds(reverseTones, gameActionDurations, padIndex);
-}
-
-PadsComm::WaitResult PadsComm::playWinnerJingle(uint8_t padIndex) {
-  return play8Sounds(gameConclusionTones, gameConclusionDurations, padIndex);
-}
-
-PadsComm::WaitResult PadsComm::playLoserJingle(uint8_t padIndex) {
-  int reverseTones[paramLen] = { 0 };
-  for (size_t i = 0; i < paramLen; i++) {
-    reverseTones[paramLen - 1 - i] = gameConclusionTones[i];
-  }
-  return play8Sounds(reverseTones, gameConclusionDurations, padIndex);
-}
-
 PadsComm::WaitResult PadsComm::waitWithEventChecks(unsigned long ms) {
   unsigned long time_now = millis();
 
@@ -138,29 +135,33 @@ PadsComm::WaitResult PadsComm::waitWithEventChecks(unsigned long ms) {
     }
 
     switch (padsState) {
-      case PadsState::WaitingForAnyPadOccupied:
+      case PadsState::AnyPadOccupied:
+        Serial.println("Any pad occupied!");
         cancelOperation();
-        return PadsComm::WaitResult::PadOccupied;
-      case PadsState::WaitingForSpecificPadOccupied:
-        if (waitingForSpecificPadOccupied != UINT8_MAX) {
-          if (padsArray[waitingForSpecificPadOccupied].isOccupied) {
-            cancelOperation();
-            return PadsComm::WaitResult::PadOccupied;
-          }
-        }
-        break;
-      case PadsState::WaitingForAllActivePadsOccupied:
-        if (allPadsOccupied) {
-          cancelOperation();
-          return PadsComm::WaitResult::PadOccupied;
-        }
+        padsState = PadsState::Idle;
+        Serial.println("Exiting waitWithEventChecks early...");
+        return WaitResult::PadOccupied;
+      case PadsState::SpecificPadOccupied:
+        Serial.println("Specific pad occupied!");
+        cancelOperation();
+        padsState = PadsState::Idle;
+        Serial.println("Exiting waitWithEventChecks early...");
+        return WaitResult::PadOccupied;
+      case PadsState::AllActivePadsOccupied:
+        Serial.println("All active pads occupied!");
+        cancelOperation();
+        padsState = PadsState::Idle;
+        Serial.println("Exiting waitWithEventChecks early...");
+        return WaitResult::PadOccupied;
       default:
         break;
     }
   }
 
-  Serial.println("Timeout");  
-  return PadsComm::WaitResult::Timeout;
+  Serial.print("Finished waiting ");
+  Serial.print(ms);
+  Serial.println(" ms");
+  return WaitResult::Timeout;
 }
 
 void PadsComm::initEspNow(esp_now_send_cb_t OnDataSent, esp_now_recv_cb_t OnDataRecv) {
@@ -201,37 +202,29 @@ void PadsComm::initEspNow(esp_now_send_cb_t OnDataSent, esp_now_recv_cb_t OnData
   padsState = PadsState::Idle;
 }
 
-void PadsComm::prepareSend() {
-  // set toSendMsg struct to 0
-  toSendMsg.function = 0;
+void PadsComm::cancelOperation() {
+  waitingForSpecificPadOccupied = anyPad;
 
-  memset(toSendMsg.param1, 0, sizeof(toSendMsg.param1));
-  memset(toSendMsg.param2, 0, sizeof(toSendMsg.param2));
-  memset(toSendMsg.param3, 0, sizeof(toSendMsg.param3));
-  memset(toSendMsg.param4, 0, sizeof(toSendMsg.param4));
+  prepareSend();
+  toSendMsg.function = padOutput_cancelOperation;
+  esp_now_send(broadcastAddress, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
+  delay(500);
+}
+
+void PadsComm::prepareSend() {
+  memset(&toSendMsg, 0, sizeof(toSendMsg));
 
   // set toRecvMsg struct to 255 (is not a real return value)
   toRecvMsg.returnValue = 0xFF;
 }
 
 void PadsComm::prepareWait() {
-  anyPadOccupied = false;
-  allPadsOccupied = false;
-  waitingForSpecificPadOccupied = UINT8_MAX;
-  memset(eventOrder, 0, sizeof(maxAllowedPads));
+  waitingForSpecificPadOccupied = anyPad;
 
-  for(int i = 0; i < maxAllowedPads; i++) {
+  for (int i = 0; i < maxAllowedPads; i++) {
     padsArray[i].isOccupied = false;
+    padOccupationChronology[i] = 0;
   }
-}
-
-
-void PadsComm::cancelOperation() {
-  waitingForSpecificPadOccupied = UINT8_MAX;
-
-  prepareSend();
-  toSendMsg.function = padOutput_cancelOperation;
-  esp_now_send(broadcastAddress, (uint8_t *)&toSendMsg, sizeof(toSendMsg));
 }
 
 int PadsComm::findFirstEmptySlot(uint8_t *arr, size_t n) {
@@ -252,4 +245,68 @@ void PadsComm::printWithMac(const char *msg, uint8_t *mac) {
     else
       Serial.print("\n");
   }
+}
+
+void PadsComm::setPadOccupied(uint8_t *mac, uint8_t *incomingData) {
+  switch (padsState) {
+    case PadsState::WaitingForAnyPadOccupied:
+      {
+        padsState = PadsState::AnyPadOccupied;
+
+        Pad *pad = findPad(mac);
+        if (pad != nullptr) {
+          pad->isOccupied = true;
+        }
+
+        break;
+      }
+    case PadsState::WaitingForSpecificPadOccupied:
+      {
+        Pad *pad = findPad(waitingForSpecificPadOccupied);
+
+        if (pad != nullptr && memcmp(pad->macAddr, mac, 6) == 0) {
+          pad->isOccupied = true;
+          padsState = PadsState::SpecificPadOccupied;
+        }
+        break;
+      }
+    case PadsState::WaitingForAllActivePadsOccupied:
+      for (int padIndex = 0; padIndex < maxAllowedPads; padIndex++) {
+        if (memcmp(padsArray[padIndex].macAddr, mac, 6) == 0) {
+          int emptyIndex = findFirstEmptySlot(padOccupationChronology, maxAllowedPads);
+
+          if (emptyIndex != -1) {
+            if (emptyIndex == maxAllowedPads - 1) {
+              padsState = PadsState::AllActivePadsOccupied;
+            }
+            padOccupationChronology[emptyIndex] = padIndex;
+            break;
+          } else {
+            ErrorHandler::restart("padOccupationChronology array overflow detected");
+          }
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  memcpy(&toRecvMsg, incomingData, sizeof(toRecvMsg));
+}
+
+bool PadsComm::isPadOccupied(uint8_t padIndex) const {
+  return padIndex < maxAllowedPads ? padsArray[padIndex].isOccupied : false;
+}
+
+PadsComm::Pad *PadsComm::findPad(uint8_t index) {
+  return index < maxAllowedPads && index >= 0 ? &padsArray[index] : nullptr;
+}
+
+PadsComm::Pad *PadsComm::findPad(uint8_t *mac) {
+  for (int i = 0; i < maxAllowedPads; i++) {
+    if (memcmp(padsArray[i].macAddr, mac, 6) == 0) {
+      return &padsArray[i];
+    }
+  }
+  return nullptr;
 }

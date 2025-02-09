@@ -1,152 +1,134 @@
 #pragma once
 
 #include <functional>
-#include <array>
-#include <forward_list>
+#include <map>
 
 #include "Constants.h"
-#include "ErrorHandler.h"
 
 class Environment;
 
+/**
+ * @brief The Values class provides the structure for different types of runtime values.
+ * 
+ * It contains several value types (Null, Boolean, Number, NativeFn, Break) 
+ * and a typedef for a function call handler (FunctionCall).
+ */
 class Values {
 public:
-  ~Values() {
-    delete[] nullValPool;
-    delete[] booleanValPool;
-    delete[] numberValPool;
-    delete[] nativeFnPool;
-    delete[] breakPool;
-  }
 
+  /**
+   * @brief Enum to define different types of values in the runtime.
+   */
   enum class ValueType {
-    Null,
-    Boolean,
-    Number,
-    NativeFn,
-    Break,
+    Null,      ///< Represents a null value.
+    Boolean,   ///< Represents a boolean value.
+    Number,    ///< Represents a numeric value.
+    NativeFn,  ///< Represents a native function value.
+    Break,     ///< Represents a break statement.
   };
 
+  /**
+   * @brief A structure representing a runtime value.
+   * 
+   * The base structure includes a type which specifies the kind of value.
+   */
   typedef struct RuntimeVal {
-    ValueType type;
+    ValueType type;  ///< The type of the value.
 
+    /**
+     * @brief Default constructor initializing the type to Null.
+     */
     RuntimeVal()
       : type(ValueType::Null) {}
+
+    /**
+     * @brief Constructor initializing the value with a specific type.
+     * @param _type The type to initialize the value with.
+     */
     RuntimeVal(ValueType _type)
       : type(_type) {}
   } RuntimeVal;
 
+  /**
+   * @brief A structure representing a null value. Inherits from RuntimeVal.
+   */
   typedef struct NullVal : RuntimeVal {
+    /**
+     * @brief Default constructor initializing the type to Null.
+     */
     NullVal()
       : RuntimeVal(ValueType::Null) {}
   } NullVal;
 
+  /**
+   * @brief A structure representing a boolean value. Inherits from RuntimeVal.
+   */
   typedef struct BooleanVal : RuntimeVal {
-    bool value;
+    bool value;  ///< The boolean value.
+
+    /**
+     * @brief Default constructor initializing the value to true.
+     */
     BooleanVal()
       : RuntimeVal(ValueType::Boolean), value(true) {}
+
+    /**
+     * @brief Constructor initializing the boolean value to the given value.
+     * @param _value The boolean value to initialize.
+     */
     BooleanVal(bool _value)
       : RuntimeVal(ValueType::Boolean), value(_value) {}
   } BooleanVal;
 
+  /**
+   * @brief A structure representing a numeric value. Inherits from RuntimeVal.
+   */
   typedef struct NumberVal : RuntimeVal {
-    int value;
+    int value;  ///< The numeric value.
 
+    /**
+     * @brief Default constructor initializing the value to 0.
+     */
     NumberVal()
-      : RuntimeVal(ValueType::Number), value(0L) {}
+      : RuntimeVal(ValueType::Number), value(0) {}
+
+    /**
+     * @brief Constructor initializing the numeric value to the given value.
+     * @param _value The numeric value to initialize.
+     */
     NumberVal(int _value)
       : RuntimeVal(ValueType::Number), value(_value) {}
   } NumberVal;
 
-  using FunctionCall = std::function<RuntimeVal*(RuntimeVal* args[maxFunctionArgs], Environment* env)>;
+  /**
+   * @brief Function call typedef, used to define the type of a callable function.
+   * 
+   * The function takes a vector of runtime values and an environment pointer, 
+   * and returns a runtime value.
+   */
+  using FunctionCall = std::function<RuntimeVal(std::vector<RuntimeVal> args, Environment* env)>;
 
-  typedef struct NativeFnValue : RuntimeVal {
-    FunctionCall call;
+  /**
+   * @brief A structure representing a native function value. Inherits from RuntimeVal.
+   */
+  typedef struct NativeFnVal : RuntimeVal {
+    FunctionCall call;  ///< The native function call handler.
 
-    NativeFnValue()
+    /**
+     * Default constructor initializing the type to NativeFn.
+     */
+    NativeFnVal()
       : RuntimeVal(ValueType::NativeFn) {}
-  } NativeFnValue;
+  } NativeFnVal;
 
+  /**
+   * @brief A structure representing a break value. Inherits from RuntimeVal.
+   */
   typedef struct BreakVal : RuntimeVal {
+    /**
+     * @brief Default constructor initializing the type to Break.
+     */
     BreakVal()
       : RuntimeVal(ValueType::Break) {}
   } BreakVal;
-
-  template<typename T>
-  T* newRuntimeVal(ValueType vt) {
-    switch (vt)
-    {
-    case ValueType::Boolean :
-      /* code */
-      break;
-    
-    default:
-      break;
-    }
-  }
-
-  NullVal* newNullVal() {
-    if (nullValCount >= poolSize) {
-      ErrorHandler::restart("Out of memory for NullVal runtime values");
-    }
-    return &nullValPool[nullValCount++];
-  }
-
-  BooleanVal* newBooleanVal(bool value = true) {
-    if (booleanValCount >= poolSize) {
-      ErrorHandler::restart("Out of memory for BooleanVal runtime values");
-    }
-    booleanValPool[booleanValCount] = value;
-    return &booleanValPool[booleanValCount++];
-  }
-
-  NumberVal* newNumberVal() {
-    if (numberValCount >= poolSize) {
-      ErrorHandler::restart("Out of memory for NumberVal runtime values");
-    }
-    return &numberValPool[numberValCount++];
-  }
-
-  NativeFnValue* newNativeFn() {
-    if (nativeFnCount >= poolSize) {
-      ErrorHandler::restart("Out of memory for NativeFnVal runtime values");
-    }
-    return &nativeFnPool[nativeFnCount++];
-  }
-
-  BreakVal* newBreakVal() {
-    if (breakCount >= poolSize) {
-      ErrorHandler::restart("Out of memory for BreakVal runtime values");
-    }
-    return &breakPool[breakCount++];
-  }
-
-
-  void clearPools() {
-    for (size_t i = 0; i < poolSize; i++) {
-      nullValPool[i] = NullVal();
-      booleanValPool[i] = BooleanVal();
-      numberValPool[i] = NumberVal();
-      nativeFnPool[i] = NativeFnValue();
-      breakPool[i] = BreakVal();
-    }
-
-    nullValCount = 0;
-    booleanValCount = 0;
-    numberValCount = 0;
-    nativeFnCount = 0;
-    breakCount = 0;
-  }
-private:
-  NullVal* nullValPool = new NullVal[poolSize];
-  BooleanVal* booleanValPool = new BooleanVal[poolSize];
-  NumberVal* numberValPool = new NumberVal[poolSize];
-  NativeFnValue* nativeFnPool = new NativeFnValue[poolSize];
-  BreakVal* breakPool = new BreakVal[poolSize];
-
-  size_t nullValCount = 0;
-  size_t booleanValCount = 0;
-  size_t numberValCount = 0;
-  size_t nativeFnCount = 0;
-  size_t breakCount = 0;
 };

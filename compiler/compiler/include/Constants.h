@@ -17,6 +17,8 @@ const uint8_t phoneInput_interpret = 0x14;
 const uint8_t phoneInput_cancel = 0xFF;
 
 // PadsComm I/0
+const uint8_t anyPad = UINT8_MAX;
+
 const uint8_t padOutput_playSound8Val = 0x20;
 const uint8_t padOutput_waitForPlayerOnPad = 0x30;
 const uint8_t padOutput_cancelOperation = 0xFF;
@@ -28,14 +30,23 @@ const uint8_t maxAllowedPads = 3;
 const uint8_t reaktionPlayerCount = 2;
 const uint8_t paramLen = 8;
 const uint8_t chordLen = 4;
-const unsigned long defaultDelay = 7000; // 7 seconds
+
+// delays
+const uint8_t mandatorySendDelay = 250; // 250 ms
+const unsigned long defaultDelay = 7000; // 7000 ms
 
 // music
-const int gameActionTones[paramLen] = {440, 550, 660, 880, 0, 0, 0, 0};
-const int gameActionDurations[paramLen] = {100, 100, 100, 200, 0, 0, 0, 0};
+const int correctActionTones[paramLen] = {880, 1100, 1320, 1760, 0, 0, 0, 0};
+const int correctActionDurations[paramLen] = {100, 100, 100, 200, 0, 0, 0, 0};
 
-const int gameConclusionTones[paramLen] = {440, 550, 660, 550, 660, 880, 0, 0};
-const int gameConclusionDurations[paramLen] = {125, 125, 125, 125, 125, 125, 0, 0};
+const int wrongActionTones[paramLen] = {1760, 1320, 1100, 880, 0, 0, 0, 0};
+const int wrongActionDurations[paramLen] = {100, 100, 100, 200, 0, 0, 0, 0};
+
+const int winnerTones[paramLen] = {880, 1100, 1320, 1100, 1320, 1760, 0, 0};
+const int winnerToneDurations[paramLen] = {125, 125, 125, 125, 125, 125, 0, 0};
+
+const int loserTones[paramLen] = {1760, 1320, 1100, 1320, 1100, 880, 0, 0};
+const int loserToneDurations[paramLen] = {125, 125, 125, 125, 125, 125, 0, 0};
 
 const int soundsArray[paramLen] = {880, 1760, 2640, 3520, 0, 0, 0, 0}; // tone values in Hz, 4 times zero to make array length of 8
 const int defaultBeat[paramLen] = {200, 200, 400, 400, 200, 200, 0, 0};
@@ -48,10 +59,8 @@ const uint8_t intAsStrLen = 11;
 
 // parser
 const uint8_t poolSize = 32;
-const uint8_t maxProgramStatements = 32;
-const uint8_t maxBlockStatements = 8;
+const uint8_t estimatedProgramStatements = 32;
+const uint8_t estimatedBlockStatements = 8;
 
 // interpreter
-const uint8_t maxFunctionArgs = 8;
-const uint8_t valueTypesCount = 3;
-const uint8_t maxVariables = poolSize * valueTypesCount;
+const uint8_t estimatedFunctionArgs = 8;

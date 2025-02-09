@@ -1,8 +1,11 @@
 #include "Parser.h"
 
 Parser::Program* Parser::produceAST(char* code, size_t len) {
+  Serial.println("Before cleanup");
   cleanup();
+  Serial.println("After cleanup");
   tokens = lexer->tokenize(code, len);
+  Serial.println("Tokenized");
 
   ErrorHandler::printMemoryStats("before producing AST");
 
@@ -10,10 +13,13 @@ Parser::Program* Parser::produceAST(char* code, size_t len) {
     push(parseStmt());
   }
 
+  program.body.shrink_to_fit();
+
   return &program;
 }
 
 Parser::Stmt* Parser::parseStmt() {
+  Serial.println("parseStmt");
   Serial.println(at().value);
   switch (at().type) {
     case Lexer::TokenType::Let:
@@ -36,12 +42,14 @@ Parser::Stmt* Parser::parseStmt() {
 }
 
 Parser::VarDeclaration* Parser::parseVarDeclaration() {
+  Serial.println("parseVarDeclaration");
   const bool isConstant = eat().type == Lexer::TokenType::Const;
-  const char* ident = expect(Lexer::TokenType::Identifier, "identifier after let/const").value;
+  Lexer::Token varName = expect(Lexer::TokenType::Identifier, "identifier after let/const");
 
-  VarDeclaration* varDecl = newVarDeclaration();
+  VarDeclaration* varDecl = varDeclarationPool.allocate();
   varDecl->constant = isConstant;
-  varDecl->ident = ident;
+  varDecl->ident = strcpyNew(varName.value);
+  Serial.println(varDecl->ident);
 
   if (at().type == Lexer::TokenType::Semicolon) {
     eat();
@@ -62,8 +70,9 @@ Parser::VarDeclaration* Parser::parseVarDeclaration() {
 }
 
 Parser::IfStmt* Parser::parseIfStmt() {
+  Serial.println("parseIfStmt");
   eat();  // consume 'if'
-  IfStmt* ifStmt = newIfStmt();
+  IfStmt* ifStmt = ifStmtPool.allocate();
 
   expect(Lexer::TokenType::OpenParen, "(");
   ifStmt->test = parseExpr();
@@ -80,8 +89,9 @@ Parser::IfStmt* Parser::parseIfStmt() {
 }
 
 Parser::WhileStmt* Parser::parseWhileStmt() {
+  Serial.println("parseWhileStmt");
   eat();  // consume 'while'
-  WhileStmt* whileStmt = newWhileStmt();
+  WhileStmt* whileStmt = whileStmtPool.allocate();
 
   expect(Lexer::TokenType::OpenParen, "(");
   whileStmt->test = parseExpr();
@@ -93,31 +103,27 @@ Parser::WhileStmt* Parser::parseWhileStmt() {
 }
 
 Parser::BreakStmt* Parser::parseBreakStmt() {
-  eat(); // consume 'break'
-  Serial.println("Parsing break statement");
-  BreakStmt* breakStmt = newBreakStmt();
-
+  Serial.println("parseBreakStmt");
+  eat();  // consume 'break'
+  BreakStmt* breakStmt = breakStmtPool.allocate();
+  expect(Lexer::TokenType::Semicolon, ";");
   return breakStmt;
 }
 
 Parser::BlockStmt* Parser::parseBlockStmt() {
+  Serial.println("parseBlockStmt");
   expect(Lexer::TokenType::OpenBrace, "{");
-  BlockStmt* blockStmt = newBlockStmt();
+  BlockStmt* blockStmt = blockStmtPool.allocate();
+  blockStmt->body.reserve(estimatedBlockStatements);
 
-  size_t lineCount = 0;
   while (at().type != Lexer::TokenType::CloseBrace) {
     if (endOfFile()) {
       ErrorHandler::restart("Reached end of file, expected '}'");
     }
-    if (lineCount >= maxBlockStatements) {
-      char errmsg[64];
-      sprintf(errmsg, "Maximum of %d statements in {} exceeded", maxBlockStatements);
-      ErrorHandler::restart(errmsg);
-    }
 
-    blockStmt->body[lineCount] = parseStmt();
-    lineCount++;
+    blockStmt->body.push_back(parseStmt());
   }
+  blockStmt->body.shrink_to_fit();
 
   eat();  // consume '}'
 
@@ -125,48 +131,56 @@ Parser::BlockStmt* Parser::parseBlockStmt() {
 }
 
 Parser::Expr* Parser::parseExpr() {
+  Serial.println("parseExpr");
   return parseLogicalExpr();
 }
 
 Parser::Expr* Parser::parseLogicalExpr() {
+  Serial.println("parseLogicalExpr");
   Expr* left = parseRelationalExpr();
 
   while (strcmp(at().value, "and") == 0 || strcmp(at().value, "or") == 0) {
-    char* op = eat().value;
+    Lexer::Token op = eat();
 
     Expr* right = parseRelationalExpr();
 
-    LogicalExpr* logicalExpr = newLogicalExpr();
-    logicalExpr->op = op;
+    LogicalExpr* logicalExpr = logicalExprPool.allocate();
     logicalExpr->left = left;
     logicalExpr->right = right;
+    logicalExpr->op = strcpyNew(op.value);
 
     return logicalExpr;
   }
+
+  Serial.println("return parseLogicalExpr");
 
   return left;
 }
 
 Parser::Expr* Parser::parseRelationalExpr() {
+  Serial.println("parseRelationalExpr");
   Expr* left = parseAssignmentExpr();
 
   while (strcmp(at().value, "<") == 0 || strcmp(at().value, "<=") == 0 || strcmp(at().value, ">") == 0 || strcmp(at().value, ">=") == 0 || strcmp(at().value, "==") == 0 || strcmp(at().value, "!=") == 0) {
-    char* op = eat().value;
+    Lexer::Token op = eat();
 
     Expr* right = parseAssignmentExpr();
 
-    BinaryExpr* relationalExpr = newBinaryExpr();
-    relationalExpr->op = op;
+    BinaryExpr* relationalExpr = binaryExprPool.allocate();
     relationalExpr->left = left;
     relationalExpr->right = right;
+    relationalExpr->op = strcpyNew(op.value);
 
     return relationalExpr;
   }
+
+  Serial.println("return parseRelationalExpr");
 
   return left;
 }
 
 Parser::Expr* Parser::parseAssignmentExpr() {
+  Serial.println("parseAssignmentExpr");
   Expr* left = parseAdditiveExpr();
 
   if (at().type == Lexer::TokenType::Equals) {
@@ -176,58 +190,69 @@ Parser::Expr* Parser::parseAssignmentExpr() {
     }
     Expr* value = parseAssignmentExpr();
 
-    AssignmentExpr* assignmentExpr = newAssignmentExpr();
+    AssignmentExpr* assignmentExpr = assignmentExprPool.allocate();
     assignmentExpr->assignee = left;
     assignmentExpr->value = value;
 
+    expect(Lexer::TokenType::Semicolon, ";");
+
     return assignmentExpr;
   }
+
+  Serial.println("return parseAssignmentExpr");
 
   return left;
 }
 
 Parser::Expr* Parser::parseAdditiveExpr() {
+  Serial.println("parseAdditiveExpr");
   Expr* leftMost = parseMultiplicativeExpr();
 
 
   while (strcmp(at().value, "+") == 0 || strcmp(at().value, "-") == 0) {
-    char* op = eat().value;
+    Lexer::Token op = eat();
 
     Expr* right = parseMultiplicativeExpr();
 
-    BinaryExpr* binaryExpr = newBinaryExpr();
+    BinaryExpr* binaryExpr = binaryExprPool.allocate();
     binaryExpr->kind = NodeType::BinaryExpr;
     binaryExpr->left = leftMost;
     binaryExpr->right = right;
-    binaryExpr->op = op;
+    binaryExpr->op = strcpyNew(op.value);
 
     leftMost = binaryExpr;
   }
+
+  Serial.println("return parseAdditiveExpr");
 
   return leftMost;
 }
 
 Parser::Expr* Parser::parseMultiplicativeExpr() {
+  Serial.println("parseMultiplicativeExpr");
   Expr* leftMost = parseCallMemberExpr();
 
   while (strcmp(at().value, "*") == 0 || strcmp(at().value, "/") == 0 || strcmp(at().value, "%") == 0) {
-    char* op = eat().value;
+    Lexer::Token op = eat();
 
     Expr* right = parseCallMemberExpr();
 
-    BinaryExpr* binaryExpr = newBinaryExpr();
+    BinaryExpr* binaryExpr = binaryExprPool.allocate();
     binaryExpr->kind = NodeType::BinaryExpr;
     binaryExpr->left = leftMost;
     binaryExpr->right = right;
-    binaryExpr->op = op;
+    binaryExpr->op = strcpyNew(op.value);
 
     leftMost = binaryExpr;
   }
+
+  Serial.println("return parseMultiplicativeExpr");
 
   return leftMost;
 }
 
 Parser::Expr* Parser::parseCallMemberExpr() {
+  Serial.println("parseCallMemberExpr");
   Expr* member = parsePrimaryExpr();
 
   if (at().type == Lexer::TokenType::OpenParen) {
@@ -235,48 +260,45 @@ Parser::Expr* Parser::parseCallMemberExpr() {
     return parseCallExpr(member);
   }
 
+  Serial.println("return parseCallMemberExpr");
+
   return member;
 }
 
 Parser::Expr* Parser::parseCallExpr(Expr* caller) {
-  Serial.println("Parsing call expr");
-  CallExpr* callExpr = newCallExpr();
+  Serial.println("parseCallExpr");
+  CallExpr* callExpr = callExprPool.allocate();
   callExpr->caller = caller;
   parseArgs(callExpr);
-
-  if (at().type == Lexer::TokenType::OpenParen) {
-    Serial.println("Parsing CallExpr in CallExpr");
-    parseCallExpr(callExpr);
-  }
+  expect(Lexer::TokenType::Semicolon, ";");
 
   return callExpr;
 }
 
 void Parser::parseArgs(CallExpr* callExpr) {
+  Serial.println("parseArgs");
   expect(Lexer::TokenType::OpenParen, "(");
-  parseArgsList(callExpr);
+  if (strcmp(at().value, ")") != 0) {
+    parseArgsList(callExpr);
+  }
   expect(Lexer::TokenType::CloseParen, ")");
 }
 
 void Parser::parseArgsList(CallExpr* callExpr) {
-  callExpr->args[0] = strcmp(at().value, ")") != 0 ? parseAssignmentExpr() : nullptr;
+  Serial.println("parseArgsList");
+  Expr* firstParam = parseExpr();
+  callExpr->args.push_back(firstParam);
 
-  for (size_t i = 1; at().type == Lexer::TokenType::Comma; i++) {
-    if (i >= maxFunctionArgs) {
-      ErrorHandler::restart("Function argument list exceeds argument count limit");
-    }
-
+  while (at().type == Lexer::TokenType::Comma) {
     eat();
-    callExpr->args[i] = parseAssignmentExpr();
-    Serial.println("Parsing argument from argument list");
-    if (callExpr->args[i]->kind == NodeType::NumericLiteral) Serial.println(static_cast<NumericLiteral*>(callExpr->args[i])->num);
+    callExpr->args.push_back(parseExpr());
   }
 }
 
 Parser::Expr* Parser::parsePrimaryExpr() {
-  const Lexer::TokenType tokenType = at().type;
+  Serial.println("parsePrimaryExpr");
 
-  switch (tokenType) {
+  switch (at().type) {
     case Lexer::TokenType::Identifier:
     case Lexer::TokenType::Let:
     case Lexer::TokenType::Const:
@@ -286,9 +308,11 @@ Parser::Expr* Parser::parsePrimaryExpr() {
     case Lexer::TokenType::Break:
     case Lexer::TokenType::LogicalOperator:
       {
-        Identifier* identifier = newIdentifier();
+        Identifier* identifier = identifierPool.allocate();
 
-        identifier->symbol = eat().value;
+        Lexer::Token identToken = eat();
+
+        identifier->symbol = strcpyNew(identToken.value);
 
         Serial.print("Found identifier ");
         Serial.println(identifier->symbol);
@@ -297,7 +321,7 @@ Parser::Expr* Parser::parsePrimaryExpr() {
       }
     case Lexer::TokenType::Number:
       {
-        NumericLiteral* number = newNumericLiteral();
+        NumericLiteral* number = numericLiteralPool.allocate();
 
         number->num = strtof(eat().value, nullptr);
 
@@ -338,6 +362,9 @@ Lexer::Token Parser::expect(Lexer::TokenType type, const char* expectedVal) {
   if (prev.type != type) {
     ErrorHandler::restart(expectedVal, (const char*)prev.value);
   }
+  Serial.print("Found expected '");
+  Serial.print(prev.value);
+  Serial.println("'");
   return prev;
 }
 
@@ -346,9 +373,9 @@ bool Parser::endOfFile() {
 }
 
 void Parser::push(Stmt* stmt) {
-  program.body[currentStmtIndex] = stmt;
+  program.body.push_back(stmt);
 
-  if (currentStmtIndex < maxProgramStatements) {
+  if (currentStmtIndex < estimatedProgramStatements) {
     currentStmtIndex++;
   } else {
     ErrorHandler::restart("Too many statements in program");
@@ -356,109 +383,186 @@ void Parser::push(Stmt* stmt) {
 }
 
 void Parser::cleanup() {
-  for (size_t i = 0; i < maxProgramStatements; i++) {
-    program.body[i] = nullptr;
-  }
+  program.body.clear();
+  Serial.println("Program body cleared");
   currentStmtIndex = 0;
 
-  for (size_t i = 0; i < poolSize; i++) {
-    binaryExprPool[i] = BinaryExpr();
-    identifierPool[i] = Identifier();
-    varDeclarationPool[i] = VarDeclaration();
-    numericLiteralPool[i] = NumericLiteral();
-    assignmentExprPool[i] = AssignmentExpr();
-    callExprPool[i] = CallExpr();
-    blockStmtPool[i] = BlockStmt();
-    ifStmtPool[i] = IfStmt();
-    whileStmtPool[i] = WhileStmt();
-    breakStmtPool[i] = BreakStmt();
-  }
-
-  binaryExprCount = 0;
-  identifierCount = 0;
-  varDeclarationCount = 0;
-  numericLiteralCount = 0;
-  assignmentExprCount = 0;
-  callExprCount = 0;
-  blockStmtCount = 0;
-  ifStmtCount = 0;
-  whileStmtCount = 0;
-  breakStmtCount = 0;
+  binaryExprPool.cleanup();
+  identifierPool.cleanup();
+  varDeclarationPool.cleanup();
+  numericLiteralPool.cleanup();
+  assignmentExprPool.cleanup();
+  callExprPool.cleanup();
+  blockStmtPool.cleanup();
+  ifStmtPool.cleanup();
+  whileStmtPool.cleanup();
+  breakStmtPool.cleanup();
+  Serial.println("End of cleanup function");
 }
 
-Parser::BinaryExpr* Parser::newBinaryExpr() {
-  if (binaryExprCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for BinaryExpr nodes");
-  }
-  return &binaryExprPool[binaryExprCount++];
+char* Parser::strcpyNew(const char* src) {
+  size_t len = strlen(src) + 1; // one longer than string for null termination
+  char* dest = new char[len];
+  strncpy(dest, src, len);
+  return dest;
 }
 
-Parser::Identifier* Parser::newIdentifier() {
-  if (identifierCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for Identifier nodes");
-  }
-  return &identifierPool[identifierCount++];
+// toString
+void Parser::toStringNumericLiteral(const Parser::NumericLiteral* numLit) {
+  Serial.print("{\"type\":\"numericLiteral\",\"value\":\"");
+  Serial.print(numLit->num);
+  Serial.print("\"}");
 }
 
-Parser::NumericLiteral* Parser::newNumericLiteral() {
-  if (numericLiteralCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for NumericLiteral nodes");
-  }
-  return &numericLiteralPool[numericLiteralCount++];
+void Parser::toStringIdentifier(const Parser::Identifier* ident) {
+  Serial.print("{\"type\":\"identifier\",\"symbol\":\"");
+  Serial.print(ident->symbol);
+  Serial.print("\"}");
 }
 
-Parser::VarDeclaration* Parser::newVarDeclaration() {
-  if (varDeclarationCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for VarDeclaration nodes");
-  }
-  return &varDeclarationPool[varDeclarationCount++];
+void Parser::toStringBinaryExpr(const Parser::BinaryExpr* binaryExpr) {
+  Serial.print("{\"type\":\"binaryExpr\",");
+  Serial.print("\"left\":");
+  toString(static_cast<const Parser::Stmt*>(binaryExpr->left));
+  Serial.print(",\"operator\":\"");
+  Serial.print(binaryExpr->op);
+  Serial.print("\",");
+  Serial.print("\"right\":");
+  toString(static_cast<const Parser::Stmt*>(binaryExpr->right));
+  Serial.print("}");
 }
 
-Parser::AssignmentExpr* Parser::newAssignmentExpr() {
-  if (assignmentExprCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for BinaryExpr nodes");
-  }
-  return &assignmentExprPool[assignmentExprCount++];
+void Parser::toStringLogicalExpr(const Parser::LogicalExpr* logicalExpr) {
+  Serial.print("{\"type\":\"logicalExpr\",");
+  Serial.print("\"left\":");
+  toString(static_cast<const Parser::Stmt*>(logicalExpr->left));
+  Serial.print(",\"operator\":\"");
+  Serial.print(logicalExpr->op);
+  Serial.print("\",\"right\":");
+  toString(static_cast<const Parser::Stmt*>(logicalExpr->right));
+  Serial.print("}");
 }
 
-Parser::CallExpr* Parser::newCallExpr() {
-  if (callExprCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for CallExpr nodes");
-  }
-  return &callExprPool[callExprCount++];
+void Parser::toStringVarDecl(const Parser::VarDeclaration* varDecl) {
+  Serial.print("{\"type\":\"varDecl\",");
+  Serial.print("\"isConstant\":");
+  Serial.print(varDecl->constant ? "\"true\"," : "\"false\",");
+  Serial.print("\"identifier\":\"");
+  Serial.print(varDecl->ident);
+  Serial.print("\",\"value\":");
+  if (varDecl->value != nullptr) toString(varDecl->value);
+  Serial.print("}");
 }
 
-Parser::LogicalExpr* Parser::newLogicalExpr() {
-  if (logicalExprCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for LogicalExpr nodes");
+void Parser::toStringBlockStmt(const Parser::BlockStmt* blockStmt) {
+  Serial.print("{\"type\":\"blockStmt\",\"body\":[");
+  for (size_t i = 0; i < blockStmt->body.size(); i++) {
+    toString(blockStmt->body[i]);
+    Serial.print(",");
   }
-  return &logicalExprPool[logicalExprCount++];
+  Serial.print("]}");
 }
 
-Parser::BlockStmt* Parser::newBlockStmt() {
-  if (blockStmtCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for BlockStmt nodes");
+void Parser::toStringIfStmt(const Parser::IfStmt* ifStmt) {
+  Serial.print("{\"type\":\"ifStmt\",");
+  Serial.print("\"test\":");
+  toString(ifStmt->test);
+  Serial.print(",\"consequent\":");
+  toStringBlockStmt(ifStmt->consequent);
+  Serial.print(",\"alternate\":");
+  if (ifStmt->alternate != nullptr) {
+    toStringBlockStmt(ifStmt->alternate);
+  } else {
+    Serial.print("null");
   }
-  return &blockStmtPool[blockStmtCount++];
+  Serial.print("}");
 }
 
-Parser::IfStmt* Parser::newIfStmt() {
-  if (ifStmtCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for IfStmt nodes");
-  }
-  return &ifStmtPool[ifStmtCount++];
+void Parser::toStringWhileStmt(const Parser::WhileStmt* whileStmt) {
+  Serial.print("{\"type\":\"whileStmt\",");
+  Serial.print("\"test\":");
+  toString(whileStmt->test);
+  Serial.print(",\"body\":");
+  toStringBlockStmt(whileStmt->body);
+  Serial.print("}");
 }
 
-Parser::WhileStmt* Parser::newWhileStmt() {
-  if (whileStmtCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for WhileStmt nodes");
-  }
-  return &whileStmtPool[whileStmtCount++];
+void Parser::toStringBreakStmt(const Parser::BreakStmt* breakStmt) {
+  Serial.print("{\"type\":\"breakStmt\"}");
 }
 
-Parser::BreakStmt* Parser::newBreakStmt() {
-  if (breakStmtCount >= poolSize) {
-    ErrorHandler::restart("Out of memory for BreakStmt nodes");
+void Parser::toStringAssignmentExpr(const Parser::AssignmentExpr* assignmentExpr) {
+  Serial.print("{\"type\":\"assignmentExpr\",\"assignee\":");
+  toString(assignmentExpr->assignee);
+  Serial.print(",\"value\":");
+  toString(assignmentExpr->value);
+  Serial.print("}");
+}
+
+void Parser::toStringCallExpr(const Parser::CallExpr* callExpr) {
+  Serial.print("{\"type\":\"callExpr\",\"caller\":");
+  toString(callExpr->caller);
+  Serial.print(",\"args\":[");
+  for (size_t i = 0; i < callExpr->args.size(); i++) {
+    toString(callExpr->args[i]);
+    Serial.print(",");
   }
-  return &breakStmtPool[breakStmtCount++];
+  Serial.print("]}");
+}
+
+void Parser::printAST(const Parser::Program* program) {
+  Serial.print("{\"type\":\"program\",\"body\":[");
+
+  size_t i = 0;
+  while (true) {
+    if (i < estimatedProgramStatements && program->body[i] != nullptr) {
+      toString(program->body[i]);
+      Serial.println(",");
+      i++;
+    } else {
+      break;
+    }
+  }
+  Serial.print("]}");
+}
+
+void Parser::toString(const Parser::Stmt* stmt) {
+  switch (stmt->kind) {
+    case Parser::NodeType::BinaryExpr:
+      toStringBinaryExpr(static_cast<const Parser::BinaryExpr*>(stmt));
+      break;
+    case Parser::NodeType::LogicalExpr:
+      toStringLogicalExpr(static_cast<const Parser::LogicalExpr*>(stmt));
+      break;
+    case Parser::NodeType::Identifier:
+      toStringIdentifier(static_cast<const Parser::Identifier*>(stmt));
+      break;
+    case Parser::NodeType::NumericLiteral:
+      toStringNumericLiteral(static_cast<const Parser::NumericLiteral*>(stmt));
+      break;
+    case Parser::NodeType::VarDeclaration:
+      toStringVarDecl(static_cast<const Parser::VarDeclaration*>(stmt));
+      break;
+    case Parser::NodeType::IfStmt:
+      toStringIfStmt(static_cast<const Parser::IfStmt*>(stmt));
+      break;
+    case Parser::NodeType::WhileStmt:
+      toStringWhileStmt(static_cast<const Parser::WhileStmt*>(stmt));
+      break;
+    case Parser::NodeType::BreakStmt:
+      toStringBreakStmt(static_cast<const Parser::BreakStmt*>(stmt));
+      break;
+    case Parser::NodeType::BlockStmt:
+      toStringBlockStmt(static_cast<const Parser::BlockStmt*>(stmt));
+      break;
+    case Parser::NodeType::AssignmentExpr:
+      toStringAssignmentExpr(static_cast<const Parser::AssignmentExpr*>(stmt));
+      break;
+    case Parser::NodeType::CallExpr:
+      toStringCallExpr(static_cast<const Parser::CallExpr*>(stmt));
+      break;
+    case Parser::NodeType::Program:
+      ErrorHandler::restart("Found Program in Program, don't know what to do with it");
+      break;
+  }
 }

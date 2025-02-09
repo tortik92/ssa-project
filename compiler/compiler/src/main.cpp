@@ -1,4 +1,6 @@
 // -------------------INCLUDE-----------------------
+#include <list>
+
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <espnow.h>
@@ -34,7 +36,7 @@ void shuffle(int *array, size_t n) {
 
 // callback functions
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
-  Serial.print("\nMessage sent to: ");
+  Serial.print("[OUTGOING] Message sent to ");
   for (int i = 0; i < 6; i++) {
     Serial.print(mac_addr[i], HEX);
     if (i < 5)
@@ -44,177 +46,19 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
 }
 
 void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
+  Serial.print("[INCOMING] Message from ");
+  for (int i = 0; i < 6; i++) {
+    Serial.print(mac[i], HEX);
+    Serial.print(":");
+  }
+  Serial.print(" 0x");
+  Serial.println(*incomingData, HEX);
+
   if (*incomingData == padInput_padOccupied) {
     padsComm->setPadOccupied(mac, incomingData);
   }
 }
 
-// tostring
-void toStringNumericLiteral(const Parser::NumericLiteral *numLit) {
-  Serial.print("{\"type\":\"numericLiteral\",\"value\":\"");
-  Serial.print(numLit->num);
-  Serial.print("\"}");
-}
-
-void toStringIdentifier(const Parser::Identifier *ident) {
-  Serial.print("{\"type\":\"identifier\",\"symbol\":\"");
-  Serial.print(ident->symbol);
-  Serial.print("\"}");
-}
-
-void toString(const Parser::Stmt *stmt);
-
-void toStringBinaryExpr(const Parser::BinaryExpr *binaryExpr) {
-  Serial.print("{\"type\":\"binaryExpr\",");
-  Serial.print("\"left\":");
-  toString(static_cast<const Parser::Stmt *>(binaryExpr->left));
-  Serial.print(",\"operator\":\"");
-  Serial.print(binaryExpr->op);
-  Serial.print("\",");
-  Serial.print("\"right\":");
-  toString(static_cast<const Parser::Stmt *>(binaryExpr->right));
-  Serial.print("}");
-}
-
-void toStringLogicalExpr(const Parser::LogicalExpr *logicalExpr) {
-  Serial.print("{\"type\":\"logicalExpr\",");
-  Serial.print("\"left\":");
-  toString(static_cast<const Parser::Stmt *>(logicalExpr->left));
-  Serial.print(",\"operator\":\"");
-  Serial.print(logicalExpr->op);
-  Serial.print("\",\"right\":");
-  toString(static_cast<const Parser::Stmt *>(logicalExpr->right));
-  Serial.print("}");
-}
-
-void toStringVarDecl(const Parser::VarDeclaration *varDecl) {
-  Serial.print("{\"type\":\"varDecl\",");
-  Serial.print("\"isConstant\":");
-  Serial.print(varDecl->constant ? "\"true\"," : "\"false\",");
-  Serial.print("\"identifier\":\"");
-  Serial.print(varDecl->ident);
-  Serial.print("\",\"value\":");
-  if (varDecl->value != nullptr) toString(varDecl->value);
-  Serial.print("}");
-}
-
-void toStringBlockStmt(const Parser::BlockStmt *blockStmt) {
-  Serial.print("{\"type\":\"blockStmt\",\"body\":[");
-  for (size_t i = 0; i < maxProgramStatements && blockStmt->body[i] != nullptr; i++) {
-    toString(blockStmt->body[i]);
-    Serial.print(",");
-  }
-  Serial.print("]}");
-}
-
-void toStringIfStmt(const Parser::IfStmt *ifStmt) {
-  Serial.print("{\"type\":\"ifStmt\",");
-  Serial.print("\"test\":");
-  toString(ifStmt->test);
-  Serial.print(",\"consequent\":");
-  toStringBlockStmt(ifStmt->consequent);
-  Serial.print(",\"alternate\":");
-  if (ifStmt->alternate != nullptr) {
-    toStringBlockStmt(ifStmt->alternate);
-  } else {
-    Serial.print("null");
-  }
-  Serial.print("}");
-}
-
-void toStringWhileStmt(const Parser::WhileStmt *whileStmt) {
-  Serial.print("{\"type\":\"whileStmt\",");
-  Serial.print("\"test\":");
-  toString(whileStmt->test);
-  Serial.print(",\"body\":");
-  toStringBlockStmt(whileStmt->body);
-  Serial.print("}");
-}
-
-void toStringBreakStmt(const Parser::BreakStmt *breakStmt) {
-  Serial.print("{\"type\":\"breakStmt\"}");
-}
-
-void toStringAssignmentExpr(const Parser::AssignmentExpr *assignmentExpr) {
-  Serial.print("{\"type\":\"assignmentExpr\",\"assignee\":");
-  toString(assignmentExpr->assignee);
-  Serial.print(",\"value\":");
-  toString(assignmentExpr->value);
-  Serial.print("}");
-}
-
-void toStringCallExpr(const Parser::CallExpr *callExpr) {
-  Serial.print("{\"type\":\"callExpr\",\"caller\":");
-  toString(callExpr->caller);
-  Serial.print(",\"args\":[");
-  for (size_t i = 0; i < maxFunctionArgs && callExpr->args[i] != nullptr; i++) {
-    toString(callExpr->args[i]);
-    Serial.print(",");
-  }
-  Serial.print("]}");
-}
-
-void toString(const Parser::Stmt *stmt) {
-  switch (stmt->kind) {
-    case Parser::NodeType::BinaryExpr:
-      toStringBinaryExpr(static_cast<const Parser::BinaryExpr *>(stmt));
-      break;
-    case Parser::NodeType::LogicalExpr:
-      toStringLogicalExpr(static_cast<const Parser::LogicalExpr *>(stmt));
-      break;
-    case Parser::NodeType::Identifier:
-      toStringIdentifier(static_cast<const Parser::Identifier *>(stmt));
-      break;
-    case Parser::NodeType::NumericLiteral:
-      toStringNumericLiteral(static_cast<const Parser::NumericLiteral *>(stmt));
-      break;
-    case Parser::NodeType::VarDeclaration:
-      toStringVarDecl(static_cast<const Parser::VarDeclaration *>(stmt));
-      break;
-    case Parser::NodeType::IfStmt:
-      toStringIfStmt(static_cast<const Parser::IfStmt *>(stmt));
-      break;
-    case Parser::NodeType::WhileStmt:
-      toStringWhileStmt(static_cast<const Parser::WhileStmt *>(stmt));
-      break;
-    case Parser::NodeType::BreakStmt:
-      toStringBreakStmt(static_cast<const Parser::BreakStmt *>(stmt));
-      break;
-    case Parser::NodeType::BlockStmt:
-      toStringBlockStmt(static_cast<const Parser::BlockStmt *>(stmt));
-      break;
-    case Parser::NodeType::AssignmentExpr:
-      toStringAssignmentExpr(static_cast<const Parser::AssignmentExpr *>(stmt));
-      break;
-    case Parser::NodeType::CallExpr:
-      toStringCallExpr(static_cast<const Parser::CallExpr *>(stmt));
-      break;
-    case Parser::NodeType::Program:
-      ErrorHandler::restart("Found Program in Program, don't know what to do with it");
-      break;
-    case Parser::NodeType::Undefined:
-      ErrorHandler::restart("Undefined node found");
-    default:
-      ErrorHandler::restart("Undefined statement found while printing AST");
-      break;
-  }
-}
-
-void toString(const Parser::Program *program) {
-  Serial.print("{\"type\":\"program\",\"body\":[");
-
-  size_t i = 0;
-  while (true) {
-    if (i < maxProgramStatements && program->body[i] != nullptr) {
-      toString(program->body[i]);
-      Serial.println(",");
-      i++;
-    } else {
-      break;
-    }
-  }
-  Serial.print("]}");
-}
 
 // ----------------MAIN FUNCTIONS-----------------
 void setup() {
@@ -249,80 +93,107 @@ void loop() {
       case phoneInput_makeSound_pad4:
         padsComm->playSingleSound(soundsArray[3], 1000, 3);
         break;
+      // all hex codes from here on out are undocumented and just for testing purposes
+      case 0x05:
+        padsComm->play8Sounds(soundsArray, correctActionDurations);
+        break;
+      case 0x06:
+        padsComm->playWinnerJingle();
+        padsComm->waitWithEventChecks(3000);
+        padsComm->playLoserJingle();
+        padsComm->waitWithEventChecks(3000);
+        padsComm->playCorrectActionJingle();
+        padsComm->waitWithEventChecks(3000);
+        padsComm->playWrongActionJingle();
+        break;
+      case 0x07:
+        padsComm->waitForPlayerOnAnyPad();
+        if (padsComm->isPadOccupied(1)) {
+          padsComm->playWinnerJingle();
+        } else {
+          padsComm->playLoserJingle();
+        }
+        break;
+      case 0x08:
+        padsComm->waitForPlayerOnPad(1);
+        if (padsComm->isPadOccupied(1)) {
+          Serial.println("SUCCESS");
+        } else {
+          Serial.println("FAILURE");
+        }
+        break;
       case phoneInput_gameSelection_Memory:
         {
           Serial.println("Memory start");
 
-          uint8_t selectedLastRound = UINT8_MAX;
-          uint8_t selectedPad = UINT8_MAX;
-
           bool easyMemory = true;
 
           if (easyMemory) {
+            Serial.println("Playing easy memory");
+            uint8_t selectedPad = anyPad;
+            uint8_t selectedLastRound = anyPad;
+            
             while (true) {
               // select random pad and deactivate for next round
               while (selectedPad == selectedLastRound) {
                 selectedPad = random(maxAllowedPads);
               }
               selectedLastRound = selectedPad;
+              Serial.print("Selected correct pad: ");
+              Serial.println(selectedPad, DEC);
 
               // play tone on correct pad
               padsComm->playSingleSound(soundsArray[selectedPad], 1000, selectedPad);
+              Serial.println("Played correct sound once");
 
               // check if player jumps on correct pad
               padsComm->waitForPlayerOnAnyPad();
 
               // if not on the correct pad
-              if ((*padsComm->getPad(selectedPad)).isOccupied) {
+              if (!padsComm->isPadOccupied(selectedPad)) {
+                Serial.println("Wrong pad selected!!!");
                 padsComm->playLoserJingle();
+                Serial.println("Returning...");
                 break;
-                return;
               } else /* Correct pad */ {
+                Serial.println("Correct pad selected!!!");
                 padsComm->playWinnerJingle();
               }
             }
           } else {
-            const uint8_t soundSeqLen = 32;
-            uint8_t correctSelectionsCount = 0;
-            uint8_t soundSeq[soundSeqLen];
-            memset(soundSeq, UINT8_MAX, soundSeqLen);
+            const uint8_t maxRounds = 4; 
+            uint8_t soundSeq[maxRounds];
+            memset(soundSeq, UINT8_MAX, maxRounds);
 
-            while (true) {
-              // select random pad and deactivate for next round
-              while (selectedPad == selectedLastRound) {
-                selectedPad = random(maxAllowedPads);
-              }
-              selectedLastRound = selectedPad;
-
-              soundSeq[correctSelectionsCount] = selectedPad;
-              correctSelectionsCount++;
+            for(size_t round = 0; round < maxRounds; round++) {
+              soundSeq[round] = random(maxAllowedPads);
 
               // play sound sequence on pads in order
-              for (int i = 0; i < soundSeqLen && soundSeq[i] < maxAllowedPads; i++) {
-                uint8_t padIndex = soundSeq[i];
+              Serial.print("Pad order: [");
+              for (size_t j = 0; j <= round; j++) {
+                uint8_t padIndex = soundSeq[j];
+                
+                Serial.print(padIndex);
+                Serial.print(j + 1 != round ? "," : "]\n");
+
                 padsComm->playSingleSound(soundsArray[padIndex], 1000, padIndex);
               }
 
-              for (int i = 0; i < soundSeqLen; i++) {
-                // check if player jumps on correct pad
+              // check for correct pads 
+              for (size_t j = 0; j <= round; j++) {
                 padsComm->waitForPlayerOnAnyPad();
 
-                // if not on the correct pad
-                PadsComm::Pad *pad = padsComm->getPad(selectedPad);
-
-                if (!pad->isOccupied) {
-                  padsComm->playWrongActionJingle();
-                  break;
-                } else /* Correct pad */ {
-                  if (correctSelectionsCount >= soundSeqLen) {
-                    padsComm->playWinnerJingle();
-                  } else {
-                    padsComm->playCorrectActionJingle();
-                  }
+                if (padsComm->isPadOccupied(soundSeq[j])) {
+                  padsComm->playLoserJingle();
                   return;
+                } else /* Correct pad */ {              
+                  padsComm->playCorrectActionJingle();
                 }
               }
             }
+
+            padsComm->waitWithEventChecks(1000);
+            padsComm->playWinnerJingle();
           }
 
           Serial.println("Memory end");
@@ -330,86 +201,61 @@ void loop() {
         }
       case phoneInput_gameSelection_Reaktion:
         {
-          Serial.println("---Reaktion selected---");
+          Serial.println("Reaktion start");
 
           activePadCount = 2;
-          //int shuffledToneOrder[chordAMajorLen] = { 0 };
-          //memcpy(&shuffledToneOrder, &soundsArray, sizeof(shuffledToneOrder));
-          //int correctToneOrder[chordAMajorLen] = { 0 };
-          int randomTone = soundsArray[random(chordLen)];
-          int correctTone = soundsArray[random(chordLen)];
+          int correctIndex = random(chordLen);
+          std::vector<int> usable;
+          for (int i = 0; i < paramLen; i++) {
+            if (soundsArray[i] != 0) {
+              usable.push_back(soundsArray[i]);
+            }
+          }
+          usable.shrink_to_fit();
 
+
+          // play all possible sounds so players know
+          {
+            int soundLenArray[paramLen] = { 500, 500, 500, 500, 0, 0, 0, 0 };
+            padsComm->play8Sounds(soundsArray, soundLenArray);
+
+            padsComm->waitWithEventChecks(3000);
+          }
+
+          int countdownTones[paramLen] = { 440, 440, 440, 880, 0, 0, 0, 0 };
+          int countdownLen[paramLen] = { 1000, 1000, 1000, 1000, 0, 0, 0, 0 };
           while (activePadCount > 1) {
             padsComm->waitWithEventChecks(3000);
 
-            // play all possible sounds so players know
-            {
-              int soundLenArray[paramLen] = { 500, 500, 500, 500, 0, 0, 0, 0 };
-              padsComm->play8Sounds(soundsArray, soundLenArray);
-              padsComm->waitWithEventChecks(3000);
-            }
-
             // play correct sound
-            //shuffle(shuffledToneOrder, chordAMajorLen);
-            //memcpy(&correctToneOrder, &shuffledToneOrder, sizeof(correctToneOrder));
-            padsComm->playSingleSound(correctTone, 500);
+            padsComm->playSingleSound(soundsArray[correctIndex], 500);
             padsComm->waitWithEventChecks(3000);
-            /*while (memcmp(shuffledToneOrder, correctToneOrder, sizeof(shuffledToneOrder)) == 0) {
-            shuffle(shuffledToneOrder, chordAMajorLen);
-          }*/
 
-            // initial shuffle
-            while (randomTone == correctTone) {
-              randomTone = soundsArray[random(4)];
+            // play countdown before game begins
+            padsComm->play8Sounds(countdownTones, countdownLen);
+
+            // repeat sound playing until correct tone is played
+            while (!usable.empty()) {
+              int randomIndex = random(usable.size());
+              padsComm->playSingleSound(usable[randomIndex], 500);
+              usable.erase(usable.begin() + randomIndex);
+              if (!usable.empty()) {
+                padsComm->waitWithEventChecks(3000);
+              }
             }
-
-            /*while (memcmp(shuffledToneOrder, correctToneOrder, sizeof(shuffledToneOrder)) != 0) {
-          shuffle(shuffledToneOrder, chordAMajorLen);
-          if (padsComm->play8Sounds(shuffledToneOrder, soundLenArray) == PadsComm::WaitResult::CANCEL_GAME) return;
-        }*/
-
-            padsComm->playSingleSound(randomTone, 500);
-
-            do {
-              padsComm->waitWithEventChecks(3000);
-              randomTone = soundsArray[random(4)];
-              padsComm->playSingleSound(randomTone, 500);
-            } while (randomTone != correctTone);
 
             Serial.println("Correct tone played, waiting for player on pads");
 
             PadsComm::WaitResult ret = padsComm->waitForPlayerOnAnyPad();
-            if (ret == PadsComm::WaitResult::Timeout) {
+            if (ret == PadsComm::WaitResult::PadOccupied) {
               for (int i = 0; i < maxAllowedPads; i++) {
-                if ((*padsComm->getPad(i)).isOccupied) {
+                if (padsComm->isPadOccupied(i)) {
                   padsComm->playWinnerJingle(i);
                 }
               }
             }
 
             activePadCount--;
-
-            /*Serial.println("Auswertung");
-          // play correct for all except winner and loser
-          for (int i = 1; i < activePadCount - 1; i++) {
-            uint8_t padIndex = eventOrder[i];
-            if (playCorrectActionJingle(padIndex) == PadsComm::WaitResult::CANCEL_GAME) return;
-          }
-
-          // play winner and loser hingle
-          uint8_t winnerPad = eventOrder[0];
-          uint8_t loserPad = eventOrder[activePadCount - 1];
-
-          if (playWinnerJingle(winnerPad) == PadsComm::WaitResult::CANCEL_GAME) return;
-          if (playWrongActionJingle(loserPad) == PadsComm::WaitResult::CANCEL_GAME) return;
-
-          // remove loser from round
-          padsArray[loserPad].isActive = false;
-          activePadCount--;
-
-          for (int i = 0; i < maxAllowedPads; i++) {
-            eventOrder[i] = 0;
-          }*/
           }
 
           padsComm->playCorrectActionJingle();
@@ -510,7 +356,7 @@ void loop() {
           if (program->kind == Parser::NodeType::Program)
             Serial.println("Program parsed successfully!");
 
-          toString(program);
+          parser.printAST(program);
           break;
         }
       case phoneInput_interpret:
@@ -519,13 +365,15 @@ void loop() {
 
           Environment env;
 
-          Serial.println("Ready to interpret!");
+          ErrorHandler::printMemoryStats("after env decl");
+
+          Serial.println("\nReady to interpret!");
 
           while (true) {
             if (Serial.available() > 0) {
               String code = Serial.readStringUntil('\n');
 
-              if(code.equals("exit")) {
+              if (code.equals("exit")) {
                 break;
               }
 
@@ -533,44 +381,45 @@ void loop() {
               Serial.println("Got string: ");
               Serial.println(code);
 
-              char* code_cstr = new char[code.length() + 1];
+              char *code_cstr = new char[code.length() + 1];
               code.toCharArray(code_cstr, code.length() + 1, 0);
 
+              Serial.println("Producing AST");
               Parser::Program *program = parser.produceAST(code_cstr, code.length() + 1);
-              toString(program);
+              parser.printAST(program);
               Serial.println("Successfully parsed program");
               ErrorHandler::printMemoryStats("after AST printing");
               ESP.wdtFeed();
 
-              Values::RuntimeVal *val = interpreter.evaluate(program, &env);
+              Values::RuntimeVal val = interpreter.evaluate(program, &env);
               ErrorHandler::printMemoryStats("after evaluation");
               ESP.wdtFeed();
 
 
               Serial.print("Value: ");
-              switch (val->type) {
+              switch (val.type) {
                 case Values::ValueType::Null:
                   Serial.println("Null");
                   break;
                 case Values::ValueType::Boolean:
                   {
                     Serial.print("Boolean: ");
-                    Values::BooleanVal *boolVal = static_cast<Values::BooleanVal *>(val);
+                    Values::BooleanVal *boolVal = static_cast<Values::BooleanVal *>(&val);
                     Serial.println(boolVal->value);
                     break;
                   }
                 case Values::ValueType::Number:
                   {
                     Serial.print("Number: ");
-                    Values::NumberVal *numVal = static_cast<Values::NumberVal *>(val);
+                    Values::NumberVal *numVal = static_cast<Values::NumberVal *>(&val);
                     Serial.println(numVal->value);
                     break;
                   }
                 case Values::ValueType::NativeFn:
                   Serial.println("NativeFn");
                   break;
-                default:
-                  ErrorHandler::restart("Undefined ValueType");
+                case Values::ValueType::Break:
+                  Serial.println("Break");
                   break;
               }
 
