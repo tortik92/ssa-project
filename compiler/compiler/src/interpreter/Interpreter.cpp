@@ -10,6 +10,11 @@ Values::RuntimeVal Interpreter::evaluate(Parser::Stmt* astNode, Environment* env
       }
     case Parser::NodeType::Identifier:
       return evalIdentifier(static_cast<Parser::Identifier*>(astNode), env);
+    case Parser::NodeType::StringLiteral:
+      {
+        Values::StringVal strVal(static_cast<Parser::StringLiteral*>(astNode)->value);
+        return strVal;
+      }
     case Parser::NodeType::BinaryExpr:
       return evalBinaryExpr(static_cast<Parser::BinaryExpr* >(astNode), env);
     case Parser::NodeType::VarDeclaration:
@@ -26,13 +31,14 @@ Values::RuntimeVal Interpreter::evaluate(Parser::Stmt* astNode, Environment* env
       return evalLogicalExpr(static_cast<Parser::LogicalExpr* >(astNode), env);
     case Parser::NodeType::AssignmentExpr:
       return evalAssignmentExpr(static_cast<Parser::AssignmentExpr*>(astNode), env);
+    case Parser::NodeType::ObjectLiteral:
+      return evalObjectExpr(static_cast<Parser::ObjectLiteral*>(astNode), env);
     case Parser::NodeType::CallExpr:
       return evalCallExpr(static_cast<Parser::CallExpr*>(astNode), env);
+    case Parser::NodeType::MemberExpr:
+      return evalMemberExpr(static_cast<Parser::MemberExpr*>(astNode), env);
     case Parser::NodeType::Program:
       return evalProgram(static_cast<Parser::Program*>(astNode), env);
-    /*default:
-      ErrorHandler::restart("AST node not set up for interpretation (should not happen)");
-      break;*/
   }
 
   return Values::NullVal();
@@ -52,6 +58,7 @@ Values::RuntimeVal Interpreter::evalProgram(Parser::Program* program, Environmen
 }
 
 Values::RuntimeVal Interpreter::evalVarDeclaration(Parser::VarDeclaration* declaration, Environment* env) {
+  Serial.println("evalVarDeclaration");
   Values::RuntimeVal val = declaration->value != nullptr ? evaluate(declaration->value, env) : Values::NullVal();
   return env->declareVar(declaration->ident, val, declaration->constant);
 }
@@ -86,8 +93,8 @@ Values::RuntimeVal Interpreter::evalWhileStmt(Parser::WhileStmt* whileStmt, Envi
 
     while (true) {
       Values::RuntimeVal testResult = evaluate(whileStmt->test, env);
-      if(!static_cast<Values::BooleanVal*>(&testResult)->value) {
-        Serial.println("While test evaluated to false");  
+      if (!static_cast<Values::BooleanVal*>(&testResult)->value) {
+        Serial.println("While test evaluated to false");
         break;
       }
 
@@ -109,10 +116,12 @@ afterWhile:
 }
 
 Values::BreakVal Interpreter::evalBreakStmt(Parser::BreakStmt* breakStmt, Environment* env) {
+  Serial.println("evalBreakStmt");
   return Values::BreakVal();
 }
 
 Values::RuntimeVal Interpreter::evalBlockStmt(Parser::BlockStmt* blockStmt, Environment* parent) {
+  Serial.println("evalBlockStmt");
   Environment* env = new Environment(parent);
   Values::RuntimeVal lastEvaluated;
   for (size_t i = 0; i < blockStmt->body.size(); i++) {
@@ -124,6 +133,7 @@ Values::RuntimeVal Interpreter::evalBlockStmt(Parser::BlockStmt* blockStmt, Envi
 }
 
 Values::BooleanVal Interpreter::evalLogicalExpr(Parser::LogicalExpr* logicalExpr, Environment* env) {
+  Serial.println("evalLogicalExpr");
   Values::RuntimeVal left = evaluate(logicalExpr->left, env);
   Values::RuntimeVal right = evaluate(logicalExpr->right, env);
 
@@ -154,6 +164,7 @@ Values::BooleanVal Interpreter::evalLogicalExpr(Parser::LogicalExpr* logicalExpr
 }
 
 Values::RuntimeVal Interpreter::evalBinaryExpr(Parser::BinaryExpr* binExp, Environment* env) {
+  Serial.println("evalBinaryExpr");
   Values::RuntimeVal left = evaluate(binExp->left, env);
   Values::RuntimeVal right = evaluate(binExp->right, env);
 
@@ -167,20 +178,33 @@ Values::RuntimeVal Interpreter::evalBinaryExpr(Parser::BinaryExpr* binExp, Envir
     Values::BooleanVal* rightBool = static_cast<Values::BooleanVal*>(&right);
 
     return evalBooleanBinaryExpr(leftBool, rightBool, binExp->op, env);
+  } else if (left.type == Values::ValueType::String && right.type == Values::ValueType::String) {
+    Values::StringVal* leftString = static_cast<Values::StringVal*>(&left);
+    Values::StringVal* rightString = static_cast<Values::StringVal*>(&right);
+
+    return evalStringBinaryExpr(leftString, rightString, binExp->op, env);
   } else {
-    ErrorHandler::restart("Value types not compatible");
+    ErrorHandler::noComparisonPossible(Values::getString(left.type).c_str(), Values::getString(right.type).c_str());
   }
 
   return Values::NullVal();
 }
 
 Values::RuntimeVal Interpreter::evalIdentifier(Parser::Identifier* ident, Environment* env) {
+  Serial.println("evalIdentifier");
   Values::RuntimeVal val = env->lookupVar(ident->symbol);
   return val;
 }
 
 Values::RuntimeVal Interpreter::evalNumericBinaryExpr(Values::NumberVal* left, Values::NumberVal* right, char* op, Environment* env) {
+  Serial.println("evalNumericBinaryExpr");
   Values::NumberVal numberVal = Values::NumberVal();
+
+  Serial.print("Left value: ");
+  Serial.println(left->value);
+
+  Serial.print("Right value: ");
+  Serial.println(right->value);
 
   switch (op[0]) {
     case '+':
@@ -229,6 +253,7 @@ Values::RuntimeVal Interpreter::evalNumericBinaryExpr(Values::NumberVal* left, V
 }
 
 Values::BooleanVal Interpreter::evalBooleanBinaryExpr(Values::BooleanVal* left, Values::BooleanVal* right, char* op, Environment* env) {
+  Serial.println("evalBooleanBinaryExpr");
   Values::BooleanVal boolVal = Values::BooleanVal();
 
   if (strcmp(op, "==") == 0) {
@@ -242,7 +267,23 @@ Values::BooleanVal Interpreter::evalBooleanBinaryExpr(Values::BooleanVal* left, 
   return boolVal;
 }
 
+Values::BooleanVal Interpreter::evalStringBinaryExpr(Values::StringVal* left, Values::StringVal* right, char* op, Environment* env) {
+  Serial.println("evalStringBinaryExpr");
+  Values::BooleanVal boolVal = Values::BooleanVal();
+
+  if (strcmp(op, "==") == 0) {
+    boolVal.value = strcmp(left->str, right->str) == 0;
+  } else if (strcmp(op, "!=") == 0) {
+    boolVal.value = strcmp(left->str, right->str) != 0;
+  } else {
+    ErrorHandler::restart("Cannot compare two Strings with \"", op, "\"");
+  }
+
+  return boolVal;
+}
+
 Values::RuntimeVal Interpreter::evalAssignmentExpr(Parser::AssignmentExpr* node, Environment* env) {
+  Serial.println("evalAssignmentExpr");
   if (node->assignee->kind != Parser::NodeType::Identifier) {
     ErrorHandler::restart("Expected identifier on left side of assignment expression");
   }
@@ -250,6 +291,19 @@ Values::RuntimeVal Interpreter::evalAssignmentExpr(Parser::AssignmentExpr* node,
   const char* varname = static_cast<Parser::Identifier*>(node->assignee)->symbol;
 
   return env->assignVar(varname, evaluate(node->value, env));
+}
+
+Values::ObjectVal Interpreter::evalObjectExpr(Parser::ObjectLiteral* obj, Environment* env) {
+  Serial.println("evalObjectExpr");
+  Values::ObjectVal object;
+
+  for (const auto& [key, value] : obj->properties) {
+    Values::RuntimeVal rtVal = value == nullptr ? Values::NullVal() : evaluate(value, env);
+
+    object.properties[key] = rtVal;
+  }
+
+  return object;
 }
 
 Values::RuntimeVal Interpreter::evalCallExpr(Parser::CallExpr* expr, Environment* env) {
@@ -273,10 +327,43 @@ Values::RuntimeVal Interpreter::evalCallExpr(Parser::CallExpr* expr, Environment
   }
 
   Values::NativeFnVal* function = static_cast<Values::NativeFnVal*>(&fn);
-  
+
   Serial.print("Found function ");
   Serial.println(static_cast<Parser::Identifier*>(expr->caller)->symbol);
+  
 
   Values::RuntimeVal result = function->call(args, env);
   return result;
+}
+
+Values::RuntimeVal Interpreter::evalMemberExpr(Parser::MemberExpr* member, Environment* env) {
+  Serial.println("evalMemberExpr");
+
+  Values::RuntimeVal objectVal = evaluate(member->object, env);
+
+  if (objectVal.type != Values::ValueType::ObjectVal) {
+    ErrorHandler::restart("Cannot perform member access on non-object value");
+  }
+
+  Values::ObjectVal* obj = static_cast<Values::ObjectVal*>(&objectVal);
+
+  String propertyName;
+  if (member->computed) {
+    Values::RuntimeVal propertyVal = evaluate(member->property, env);
+
+    if (propertyVal.type != Values::ValueType::String) {
+      ErrorHandler::restart("Computed property must evaluate to a string");
+    }
+
+
+  } else {
+    Parser::Identifier* identifier = static_cast<Parser::Identifier*>(member->property);
+    propertyName = identifier->symbol;
+  }
+
+  if (obj->properties.find(propertyName) == obj->properties.end()) {
+    ErrorHandler::restart("Invalid property access: expected identifier");
+  }
+
+  return obj->properties[propertyName];
 }

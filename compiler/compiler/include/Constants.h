@@ -1,8 +1,6 @@
 #pragma once
 
-#ifndef PIO_UNIT_TESTING
 #include <Arduino.h>
-#endif
 
 // BLEComm inputs
 const uint8_t phoneInput_makeSound_pad1 = 0x01;

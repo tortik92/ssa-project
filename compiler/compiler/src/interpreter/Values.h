@@ -20,11 +20,13 @@ public:
    * @brief Enum to define different types of values in the runtime.
    */
   enum class ValueType {
-    Null,      ///< Represents a null value.
-    Boolean,   ///< Represents a boolean value.
-    Number,    ///< Represents a numeric value.
-    NativeFn,  ///< Represents a native function value.
-    Break,     ///< Represents a break statement.
+    Null,       ///< Represents a null value.
+    Boolean,    ///< Represents a boolean value.
+    Number,     ///< Represents a numeric value.
+    String,     ///< Represents a string value.
+    ObjectVal,  ///< Represents an object value.
+    NativeFn,   ///< Represents a native function value.
+    Break,      ///< Represents a break statement.
   };
 
   /**
@@ -101,6 +103,37 @@ public:
   } NumberVal;
 
   /**
+   * @struct StringVal
+   * 
+   * @brief Structure representing a string value. Inherits from RuntimeVal.
+   */
+  typedef struct StringVal : RuntimeVal {
+    char* str;
+
+    StringVal()
+      : RuntimeVal(ValueType::String), str(nullptr) {}
+    StringVal(const char* _str) {
+      size_t len = strlen(_str);
+      str = new char[len + 1];
+      strcpy(str, _str);
+      str[len] = '\0';
+    }
+
+    
+
+    ~StringVal() {
+      delete[] str;
+    }
+  } StringVal;
+
+  typedef struct ObjectVal : RuntimeVal {
+    std::map<String, RuntimeVal> properties;
+
+    ObjectVal()
+      : RuntimeVal(ValueType::ObjectVal) {}
+  } ObjectVal;
+
+  /**
    * @brief Function call typedef, used to define the type of a callable function.
    * 
    * The function takes a vector of runtime values and an environment pointer, 
@@ -131,4 +164,19 @@ public:
     BreakVal()
       : RuntimeVal(ValueType::Break) {}
   } BreakVal;
+
+  static String getString(ValueType valueType) {
+    return valueTypeString.at(valueType);
+  }
+
+private:
+  static inline const std::map<ValueType, String> valueTypeString = {
+    { ValueType::Null, "Null" },
+    { ValueType::Boolean, "Boolean" },
+    { ValueType::Number, "Number" },
+    { ValueType::String, "String" },
+    { ValueType::ObjectVal, "ObjectVal" },
+    { ValueType::NativeFn, "NativeFn" },
+    { ValueType::Break, "Break" }
+  };
 };

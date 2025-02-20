@@ -1,4 +1,4 @@
-// -------------------INCLUDE-----------------------
+#ifndef UNIT_TEST
 #include <list>
 
 #include <Arduino.h>
@@ -20,19 +20,6 @@ Parser parser = Parser(&lexer);
 Interpreter interpreter;
 
 uint8_t activePadCount = 0;
-
-// ----------------HELPER FUNCTIONS------------------
-void shuffle(int *array, size_t n) {
-  if (n > 1) {
-    for (size_t i = 0; i < n; i++) {
-      size_t j = random(i, n - 1);
-
-      int tmp = array[j];
-      array[j] = array[i];
-      array[i] = tmp;
-    }
-  }
-}
 
 // callback functions
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -132,7 +119,7 @@ void loop() {
             Serial.println("Playing easy memory");
             uint8_t selectedPad = anyPad;
             uint8_t selectedLastRound = anyPad;
-            
+
             while (true) {
               // select random pad and deactivate for next round
               while (selectedPad == selectedLastRound) {
@@ -161,32 +148,32 @@ void loop() {
               }
             }
           } else {
-            const uint8_t maxRounds = 4; 
+            const uint8_t maxRounds = 4;
             uint8_t soundSeq[maxRounds];
             memset(soundSeq, UINT8_MAX, maxRounds);
 
-            for(size_t round = 0; round < maxRounds; round++) {
+            for (size_t round = 0; round < maxRounds; round++) {
               soundSeq[round] = random(maxAllowedPads);
 
               // play sound sequence on pads in order
               Serial.print("Pad order: [");
               for (size_t j = 0; j <= round; j++) {
                 uint8_t padIndex = soundSeq[j];
-                
+
                 Serial.print(padIndex);
                 Serial.print(j + 1 != round ? "," : "]\n");
 
                 padsComm->playSingleSound(soundsArray[padIndex], 1000, padIndex);
               }
 
-              // check for correct pads 
+              // check for correct pads
               for (size_t j = 0; j <= round; j++) {
                 padsComm->waitForPlayerOnAnyPad();
 
                 if (padsComm->isPadOccupied(soundSeq[j])) {
                   padsComm->playLoserJingle();
                   return;
-                } else /* Correct pad */ {              
+                } else /* Correct pad */ {
                   padsComm->playCorrectActionJingle();
                 }
               }
@@ -264,15 +251,15 @@ void loop() {
         }
       case phoneInput_tokenize:
         {
-          char code[maxCharsAllowed];  // = "var something if(13 + 4 / (7*300) + foo * bar)";
-
-          String codeAsStr = Serial.readStringUntil('\n');
-
-          strncpy(code, codeAsStr.c_str(), maxCharsAllowed);
+          char code[] = "variable_name anotherVar"; // "let something = \"anything\"; if(something == \"anything\") {print(\"hello\");}";
 
           Serial.println(code);
 
-          std::queue<Lexer::Token> tokens = lexer.tokenize(code, sizeof(code));
+          ErrorHandler::printMemoryStats("before tokenizing");
+
+          std::queue<Lexer::Token> tokens = lexer.tokenize(code, strlen(code));
+
+          ErrorHandler::printMemoryStats("after tokenizing, before producing AST");
 
           Serial.println("Tokenized!");
 
@@ -322,6 +309,12 @@ void loop() {
               case Lexer::TokenType::CloseParen:
                 Serial.println("CloseParen");
                 break;
+              case Lexer::TokenType::OpenBracket:
+                Serial.println("OpenBracket");
+                break;
+              case Lexer::TokenType::CloseBracket:
+                Serial.println("CloseBracket");
+                break;
               case Lexer::TokenType::OpenBrace:
                 Serial.println("OpenBrace");
                 break;
@@ -331,11 +324,20 @@ void loop() {
               case Lexer::TokenType::Number:
                 Serial.println("Number");
                 break;
+              case Lexer::TokenType::StringLiteral:
+                Serial.println("StringLiteral");
+                break;
               case Lexer::TokenType::Semicolon:
                 Serial.println("Semicolon");
                 break;
-              case Lexer::TokenType::Comma:
+              case Lexer::TokenType::Colon:
                 Serial.println("Colon");
+                break;
+              case Lexer::TokenType::Comma:
+                Serial.println("Comma");
+                break;
+              case Lexer::TokenType::Dot:
+                Serial.println("Dot");
                 break;
               case Lexer::TokenType::EndOfFile:
                 Serial.println("EOF");
@@ -349,9 +351,13 @@ void loop() {
         }
       case phoneInput_parse:
         {
-          char code[maxCharsAllowed] = "var something if(13 + 4 / (7*300) + foo * bar)";
+          char code[] = "let something = \"anything\"; if(something == \"anything\") {print(\"hello\");} else {let obj = {num:5,str:\"hello\"}; print(obj.num);}";
 
-          Parser::Program *program = parser.produceAST(code, sizeof(code));
+          ErrorHandler::printMemoryStats("before producing AST");
+
+          Parser::Program *program = parser.produceAST(code, strlen(code));
+
+          ErrorHandler::printMemoryStats("after producing AST");
 
           if (program->kind == Parser::NodeType::Program)
             Serial.println("Program parsed successfully!");
@@ -370,13 +376,21 @@ void loop() {
           Serial.println("\nReady to interpret!");
 
           while (true) {
-            if (Serial.available() > 0) {
+            if (Serial.available()) {
               String code = Serial.readStringUntil('\n');
 
-              if (code.equals("exit")) {
-                break;
+              if (code.startsWith("AT") || code.startsWith("OK")) {
+                Serial.print("Got HC-05 code ");
+                Serial.println(code);
+                if (code.equals("OK+LOST")) {
+                  return;
+                }
+                continue;
               }
 
+              if (code.equalsIgnoreCase("exit")) {
+                break;
+              }
 
               Serial.println("Got string: ");
               Serial.println(code);
@@ -385,10 +399,11 @@ void loop() {
               code.toCharArray(code_cstr, code.length() + 1, 0);
 
               Serial.println("Producing AST");
+              ErrorHandler::printMemoryStats("before AST production");
               Parser::Program *program = parser.produceAST(code_cstr, code.length() + 1);
               parser.printAST(program);
               Serial.println("Successfully parsed program");
-              ErrorHandler::printMemoryStats("after AST printing");
+              ErrorHandler::printMemoryStats("after AST production");
               ESP.wdtFeed();
 
               Values::RuntimeVal val = interpreter.evaluate(program, &env);
@@ -415,8 +430,18 @@ void loop() {
                     Serial.println(numVal->value);
                     break;
                   }
+                case Values::ValueType::String:
+                  {
+                    Serial.println("String: ");
+                    Values::StringVal *stringVal = static_cast<Values::StringVal *>(&val);
+                    Serial.println(stringVal->str);
+                    break;
+                  }
                 case Values::ValueType::NativeFn:
                   Serial.println("NativeFn");
+                  break;
+                case Values::ValueType::ObjectVal:
+                  Serial.println("ObjectVal");
                   break;
                 case Values::ValueType::Break:
                   Serial.println("Break");
@@ -437,3 +462,5 @@ void loop() {
     }
   }
 }
+
+#endif

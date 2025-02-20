@@ -66,6 +66,19 @@ public:
   }
 
   /**
+   * @brief Restarts the system with a formatted message.
+   * @param valueType1 The first main value to be displayed.
+   * @param valueType2 The second main value to be displayed.
+   */
+  static void noComparisonPossible(const char* valueType1, const char* valueType2) {
+    Serial.print("Cannot compare ");
+    Serial.print(valueType1);
+    Serial.print(" with ");
+    Serial.println(valueType2);
+    actualRestart();
+  }
+
+  /**
    * @brief Restarts the system with an expected vs actual value message.
    * @param expected The expected value.
    * @param actual The actual value that was received.
@@ -75,6 +88,13 @@ public:
     Serial.print(expected);
     Serial.print("\", got \"");
     Serial.print(actual);
+    Serial.println("\"");
+    actualRestart();
+  }
+
+  static void missingToken(const char* expectedVal) {
+    Serial.print("Missing \"");
+    Serial.print(expectedVal);
     Serial.println("\"");
     actualRestart();
   }

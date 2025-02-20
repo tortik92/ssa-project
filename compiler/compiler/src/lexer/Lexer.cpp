@@ -13,6 +13,12 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
       case ')':
         addToken(&code[i], 1, TokenType::CloseParen);
         break;
+      case '[':
+        addToken(&code[i], 1, TokenType::OpenBracket);
+        break;
+      case ']':
+        addToken(&code[i], 1, TokenType::CloseBracket);
+        break;
       case '{':
         addToken(&code[i], 1, TokenType::OpenBrace);
         break;
@@ -53,9 +59,30 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
       case ';':
         addToken(&code[i], 1, TokenType::Semicolon);
         break;
+      case ':':
+        addToken(&code[i], 1, TokenType::Colon);
+        break;
       case ',':
         addToken(&code[i], 1, TokenType::Comma);
         break;
+      case '.':
+        addToken(&code[i], 1, TokenType::Dot);
+        break;
+      case '"':
+        {
+          size_t strLen = 1;
+          while(i + strLen < len && code[i + strLen] != '"') {
+            strLen++;
+          }
+
+          if(i + strLen >= len || code[i + strLen] != '"') {
+            ErrorHandler::restart("Expected closing '\"' for string literal");
+          }
+
+          addToken(&code[i], strLen + 1, TokenType::StringLiteral); // +1 for closing quote
+          i += strLen;
+          break;
+        }
       default:
         // handle multicharacter tokens
         if (isDigit(code[i])) {
@@ -67,10 +94,10 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
 
           addToken(&code[i], numLen, TokenType::Number);
           i += numLen - 1;
-        } else if (isAlpha(code[i])) {
+        } else if (isAlpha(code[i]) || code[i] == '$' || code[i] == '_') {
           // identifier
           size_t identLen = 1;
-          while (i + identLen < len && isAlphaNumeric(code[i + identLen])) {
+          while (i + identLen < len && (isAlphaNumeric(code[i + identLen]) || code[i + identLen] == '_' || code[i + identLen] == '$')) {
             identLen++;
           }
 
@@ -96,7 +123,7 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
   char endOfFile[] = "EOF";
   addToken(endOfFile, strlen(endOfFile), TokenType::EndOfFile);
 
-  return tokens;
+  return std::move(tokens);
 }
 
 
@@ -106,7 +133,7 @@ void Lexer::addToken(const char* src, size_t srcLen, TokenType tokenType) {
   value[srcLen] = '\0';
 
   if (tokens.size() < maxTokens) {
-    tokens.emplace(value, tokenType);
+    tokens.push(Token(value, tokenType));
   } else {
     ErrorHandler::restart("Too many tokens in program!");
   }

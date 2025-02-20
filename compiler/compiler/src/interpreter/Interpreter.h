@@ -128,6 +128,17 @@ private:
   Values::BooleanVal evalBooleanBinaryExpr(Values::BooleanVal* left, Values::BooleanVal* right, char* op, Environment* env);
 
   /**
+   * @brief Evaluates a binary expression of two strings (e.g., equality, inequality) in the given environment.
+   * 
+   * @param left The left operand of the binary expression.
+   * @param right The right operand of the binary expression.
+   * @param op The operator of the binary expression.
+   * @param env The environment in which the expression is evaluated.
+   * @return The resulting boolean value from evaluating the binary expression.
+   */
+  Values::BooleanVal evalStringBinaryExpr(Values::StringVal* left, Values::StringVal* right, char* op, Environment* env);
+
+  /**
    * @brief Evaluates an assignment expression in the given environment.
    * 
    * @param node The assignment expression to be evaluated.
@@ -137,6 +148,15 @@ private:
   Values::RuntimeVal evalAssignmentExpr(Parser::AssignmentExpr* node, Environment* env);
 
   /**
+   * @brief Evaluates an object expression in the given environment.
+   * 
+   * @param obj The object expression to be evaluated.
+   * @param env The environment in which the assignment expression is evaluated.
+   * @return The result of the object expression evaluation.
+   */
+  Values::ObjectVal evalObjectExpr(Parser::ObjectLiteral* obj, Environment* env);
+
+  /**
    * @brief Evaluates a function call expression in the given environment.
    * 
    * @param expr The call expression to be evaluated.
@@ -144,4 +164,13 @@ private:
    * @return The result of evaluating the function call.
    */
   Values::RuntimeVal evalCallExpr(Parser::CallExpr* expr, Environment* env);
+
+  /**
+   * @brief Evaluates a member expression in the given environment.
+   * 
+   * @param expr The member expression to be evaluated.
+   * @param env The environment in which the member expression is evaluated.
+   * @return The result of evaluating the member expression.
+   */
+  Values::RuntimeVal evalMemberExpr(Parser::MemberExpr* member, Environment* env);
 };

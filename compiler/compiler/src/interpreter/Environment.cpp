@@ -46,7 +46,7 @@ void Environment::createGlobalEnv() {
   declareVar("null", Values::NullVal(), true);
   Values::NativeFnVal print = Values::NativeFnVal();
 
-  print.call = [](std::vector<Values::RuntimeVal> args, Environment* scope) -> Values::RuntimeVal {
+  print.call = [print](std::vector<Values::RuntimeVal> args, Environment* scope) -> Values::RuntimeVal {
     Serial.println("In Print");
     if (args.size() != 1) {
       ErrorHandler::restart("1 argument expected for function print()");
@@ -66,6 +66,31 @@ void Environment::createGlobalEnv() {
       case Values::ValueType::Number:
         Serial.println(static_cast<const Values::NumberVal*>(&args[0])->value);
         break;
+      case Values::ValueType::String:
+        Serial.println(static_cast<const Values::StringVal*>(&args[0])->str);
+      case Values::ValueType::ObjectVal:
+        {
+          Serial.println("{");
+
+          std::map<String, Values::RuntimeVal> properties = static_cast<const Values::ObjectVal*>(&args[0])->properties;
+
+          for (const auto& [key, value] : properties) {
+            Serial.print(key);
+            Serial.print(": ");
+
+            // recursive call to print
+            std::vector<Values::RuntimeVal> callArgs;
+            callArgs.push_back(value);
+            print.call(callArgs, scope);
+
+            if(key != properties.rbegin()->first) {
+              Serial.println(",");
+            }
+          }
+          
+          Serial.println("}");
+          break;
+        }
       case Values::ValueType::NativeFn:
         Serial.println((unsigned int)&static_cast<const Values::NativeFnVal*>(&args[0])->call);  // print memory address
         break;
@@ -76,8 +101,36 @@ void Environment::createGlobalEnv() {
 
     return Values::NullVal();
   };
-
   declareVar("print", print, true);
+
+  Values::NativeFnVal rnd = Values::NativeFnVal();
+  rnd.call = [](std::vector<Values::RuntimeVal> args, Environment* scope) -> Values::RuntimeVal {
+    uint8_t argsLen = 2;
+    char argNames[argsLen][4] = { "min", "max" };
+    bool required[argsLen] = { false, true };
+    int parsedArgs[argsLen] = { 0, 1 };
+
+    for (uint8_t i = 0; i < argsLen; i++) {
+      if (i >= args.size()) {
+        if (required[i]) {
+          ErrorHandler::restart("Required argument '", argNames[i], "' not given for 'random(max)'");
+        } else {
+          continue;
+        }
+      }
+
+      if (args[i].type != Values::ValueType::Number) {
+        ErrorHandler::restart("Expected Number for '", argNames[i], "' of 'random(min, max)'");
+      }
+
+      parsedArgs[i] = static_cast<const Values::NumberVal*>(&args[i])->value;
+    }
+
+    int rnd = random(parsedArgs[0], parsedArgs[1]);
+
+    return Values::NumberVal(rnd);
+  };
+  declareVar("random", rnd, false);
 
   Values::NativeFnVal playSound = Values::NativeFnVal();
   playSound.call = [](std::vector<Values::RuntimeVal> args, Environment* env) -> Values::RuntimeVal {
@@ -227,4 +280,20 @@ void Environment::createGlobalEnv() {
     return Values::BooleanVal(true);
   };
   declareVar("waitForPlayersOnAllActivePads", waitForPlayersOnAllActivePads, true);
+
+  Values::NativeFnVal isPadOccupied = Values::NativeFnVal();
+  isPadOccupied.call = [](std::vector<Values::RuntimeVal> args, Environment* env) -> Values::RuntimeVal {
+    PadsComm* padsComm = PadsComm::getInstance();
+
+    if (args.size() != 1) {
+      ErrorHandler::restart("Parameter expected for 'isPadOccupied(padIndex)'");
+    } else if (args[0].type != Values::ValueType::Number) {
+      ErrorHandler::restart("Expected Number for 'isPadOccupied(padIndex)'");
+    }
+
+    int padIndex = static_cast<Values::NumberVal*>(&args[0])->value;
+
+    return Values::BooleanVal(padsComm->isPadOccupied(padIndex));
+  };
+  declareVar("isPadOccupied", isPadOccupied, true);
 }

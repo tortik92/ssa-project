@@ -32,19 +32,24 @@ public:
 
     Identifier,  ///< Token for identifiers (variable names, etc.)
     Number,      ///< Token for numerical literals
+    StringLiteral,  ///< Token for string literals
 
     Equals,              ///< Token for '=' operator
     ArithmeticOperator,  ///< Token for arithmetic operators (+, -, *, /, %)
     RelationalOperator,  ///< Token for relational operators (<, <=, >, >=, ==, !=)
     LogicalOperator,     ///< Token for logical operators (not, and, or)
 
-    OpenParen,   ///< Token for '(' character
-    CloseParen,  ///< Token for ')' character
-    OpenBrace,   ///< Token for '{' character
-    CloseBrace,  ///< Token for '}' character
+    OpenParen,     ///< Token for '(' character
+    CloseParen,    ///< Token for ')' character
+    OpenBracket,   ///< Token for '[' character
+    CloseBracket,  ///< Token for ']' character
+    OpenBrace,     ///< Token for '{' character
+    CloseBrace,    ///< Token for '}' character
 
     Semicolon,  ///< Token for ';' character
+    Colon,      ///< Token for ':' character
     Comma,      ///< Token for ',' character
+    Dot,        ///< Token for '.' character
 
     EndOfFile,  ///< Token indicating the end of the file
   };
@@ -117,6 +122,21 @@ public:
       : value(other.value), type(other.type) {
       other.value = nullptr;  // Transfer ownership
     }
+
+    /**
+     * @brief Move assignment operator.
+     * @param other THe token to move from.
+     */
+    Token& operator=(Token&& other) noexcept {
+      if (this != &other) {
+        delete[] value;  // Free existing memory
+        value = other.value;  // Transfer ownership
+        type = other.type;
+        other.value = nullptr;
+      }
+      return *this;
+    }
+    
 
     /**
      * @brief Destructor.

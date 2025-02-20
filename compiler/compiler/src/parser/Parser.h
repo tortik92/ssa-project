@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <vector>
 #include "lexer/Lexer.h"
 #include "ErrorHandler.h"
@@ -37,8 +38,11 @@ public:
     // Expressions
     AssignmentExpr, /**< Represents an assignment expression */
     CallExpr,       /**< Represents a function call expression */
+    MemberExpr,     /**< Represents a object/array member access */
     // Literals
     NumericLiteral, /**< Represents a numeric literal */
+    StringLiteral,  /**< Represents a string literal */
+    ObjectLiteral,  /**< Represents an object declaration */
     Identifier,     /**< Represents an identifier */
     BinaryExpr,     /**< Represents a binary expression */
     LogicalExpr     /**< Represents a logical expression */
@@ -126,6 +130,21 @@ public:
   } CallExpr;
 
   /**
+   * @struct MemberExpr
+   * 
+   * Represents a object/array member access.
+   * Computed means `object[property]`, not computed means `object.property`.
+   */
+  typedef struct MemberExpr : Expr {
+    Expr* object;
+    Expr* property;
+    bool computed;
+
+    MemberExpr()
+      : Expr(NodeType::MemberExpr), object(nullptr), property(nullptr), computed(false) {}
+  } MemberExpr;
+
+  /**
    * @struct BinaryExpr
    * 
    * Represents a binary expression with left and right operands and an operator.
@@ -169,8 +188,106 @@ public:
     int num; /**< The value of the numeric literal */
 
     NumericLiteral()
-      : Expr(NodeType::NumericLiteral) {}
+      : Expr(NodeType::NumericLiteral), num(0) {}
   } NumericLiteral;
+
+  typedef struct StringLiteral : Expr {
+    char* value;
+    char* raw;
+
+    StringLiteral()
+      : Expr(NodeType::StringLiteral), value(nullptr), raw(nullptr) {}
+
+    StringLiteral(char* _raw) : Expr(NodeType::StringLiteral) {
+      size_t rawStrLen = strlen(_raw);
+      size_t valueStrLen = rawStrLen - 2; // minus the two quotes 
+      raw = new char[rawStrLen + 1];
+      value = new char[valueStrLen + 1];
+      strcpy(raw, _raw);
+      strncpy(value, _raw + 1, valueStrLen);
+      raw[rawStrLen] = '\0';
+      value[valueStrLen] = '\0';
+    }
+
+    // Copy constructor
+    StringLiteral(const StringLiteral& other) : Expr(NodeType::StringLiteral) {
+      if (other.raw) {
+        raw = new char[strlen(other.raw) + 1];
+        strcpy(raw, other.raw);
+      } else {
+        raw = nullptr;
+      }
+      if (other.value) {
+        value = new char[strlen(other.value) + 1];
+        strcpy(value, other.value);
+      } else {
+        value = nullptr;
+      }
+    }
+
+    // Move constructor
+    StringLiteral(StringLiteral&& other) noexcept : Expr(NodeType::StringLiteral) {
+      raw = other.raw;
+      value = other.value;
+      other.raw = nullptr;
+      other.value = nullptr;
+    }
+
+    // Copy assignment operator
+    StringLiteral& operator=(const StringLiteral& other) {
+      if (this == &other) return *this;
+
+      delete[] raw;
+      delete[] value;
+
+      if (other.raw) {
+        raw = new char[strlen(other.raw) + 1];
+        strcpy(raw, other.raw);
+      } else {
+        raw = nullptr;
+      }
+      if (other.value) {
+        value = new char[strlen(other.value) + 1];
+        strcpy(value, other.value);
+      } else {
+        value = nullptr;
+      }
+
+      return *this;
+    }
+
+    // Move assignment operator
+    StringLiteral& operator=(StringLiteral&& other) noexcept {
+      if (this == &other) return *this;
+
+      delete[] raw;
+      delete[] value;
+
+      raw = other.raw;
+      value = other.value;
+      other.raw = nullptr;
+      other.value = nullptr;
+
+      return *this;
+    }
+
+    ~StringLiteral() {
+      delete[] value;
+      delete[] raw;
+    }
+  } StringLiteral;
+
+  /**
+   * @struct ObjectLiteral
+   * 
+   * Represents a data structure of key/value pairs.
+   */
+  typedef struct ObjectLiteral : Expr {
+    std::map<String, Expr*> properties;
+
+    ObjectLiteral()
+      : Expr(NodeType::ObjectLiteral) {}
+  } ObjectLiteral;
 
   /**
    * @struct LogicalExpr
@@ -184,6 +301,9 @@ public:
 
     LogicalExpr()
       : Expr(NodeType::LogicalExpr), left(nullptr), right(nullptr), op(nullptr) {}
+    ~LogicalExpr() {
+      delete[] op;
+    }
   } LogicalExpr;
 
   /**
@@ -258,9 +378,12 @@ private:
   MemoryPool<BinaryExpr, poolSize> binaryExprPool;
   MemoryPool<Identifier, poolSize> identifierPool;
   MemoryPool<NumericLiteral, poolSize> numericLiteralPool;
+  MemoryPool<StringLiteral, poolSize> stringLiteralPool;
   MemoryPool<VarDeclaration, poolSize> varDeclarationPool;
   MemoryPool<AssignmentExpr, poolSize> assignmentExprPool;
   MemoryPool<CallExpr, poolSize> callExprPool;
+  MemoryPool<MemberExpr, poolSize> memberExprPool;
+  MemoryPool<ObjectLiteral, poolSize> objectLiteralPool;
   MemoryPool<LogicalExpr, poolSize> logicalExprPool;
   MemoryPool<BlockStmt, poolSize> blockStmtPool;
   MemoryPool<IfStmt, poolSize> ifStmtPool;
@@ -280,12 +403,14 @@ private:
   Expr* parseLogicalExpr();
   Expr* parseRelationalExpr();
   Expr* parseAssignmentExpr();
+  Expr* parseObjectExpr();
   Expr* parseAdditiveExpr();
   Expr* parseMultiplicativeExpr();
   Expr* parseCallMemberExpr();
   Expr* parseCallExpr(Expr* caller);
   void parseArgs(CallExpr* callExpr);
   void parseArgsList(CallExpr* callExpr);
+  Expr* parseMemberExpr();
   Expr* parsePrimaryExpr();
 
   /**
@@ -303,7 +428,7 @@ private:
    * @brief Looks up the `Token` at the front of the `tokens` queue.
    * @return The `Token` to be processed next.
    */
-  Lexer::Token at();
+  Lexer::Token& at();
 
   /**
    * @brief Removes the `Token` at the front of the `tokens` queue.
@@ -330,6 +455,7 @@ private:
   // various toString functions
   void toStringNumericLiteral(const NumericLiteral* numLit);
   void toStringIdentifier(const Identifier* ident);
+  void toStringStringLiteral(const StringLiteral* str);
   void toStringBinaryExpr(const BinaryExpr* binaryExpr);
   void toStringLogicalExpr(const LogicalExpr* logicalExpr);
   void toStringVarDecl(const VarDeclaration* varDecl);
@@ -338,6 +464,8 @@ private:
   void toStringWhileStmt(const WhileStmt* whileStmt);
   void toStringBreakStmt(const BreakStmt* breakStmt);
   void toStringAssignmentExpr(const AssignmentExpr* assignmentExpr);
+  void toStringObjectLiteral(const ObjectLiteral* objectLiteral);
   void toStringCallExpr(const CallExpr* callExpr);
+  void toStringMemberExpr(const MemberExpr* memberExpr);
   void toString(const Stmt* stmt);
 };
