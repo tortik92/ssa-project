@@ -3,15 +3,10 @@
 Parser::Program* Parser::produceAST(char* code, size_t len) {
   cleanup();
 
-  ErrorHandler::printMemoryStats("before tokenization");
-
   tokens = lexer->tokenize(code, len);
-
-  ErrorHandler::printMemoryStats("after tokenization");
 
   while (!endOfFile()) {
     push(parseStmt());
-    ErrorHandler::printMemoryStats("after parsing statement");
   }
 
   program.body.shrink_to_fit();
@@ -21,13 +16,11 @@ Parser::Program* Parser::produceAST(char* code, size_t len) {
 
 Parser::Stmt* Parser::parseStmt() {
   Serial.println("parseStmt");
-  ErrorHandler::printMemoryStats("before parsing statement");
   Serial.println(at().value);
   switch (at().type) {
     case Lexer::TokenType::Let:
     case Lexer::TokenType::Const:
       Serial.println("Parsing var decl");
-      ErrorHandler::printMemoryStats("before calling parseVarDecl");
       return parseVarDeclaration();
     case Lexer::TokenType::If:
       Serial.println("Parsing if statement");
@@ -46,13 +39,10 @@ Parser::Stmt* Parser::parseStmt() {
 
 Parser::VarDeclaration* Parser::parseVarDeclaration() {
   Serial.println("parseVarDeclaration");
-  ErrorHandler::printMemoryStats("before parsing varDecl");
   const bool isConstant = eat().type == Lexer::TokenType::Const;
   Lexer::Token varName = expect(Lexer::TokenType::Identifier, "identifier after let/const");
 
-  ErrorHandler::printMemoryStats("before allocating varDecl");
   VarDeclaration* varDecl = varDeclarationPool.allocate();
-  ErrorHandler::printMemoryStats("after allocating varDecl");
   varDecl->constant = isConstant;
   varDecl->ident = strcpyNew(varName.value);
   Serial.println(varDecl->ident);
@@ -70,7 +60,6 @@ Parser::VarDeclaration* Parser::parseVarDeclaration() {
 
   expect(Lexer::TokenType::Equals, "=");
   varDecl->value = parseExpr();
-  ErrorHandler::printMemoryStats("after parsing varDecl value");
   expect(Lexer::TokenType::Semicolon, ";");
 
   return varDecl;
@@ -446,7 +435,7 @@ Lexer::Token& Parser::at() {
 }
 
 Lexer::Token Parser::eat() {
-  Lexer::Token returnValue = tokens.front();
+  Lexer::Token returnValue = std::move(tokens.front());
   tokens.pop();
   return returnValue;
 }
@@ -477,8 +466,6 @@ void Parser::push(Stmt* stmt) {
 }
 
 void Parser::cleanup() {
-  ErrorHandler::printMemoryStats("before cleanup");
-
   program.body.clear();
   currentStmtIndex = 0;
 
@@ -492,8 +479,6 @@ void Parser::cleanup() {
   ifStmtPool.cleanup();
   whileStmtPool.cleanup();
   breakStmtPool.cleanup();
-
-  ErrorHandler::printMemoryStats("after cleanup");
 }
 
 char* Parser::strcpyNew(const char* src) {
