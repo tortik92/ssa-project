@@ -1,8 +1,6 @@
 #include "Parser.h"
 
 Parser::Program* Parser::produceAST(char* code, size_t len) {
-  cleanup();
-
   tokens = lexer->tokenize(code, len);
 
   while (!endOfFile()) {
@@ -14,7 +12,7 @@ Parser::Program* Parser::produceAST(char* code, size_t len) {
   return &program;
 }
 
-Parser::Stmt* Parser::parseStmt() {
+std::unique_ptr<Parser::Stmt> Parser::parseStmt() {
   Serial.println("parseStmt");
   Serial.println(at().value);
   switch (at().type) {
@@ -37,14 +35,16 @@ Parser::Stmt* Parser::parseStmt() {
   }
 }
 
-Parser::VarDeclaration* Parser::parseVarDeclaration() {
+std::unique_ptr<Parser::VarDeclaration> Parser::parseVarDeclaration() {
   Serial.println("parseVarDeclaration");
   const bool isConstant = eat().type == Lexer::TokenType::Const;
   Lexer::Token varName = expect(Lexer::TokenType::Identifier, "identifier after let/const");
 
-  VarDeclaration* varDecl = varDeclarationPool.allocate();
+  std::unique_ptr<VarDeclaration> varDecl = std::make_unique<VarDeclaration>();
   varDecl->constant = isConstant;
-  varDecl->ident = strcpyNew(varName.value);
+  varDecl->ident = varName.value;
+  varName.value = nullptr;
+
   Serial.println(varDecl->ident);
 
   if (at().type == Lexer::TokenType::Semicolon) {
@@ -65,10 +65,10 @@ Parser::VarDeclaration* Parser::parseVarDeclaration() {
   return varDecl;
 }
 
-Parser::IfStmt* Parser::parseIfStmt() {
+std::unique_ptr<Parser::IfStmt> Parser::parseIfStmt() {
   Serial.println("parseIfStmt");
   eat();  // consume 'if'
-  IfStmt* ifStmt = ifStmtPool.allocate();
+  std::unique_ptr<IfStmt> ifStmt = std::make_unique<IfStmt>();
 
   expect(Lexer::TokenType::OpenParen, "(");
   ifStmt->test = parseExpr();
@@ -84,10 +84,10 @@ Parser::IfStmt* Parser::parseIfStmt() {
   return ifStmt;
 }
 
-Parser::WhileStmt* Parser::parseWhileStmt() {
+std::unique_ptr<Parser::WhileStmt> Parser::parseWhileStmt() {
   Serial.println("parseWhileStmt");
   eat();  // consume 'while'
-  WhileStmt* whileStmt = whileStmtPool.allocate();
+  std::unique_ptr<WhileStmt> whileStmt = std::make_unique<WhileStmt>();
 
   expect(Lexer::TokenType::OpenParen, "(");
   whileStmt->test = parseExpr();
@@ -98,18 +98,18 @@ Parser::WhileStmt* Parser::parseWhileStmt() {
   return whileStmt;
 }
 
-Parser::BreakStmt* Parser::parseBreakStmt() {
+std::unique_ptr<Parser::BreakStmt> Parser::parseBreakStmt() {
   Serial.println("parseBreakStmt");
   eat();  // consume 'break'
-  BreakStmt* breakStmt = breakStmtPool.allocate();
+  std::unique_ptr<BreakStmt> breakStmt = std::make_unique<BreakStmt>();
   expect(Lexer::TokenType::Semicolon, ";");
   return breakStmt;
 }
 
-Parser::BlockStmt* Parser::parseBlockStmt() {
+std::unique_ptr<Parser::BlockStmt> Parser::parseBlockStmt() {
   Serial.println("parseBlockStmt");
   expect(Lexer::TokenType::OpenBrace, "{");
-  BlockStmt* blockStmt = blockStmtPool.allocate();
+  std::unique_ptr<BlockStmt> blockStmt = std::make_unique<BlockStmt>();
   blockStmt->body.reserve(estimatedBlockStatements);
 
   while (at().type != Lexer::TokenType::CloseBrace) {
@@ -126,24 +126,23 @@ Parser::BlockStmt* Parser::parseBlockStmt() {
   return blockStmt;
 }
 
-Parser::Expr* Parser::parseExpr() {
+std::unique_ptr<Parser::Expr> Parser::parseExpr() {
   Serial.println("parseExpr");
   return parseLogicalExpr();
 }
 
-Parser::Expr* Parser::parseLogicalExpr() {
+std::unique_ptr<Parser::Expr> Parser::parseLogicalExpr() {
   Serial.println("parseLogicalExpr");
-  Expr* left = parseRelationalExpr();
+  std::unique_ptr<Expr> left = parseRelationalExpr();
 
   while (strcmp(at().value, "and") == 0 || strcmp(at().value, "or") == 0) {
     Lexer::Token op = eat();
 
-    Expr* right = parseRelationalExpr();
-
-    LogicalExpr* logicalExpr = logicalExprPool.allocate();
-    logicalExpr->left = left;
-    logicalExpr->right = right;
-    logicalExpr->op = strcpyNew(op.value);
+    std::unique_ptr<LogicalExpr> logicalExpr = std::make_unique<LogicalExpr>();
+    logicalExpr->left = std::move(left);
+    logicalExpr->right = parseRelationalExpr();
+    logicalExpr->op = op.value;
+    op.value = nullptr;
 
     return logicalExpr;
   }
@@ -153,19 +152,18 @@ Parser::Expr* Parser::parseLogicalExpr() {
   return left;
 }
 
-Parser::Expr* Parser::parseRelationalExpr() {
+std::unique_ptr<Parser::Expr> Parser::parseRelationalExpr() {
   Serial.println("parseRelationalExpr");
-  Expr* left = parseAssignmentExpr();
+  std::unique_ptr<Expr> left = parseAssignmentExpr();
 
   while (strcmp(at().value, "<") == 0 || strcmp(at().value, "<=") == 0 || strcmp(at().value, ">") == 0 || strcmp(at().value, ">=") == 0 || strcmp(at().value, "==") == 0 || strcmp(at().value, "!=") == 0) {
     Lexer::Token op = eat();
 
-    Expr* right = parseAssignmentExpr();
-
-    BinaryExpr* relationalExpr = binaryExprPool.allocate();
-    relationalExpr->left = left;
-    relationalExpr->right = right;
-    relationalExpr->op = strcpyNew(op.value);
+    std::unique_ptr<BinaryExpr> relationalExpr = std::make_unique<BinaryExpr>();
+    relationalExpr->left = std::move(left);
+    relationalExpr->right = parseAssignmentExpr();
+    relationalExpr->op = op.value;
+    op.value = nullptr;
 
     return relationalExpr;
   }
@@ -175,20 +173,18 @@ Parser::Expr* Parser::parseRelationalExpr() {
   return left;
 }
 
-Parser::Expr* Parser::parseAssignmentExpr() {
+std::unique_ptr<Parser::Expr> Parser::parseAssignmentExpr() {
   Serial.println("parseAssignmentExpr");
-  Expr* left = parseObjectExpr();
+  std::unique_ptr<Expr> left = parseObjectExpr();
 
   if (at().type == Lexer::TokenType::Equals) {
     eat();
     if (left->kind != NodeType::Identifier) {
       ErrorHandler::restart("Expected variable name for assignment");
     }
-    Expr* value = parseAssignmentExpr();
-
-    AssignmentExpr* assignmentExpr = assignmentExprPool.allocate();
-    assignmentExpr->assignee = left;
-    assignmentExpr->value = value;
+    std::unique_ptr<AssignmentExpr> assignmentExpr = std::make_unique<AssignmentExpr>();
+    assignmentExpr->assignee = std::move(left);
+    assignmentExpr->value = parseAssignmentExpr();
 
     expect(Lexer::TokenType::Semicolon, ";");
 
@@ -200,7 +196,7 @@ Parser::Expr* Parser::parseAssignmentExpr() {
   return left;
 }
 
-Parser::Expr* Parser::parseObjectExpr() {
+std::unique_ptr<Parser::Expr> Parser::parseObjectExpr() {
   Serial.println("parseObjectExpr");
 
   if (at().type != Lexer::TokenType::OpenBrace) {
@@ -208,11 +204,10 @@ Parser::Expr* Parser::parseObjectExpr() {
   }
 
   eat();
-  ObjectLiteral* objectLiteral = objectLiteralPool.allocate();
+  std::unique_ptr<ObjectLiteral> objectLiteral = std::make_unique<ObjectLiteral>();
 
   while (!endOfFile() && at().type != Lexer::TokenType::CloseBrace) {
     Lexer::Token keyToken = expect(Lexer::TokenType::Identifier, "identifier");
-    const char* key = strcpyNew(keyToken.value);
 
     // options for { key, [...]} and { key }
     if (at().type == Lexer::TokenType::Comma || at().type == Lexer::TokenType::CloseBrace) {
@@ -220,11 +215,11 @@ Parser::Expr* Parser::parseObjectExpr() {
         eat();
       }
 
-      objectLiteral->properties[key] = nullptr;
+      objectLiteral->properties[keyToken.value] = nullptr;
     } else {
       expect(Lexer::TokenType::Colon, ":");
-      Expr* value = parseExpr();
-      objectLiteral->properties[key] = value;
+      std::unique_ptr<Expr> value = parseExpr();
+      objectLiteral->properties[keyToken.value] = std::move(value);
 
       if (at().type != Lexer::TokenType::CloseBrace) {
         expect(Lexer::TokenType::Comma, ",");
@@ -237,23 +232,21 @@ Parser::Expr* Parser::parseObjectExpr() {
   return objectLiteral;
 }
 
-Parser::Expr* Parser::parseAdditiveExpr() {
+std::unique_ptr<Parser::Expr> Parser::parseAdditiveExpr() {
   Serial.println("parseAdditiveExpr");
-  Expr* leftMost = parseMultiplicativeExpr();
-
+  std::unique_ptr<Expr> leftMost = parseMultiplicativeExpr();
 
   while (strcmp(at().value, "+") == 0 || strcmp(at().value, "-") == 0) {
     Lexer::Token op = eat();
 
-    Expr* right = parseMultiplicativeExpr();
-
-    BinaryExpr* binaryExpr = binaryExprPool.allocate();
+    std::unique_ptr<BinaryExpr> binaryExpr = std::make_unique<BinaryExpr>();
     binaryExpr->kind = NodeType::BinaryExpr;
-    binaryExpr->left = leftMost;
-    binaryExpr->right = right;
-    binaryExpr->op = strcpyNew(op.value);
+    binaryExpr->left = std::move(leftMost);
+    binaryExpr->right = parseMultiplicativeExpr();
+    binaryExpr->op = op.value;
+    op.value = nullptr;
 
-    leftMost = binaryExpr;
+    leftMost = std::move(binaryExpr);
   }
 
   Serial.println("return parseAdditiveExpr");
@@ -261,22 +254,21 @@ Parser::Expr* Parser::parseAdditiveExpr() {
   return leftMost;
 }
 
-Parser::Expr* Parser::parseMultiplicativeExpr() {
+std::unique_ptr<Parser::Expr> Parser::parseMultiplicativeExpr() {
   Serial.println("parseMultiplicativeExpr");
-  Expr* leftMost = parseCallMemberExpr();
+  std::unique_ptr<Expr> leftMost = parseCallMemberExpr();
 
   while (strcmp(at().value, "*") == 0 || strcmp(at().value, "/") == 0 || strcmp(at().value, "%") == 0) {
     Lexer::Token op = eat();
 
-    Expr* right = parseCallMemberExpr();
-
-    BinaryExpr* binaryExpr = binaryExprPool.allocate();
+    std::unique_ptr<BinaryExpr> binaryExpr = std::make_unique<BinaryExpr>();
     binaryExpr->kind = NodeType::BinaryExpr;
-    binaryExpr->left = leftMost;
-    binaryExpr->right = right;
-    binaryExpr->op = strcpyNew(op.value);
+    binaryExpr->left = std::move(leftMost);
+    binaryExpr->right = parseCallMemberExpr();
+    binaryExpr->op = op.value;
+    op.value = nullptr;
 
-    leftMost = binaryExpr;
+    leftMost = std::move(binaryExpr);
   }
 
   Serial.println("return parseMultiplicativeExpr");
@@ -284,13 +276,13 @@ Parser::Expr* Parser::parseMultiplicativeExpr() {
   return leftMost;
 }
 
-Parser::Expr* Parser::parseCallMemberExpr() {
+std::unique_ptr<Parser::Expr> Parser::parseCallMemberExpr() {
   Serial.println("parseCallMemberExpr");
-  Expr* member = parseMemberExpr();
+  std::unique_ptr<Expr> member = parseMemberExpr();
 
   if (at().type == Lexer::TokenType::OpenParen) {
     Serial.println("Found OpenParen");
-    return parseCallExpr(member);
+    return parseCallExpr(std::move(member));
   }
 
   Serial.println("return parseCallMemberExpr");
@@ -298,17 +290,18 @@ Parser::Expr* Parser::parseCallMemberExpr() {
   return member;
 }
 
-Parser::Expr* Parser::parseCallExpr(Expr* caller) {
+std::unique_ptr<Parser::CallExpr> Parser::parseCallExpr(std::unique_ptr<Expr>&& caller) {
   Serial.println("parseCallExpr");
-  CallExpr* callExpr = callExprPool.allocate();
-  callExpr->caller = caller;
+  std::unique_ptr<CallExpr> callExpr = std::make_unique<CallExpr>();
+  callExpr->caller = std::move(caller);
+
   parseArgs(callExpr);
   expect(Lexer::TokenType::Semicolon, ";");
 
   return callExpr;
 }
 
-void Parser::parseArgs(CallExpr* callExpr) {
+void Parser::parseArgs(std::unique_ptr<CallExpr>& callExpr) {
   Serial.println("parseArgs");
   expect(Lexer::TokenType::OpenParen, "(");
   if (strcmp(at().value, ")") != 0) {
@@ -317,10 +310,11 @@ void Parser::parseArgs(CallExpr* callExpr) {
   expect(Lexer::TokenType::CloseParen, ")");
 }
 
-void Parser::parseArgsList(CallExpr* callExpr) {
+void Parser::parseArgsList(std::unique_ptr<CallExpr>& callExpr) {
   Serial.println("parseArgsList");
-  Expr* firstParam = parseExpr();
-  callExpr->args.push_back(firstParam);
+  
+  std::unique_ptr<Expr> firstParam = parseExpr();
+  callExpr->args.push_back(std::move(firstParam));
 
   while (at().type == Lexer::TokenType::Comma) {
     eat();
@@ -328,12 +322,12 @@ void Parser::parseArgsList(CallExpr* callExpr) {
   }
 }
 
-Parser::Expr* Parser::parseMemberExpr() {
-  Expr* object = parsePrimaryExpr();
+std::unique_ptr<Parser::Expr> Parser::parseMemberExpr() {
+  std::unique_ptr<Expr> object = parsePrimaryExpr();
 
   while (at().type == Lexer::TokenType::Dot || at().type == Lexer::TokenType::OpenBracket) {
     const Lexer::Token op = eat();
-    Expr* property;
+    std::unique_ptr<Expr> property;
     bool computed;
 
     if (op.type == Lexer::TokenType::Dot) {
@@ -345,30 +339,30 @@ Parser::Expr* Parser::parseMemberExpr() {
       }
 
       Serial.print("Found dot, property: ");
-      Serial.println(static_cast<Parser::Identifier*>(property)->symbol);
+      Serial.println(static_cast<Parser::Identifier*>(property.get())->symbol);
     } else {
       computed = true;
       property = parseExpr();
       expect(Lexer::TokenType::CloseBracket, "]");
     }
 
-    MemberExpr* memberExpr = memberExprPool.allocate();
-    memberExpr->object = object;
-    memberExpr->property = property;
+    std::unique_ptr<MemberExpr> memberExpr = std::make_unique<MemberExpr>();
+    memberExpr->object = std::move(object);
+    memberExpr->property = std::move(property);
     memberExpr->computed = computed;
 
     if (memberExpr->property->kind == NodeType::Identifier) {
       Serial.print("MemberExpr property identifier: ");
-      Serial.println(static_cast<Identifier*>(memberExpr->property)->symbol);
+      Serial.println(static_cast<Identifier*>(memberExpr->property.get())->symbol);
     }
 
-    object = memberExpr;
+    object = std::move(memberExpr);
   }
 
   return object;
 }
 
-Parser::Expr* Parser::parsePrimaryExpr() {
+std::unique_ptr<Parser::Expr> Parser::parsePrimaryExpr() {
   Serial.println("parsePrimaryExpr");
 
   switch (at().type) {
@@ -381,11 +375,12 @@ Parser::Expr* Parser::parsePrimaryExpr() {
     case Lexer::TokenType::Break:
     case Lexer::TokenType::LogicalOperator:
       {
-        Identifier* identifier = identifierPool.allocate();
+        std::unique_ptr<Identifier> identifier = std::make_unique<Identifier>();
 
         Lexer::Token identToken = eat();
 
-        identifier->symbol = strcpyNew(identToken.value);
+        identifier->symbol = identToken.value;
+        identToken.value = nullptr;
 
         Serial.print("Found identifier ");
         Serial.println(identifier->symbol);
@@ -394,7 +389,7 @@ Parser::Expr* Parser::parsePrimaryExpr() {
       }
     case Lexer::TokenType::Number:
       {
-        NumericLiteral* number = numericLiteralPool.allocate();
+        std::unique_ptr<NumericLiteral> number = std::make_unique<NumericLiteral>();
 
         number->num = strtof(eat().value, nullptr);
 
@@ -405,8 +400,7 @@ Parser::Expr* Parser::parsePrimaryExpr() {
       }
     case Lexer::TokenType::StringLiteral:
       {
-        StringLiteral* str = stringLiteralPool.allocate();
-        *str = StringLiteral(eat().value);
+        std::unique_ptr<StringLiteral> str = std::make_unique<StringLiteral>(eat().value);
 
         Serial.print("Found string ");
         Serial.println(str->value);
@@ -416,14 +410,14 @@ Parser::Expr* Parser::parsePrimaryExpr() {
     case Lexer::TokenType::OpenParen:
       {
         eat();  // consume '('
-        Expr* val = parseExpr();
+        std::unique_ptr<Expr> val = parseExpr();
 
         expect(Lexer::TokenType::CloseParen, ")");
         return val;
       }
     default:
       ErrorHandler::restart("Unexpected token \"", at().value, "\" found!");
-      return nullptr;
+      return std::make_unique<Parser::Identifier>();
   }
 }
 
@@ -435,7 +429,7 @@ Lexer::Token& Parser::at() {
 }
 
 Lexer::Token Parser::eat() {
-  Lexer::Token returnValue = std::move(tokens.front());
+  Lexer::Token returnValue = std::move(tokens.front());  // queue emptiness is already checked in !endOfFile()
   tokens.pop();
   return returnValue;
 }
@@ -455,38 +449,14 @@ bool Parser::endOfFile() {
   return tokens.front().type == Lexer::TokenType::EndOfFile;
 }
 
-void Parser::push(Stmt* stmt) {
-  program.body.push_back(stmt);
+void Parser::push(std::unique_ptr<Stmt>&& stmt) {
+  program.body.push_back(std::move(stmt));
 
   if (currentStmtIndex < estimatedProgramStatements) {
     currentStmtIndex++;
   } else {
     ErrorHandler::restart("Too many statements in program");
   }
-}
-
-void Parser::cleanup() {
-  program.body.clear();
-  currentStmtIndex = 0;
-
-  binaryExprPool.cleanup();
-  identifierPool.cleanup();
-  varDeclarationPool.cleanup();
-  numericLiteralPool.cleanup();
-  assignmentExprPool.cleanup();
-  callExprPool.cleanup();
-  blockStmtPool.cleanup();
-  ifStmtPool.cleanup();
-  whileStmtPool.cleanup();
-  breakStmtPool.cleanup();
-}
-
-char* Parser::strcpyNew(const char* src) {
-  size_t len = strlen(src);  
-  char* dest = new char[len + 1]; // one longer than string for null termination
-  strncpy(dest, src, len);
-  dest[len] = '\0'; // ensure null termination
-  return dest;
 }
 
 // toString
@@ -513,23 +483,23 @@ void Parser::toStringStringLiteral(const Parser::StringLiteral* str) {
 void Parser::toStringBinaryExpr(const Parser::BinaryExpr* binaryExpr) {
   Serial.print("{\"type\":\"binaryExpr\",");
   Serial.print("\"left\":");
-  toString(static_cast<const Parser::Stmt*>(binaryExpr->left));
+  toString(static_cast<const Parser::Stmt*>(binaryExpr->left.get()));
   Serial.print(",\"operator\":\"");
   Serial.print(binaryExpr->op);
   Serial.print("\",");
   Serial.print("\"right\":");
-  toString(static_cast<const Parser::Stmt*>(binaryExpr->right));
+  toString(static_cast<const Parser::Stmt*>(binaryExpr->right.get()));
   Serial.print("}");
 }
 
 void Parser::toStringLogicalExpr(const Parser::LogicalExpr* logicalExpr) {
   Serial.print("{\"type\":\"logicalExpr\",");
   Serial.print("\"left\":");
-  toString(static_cast<const Parser::Stmt*>(logicalExpr->left));
+  toString(static_cast<const Parser::Stmt*>(logicalExpr->left.get()));
   Serial.print(",\"operator\":\"");
   Serial.print(logicalExpr->op);
   Serial.print("\",\"right\":");
-  toString(static_cast<const Parser::Stmt*>(logicalExpr->right));
+  toString(static_cast<const Parser::Stmt*>(logicalExpr->right.get()));
   Serial.print("}");
 }
 
@@ -540,14 +510,14 @@ void Parser::toStringVarDecl(const Parser::VarDeclaration* varDecl) {
   Serial.print("\"identifier\":\"");
   Serial.print(varDecl->ident);
   Serial.print("\",\"value\":");
-  if (varDecl->value != nullptr) toString(varDecl->value);
+  if (varDecl->value != nullptr) toString(varDecl->value.get());
   Serial.print("}");
 }
 
 void Parser::toStringBlockStmt(const Parser::BlockStmt* blockStmt) {
   Serial.print("{\"type\":\"blockStmt\",\"body\":[");
   for (size_t i = 0; i < blockStmt->body.size(); i++) {
-    toString(blockStmt->body[i]);
+    toString(blockStmt->body[i].get());
     if (i + 1 < blockStmt->body.size()) {
       Serial.print(",");
     }
@@ -558,12 +528,12 @@ void Parser::toStringBlockStmt(const Parser::BlockStmt* blockStmt) {
 void Parser::toStringIfStmt(const Parser::IfStmt* ifStmt) {
   Serial.print("{\"type\":\"ifStmt\",");
   Serial.print("\"test\":");
-  toString(ifStmt->test);
+  toString(ifStmt->test.get());
   Serial.print(",\"consequent\":");
-  toStringBlockStmt(ifStmt->consequent);
+  toStringBlockStmt(ifStmt->consequent.get());
   Serial.print(",\"alternate\":");
   if (ifStmt->alternate != nullptr) {
-    toStringBlockStmt(ifStmt->alternate);
+    toStringBlockStmt(ifStmt->alternate.get());
   } else {
     Serial.print("null");
   }
@@ -573,9 +543,9 @@ void Parser::toStringIfStmt(const Parser::IfStmt* ifStmt) {
 void Parser::toStringWhileStmt(const Parser::WhileStmt* whileStmt) {
   Serial.print("{\"type\":\"whileStmt\",");
   Serial.print("\"test\":");
-  toString(whileStmt->test);
+  toString(whileStmt->test.get());
   Serial.print(",\"body\":");
-  toStringBlockStmt(whileStmt->body);
+  toStringBlockStmt(whileStmt->body.get());
   Serial.print("}");
 }
 
@@ -585,9 +555,9 @@ void Parser::toStringBreakStmt(const Parser::BreakStmt* breakStmt) {
 
 void Parser::toStringAssignmentExpr(const Parser::AssignmentExpr* assignmentExpr) {
   Serial.print("{\"type\":\"assignmentExpr\",\"assignee\":");
-  toString(assignmentExpr->assignee);
+  toString(assignmentExpr->assignee.get());
   Serial.print(",\"value\":");
-  toString(assignmentExpr->value);
+  toString(assignmentExpr->value.get());
   Serial.print("}");
 }
 
@@ -597,8 +567,8 @@ void Parser::toStringObjectLiteral(const Parser::ObjectLiteral* objectLiteral) {
     Serial.print("\"");
     Serial.print(key);
     Serial.print("\":");
-    toString(value);
-    
+    toString(value.get());
+
     if (key != objectLiteral->properties.rbegin()->first) {
       Serial.print(",");
     }
@@ -608,10 +578,10 @@ void Parser::toStringObjectLiteral(const Parser::ObjectLiteral* objectLiteral) {
 
 void Parser::toStringCallExpr(const Parser::CallExpr* callExpr) {
   Serial.print("{\"type\":\"callExpr\",\"caller\":");
-  toString(callExpr->caller);
+  toString(callExpr->caller.get());
   Serial.print(",\"args\":[");
   for (size_t i = 0; i < callExpr->args.size(); i++) {
-    toString(callExpr->args[i]);
+    toString(callExpr->args[i].get());
     if (i + 1 < callExpr->args.size()) {
       Serial.print(",");
     }
@@ -624,9 +594,9 @@ void Parser::toStringMemberExpr(const Parser::MemberExpr* memberExpr) {
   Serial.print("\"computed\":");
   Serial.print(memberExpr->computed ? "\"true\"," : "\"false\",");
   Serial.print("\"object\":");
-  toString(memberExpr->object);
+  toString(memberExpr->object.get());
   Serial.print(",\"property\":");
-  toString(memberExpr->property);
+  toString(memberExpr->property.get());
   Serial.print("}");
 }
 
@@ -634,7 +604,7 @@ void Parser::printAST(const Parser::Program* program) {
   Serial.print("{\"type\":\"program\",\"body\":[");
 
   for (size_t i = 0; i < program->body.size(); i++) {
-    toString(program->body[i]);
+    toString(program->body[i].get());
     if (i + 1 < program->body.size()) {
       Serial.println(",");
     }

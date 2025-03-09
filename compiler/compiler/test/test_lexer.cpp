@@ -1,11 +1,8 @@
-#include <Arduino.h>
 #include <unity.h>
 #include "lexer/Lexer.h"
+#include "test_lexer.h"
 
 Lexer lexer;
-
-void setUp() {}
-void tearDown() {}
 
 void test_lexer_single_tokens() {
   char code[] = "{}()[]";
@@ -96,16 +93,3 @@ void test_lexer_identifiers() {
   TEST_ASSERT_EQUAL(Lexer::TokenType::Identifier, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("test123", tokens.front().value);
 }
-
-void setup() {
-  delay(2000);
-  UNITY_BEGIN();
-  RUN_TEST(test_lexer_single_tokens);
-  RUN_TEST(test_lexer_numbers);
-  RUN_TEST(test_lexer_keywords);
-  RUN_TEST(test_lexer_operators);
-  RUN_TEST(test_lexer_identifiers);
-  UNITY_END();
-}
-
-void loop() {}

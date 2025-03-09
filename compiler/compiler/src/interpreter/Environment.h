@@ -2,10 +2,12 @@
 
 #include <map>
 #include <set>
+#include <memory>
 
 #include "Constants.h"
 #include "ErrorHandler.h"
 #include "Values.h"
+#include "NativeFunctions.h"
 #include "comm/PadsComm.h"
 
 /**
@@ -42,7 +44,7 @@ public:
    * @return The declared variable's value.
    * @throws ErrorHandler::restart if the variable already exists in the current environment.
    */
-  Values::RuntimeVal declareVar(const char* varName, const Values::RuntimeVal& value, bool constant);
+  std::unique_ptr<Values::RuntimeVal> declareVar(const char* varName, std::unique_ptr<Values::RuntimeVal>&& value, bool constant);
 
   /**
    * @brief Assigns a value to an existing variable in the environment.
@@ -52,7 +54,7 @@ public:
    * @return The assigned value.
    * @throws ErrorHandler::restart if attempting to reassign a constant variable.
    */
-  Values::RuntimeVal assignVar(const char* varName, const Values::RuntimeVal& value);
+  std::unique_ptr<Values::RuntimeVal> assignVar(const char* varName, std::unique_ptr<Values::RuntimeVal>&& value);
 
   /**
    * @brief Looks up the value of a variable.
@@ -61,7 +63,7 @@ public:
    * @return The value of the variable.
    * @throws ErrorHandler::restart if the variable cannot be resolved in the current or parent environments.
    */
-  Values::RuntimeVal lookupVar(const char* varName);
+  std::unique_ptr<Values::RuntimeVal> lookupVar(const char* varName);
 
   /**
    * @brief Resolves a variable from the current environment or any parent environment.
@@ -82,8 +84,9 @@ private:
    */
   void createGlobalEnv();
 
-  Environment* parent; /**< The parent environment for resolution of variables. */
+  Environment* parent;             /**< The parent environment for resolution of variables. */
+  NativeFunctions nativeFunctions; /**< The container for native functions in the environment. */
 
-  std::map<String, Values::RuntimeVal> variables; /**< Map of variables in the environment. */
-  std::set<String> constants;                     /**< Set of constant variables that cannot be reassigned. */
+  std::map<String, std::unique_ptr<Values::RuntimeVal>> variables; /**< Map of variables in the environment. */
+  std::set<String> constants;                                      /**< Set of constant variables that cannot be reassigned. */
 };

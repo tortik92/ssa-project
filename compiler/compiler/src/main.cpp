@@ -259,12 +259,12 @@ void loop() {
 
           std::queue<Lexer::Token> tokens = lexer.tokenize(code, strlen(code));
 
-          ErrorHandler::printMemoryStats("after tokenizing, before producing AST");
+          ErrorHandler::printMemoryStats("finished tokenizing");
 
           Serial.println("Tokenized!");
 
           while (!tokens.empty()) {
-            Lexer::Token token = tokens.front();
+            Lexer::Token token = std::move(tokens.front());
             tokens.pop();
             Serial.print("Value: \"");
             Serial.print(token.value);
@@ -406,34 +406,34 @@ void loop() {
               ErrorHandler::printMemoryStats("after AST production");
               ESP.wdtFeed();
 
-              Values::RuntimeVal val = interpreter.evaluate(program, &env);
+              std::unique_ptr<Values::RuntimeVal> val = interpreter.evaluate(program, &env);
               ErrorHandler::printMemoryStats("after evaluation");
               ESP.wdtFeed();
 
 
               Serial.print("Value: ");
-              switch (val.type) {
+              switch (val->type) {
                 case Values::ValueType::Null:
                   Serial.println("Null");
                   break;
                 case Values::ValueType::Boolean:
                   {
                     Serial.print("Boolean: ");
-                    Values::BooleanVal *boolVal = static_cast<Values::BooleanVal *>(&val);
+                    Values::BooleanVal *boolVal = static_cast<Values::BooleanVal *>(val.get());
                     Serial.println(boolVal->value);
                     break;
                   }
                 case Values::ValueType::Number:
                   {
                     Serial.print("Number: ");
-                    Values::NumberVal *numVal = static_cast<Values::NumberVal *>(&val);
+                    Values::NumberVal *numVal = static_cast<Values::NumberVal *>(val.get());
                     Serial.println(numVal->value);
                     break;
                   }
                 case Values::ValueType::String:
                   {
                     Serial.println("String: ");
-                    Values::StringVal *stringVal = static_cast<Values::StringVal *>(&val);
+                    Values::StringVal *stringVal = static_cast<Values::StringVal *>(val.get());
                     Serial.println(stringVal->str);
                     break;
                   }

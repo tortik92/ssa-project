@@ -1,10 +1,10 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <vector>
 #include "lexer/Lexer.h"
 #include "ErrorHandler.h"
-#include "pool/MemoryPool.h"
 
 /**
  * @class Parser
@@ -58,6 +58,7 @@ public:
 
     Stmt(NodeType _kind)
       : kind(_kind) {}
+    virtual ~Stmt() = default;
   } Stmt;
 
   /**
@@ -66,12 +67,16 @@ public:
    * Represents a program statement containing multiple statements in the body.
    */
   typedef struct Program : Stmt {
-    std::vector<Stmt*> body; /**< A list of statements within the program */
+    std::vector<std::unique_ptr<Stmt>> body; /**< A list of statements within the program */
 
     Program()
       : Stmt(NodeType::Program) {
       body.reserve(estimatedProgramStatements);
     }
+
+    // Delete copy constructor and copy assignment operator
+    Program(const Program&) = delete;
+    Program& operator=(const Program&) = delete;
   } Program;
 
   /**
@@ -82,6 +87,12 @@ public:
   typedef struct Expr : Stmt {
     Expr(NodeType _nodeType)
       : Stmt(_nodeType) {}
+
+    // Delete copy constructor and copy assignment operator
+    Expr(const Expr&) = delete;
+    Expr& operator=(const Expr&) = delete;
+
+    virtual ~Expr() = default;
   } Expr;
 
   /**
@@ -90,12 +101,17 @@ public:
    * Represents a variable declaration with its type, name, and value.
    */
   typedef struct VarDeclaration : Stmt {
-    bool constant; /**< Whether the variable is constant */
-    char* ident;   /**< The identifier (name) of the variable */
-    Expr* value;   /**< The expression representing the value assigned to the variable */
+    bool constant;               /**< Whether the variable is constant */
+    char* ident;                 /**< The identifier (name) of the variable */
+    std::unique_ptr<Expr> value; /**< The expression representing the value assigned to the variable */
 
     VarDeclaration()
       : Stmt(Parser::NodeType::VarDeclaration), constant(false), ident(nullptr), value(nullptr) {}
+
+    // Delete copy constructor and copy assignment operator
+    VarDeclaration(const VarDeclaration&) = delete;
+    VarDeclaration& operator=(const VarDeclaration&) = delete;
+
     ~VarDeclaration() {
       delete[] ident;
     }
@@ -107,11 +123,15 @@ public:
    * Represents an assignment expression consisting of an assignee and a value.
    */
   typedef struct AssignmentExpr : Expr {
-    Expr* assignee; /**< The expression to the left of the assignment */
-    Expr* value;    /**< The expression to the right of the assignment */
+    std::unique_ptr<Expr> assignee; /**< The expression to the left of the assignment */
+    std::unique_ptr<Expr> value;    /**< The expression to the right of the assignment */
 
     AssignmentExpr()
       : Expr(NodeType::AssignmentExpr), assignee(nullptr), value(nullptr) {}
+
+    // Delete copy constructor and copy assignment operator
+    AssignmentExpr(const AssignmentExpr&) = delete;
+    AssignmentExpr& operator=(const AssignmentExpr&) = delete;
   } AssignmentExpr;
 
   /**
@@ -120,13 +140,16 @@ public:
    * Represents a function call expression consisting of a caller and a list of arguments.
    */
   typedef struct CallExpr : Expr {
-    Expr* caller;            /**< The function being called */
-    std::vector<Expr*> args; /**< A list of arguments passed to the function */
+    std::unique_ptr<Expr> caller;            /**< The function being called */
+    std::vector<std::unique_ptr<Expr>> args; /**< A list of arguments passed to the function */
 
     CallExpr()
-      : Expr(NodeType::CallExpr), caller(nullptr) {
+      : Expr(NodeType::CallExpr) {
       args.reserve(estimatedFunctionArgs);
     }
+    // Delete copy constructor and copy assignment operator
+    CallExpr(const CallExpr&) = delete;
+    CallExpr& operator=(const CallExpr&) = delete;
   } CallExpr;
 
   /**
@@ -136,12 +159,16 @@ public:
    * Computed means `object[property]`, not computed means `object.property`.
    */
   typedef struct MemberExpr : Expr {
-    Expr* object;
-    Expr* property;
+    std::unique_ptr<Expr> object;
+    std::unique_ptr<Expr> property;
     bool computed;
 
     MemberExpr()
       : Expr(NodeType::MemberExpr), object(nullptr), property(nullptr), computed(false) {}
+
+    // Delete copy constructor and copy assignment operator
+    MemberExpr(const MemberExpr&) = delete;
+    MemberExpr& operator=(const MemberExpr&) = delete;
   } MemberExpr;
 
   /**
@@ -150,12 +177,17 @@ public:
    * Represents a binary expression with left and right operands and an operator.
    */
   typedef struct BinaryExpr : Expr {
-    Expr* left;  /**< The left operand */
-    Expr* right; /**< The right operand */
-    char* op;    /**< The operator (e.g., "+", "-", "*", "/") */
+    std::unique_ptr<Expr> left;  /**< The left operand */
+    std::unique_ptr<Expr> right; /**< The right operand */
+    char* op;                    /**< The operator (e.g., "+", "-", "*", "/") */
 
     BinaryExpr()
       : Expr(NodeType::BinaryExpr), left(nullptr), right(nullptr), op(nullptr) {}
+
+    // Delete copy constructor and copy assignment operator
+    BinaryExpr(const BinaryExpr&) = delete;
+    BinaryExpr& operator=(const BinaryExpr&) = delete;
+
     ~BinaryExpr() {
       delete[] op;
     }
@@ -172,10 +204,12 @@ public:
     Identifier()
       : Expr(NodeType::Identifier), symbol(nullptr) {}
 
+    // Delete copy constructor and copy assignment operator
+    Identifier(const Identifier&) = delete;
+    Identifier& operator=(const Identifier&) = delete;
+
     ~Identifier() {
-      if (symbol != nullptr) {
-        delete[] symbol;
-      }
+      delete[] symbol;
     }
   } Identifier;
 
@@ -189,6 +223,10 @@ public:
 
     NumericLiteral()
       : Expr(NodeType::NumericLiteral), num(0) {}
+    // Delete copy constructor and copy assignment operator
+    NumericLiteral(const NumericLiteral&) = delete;
+    NumericLiteral& operator=(const NumericLiteral&) = delete;
+    ~NumericLiteral() = default;
   } NumericLiteral;
 
   typedef struct StringLiteral : Expr {
@@ -198,9 +236,10 @@ public:
     StringLiteral()
       : Expr(NodeType::StringLiteral), value(nullptr), raw(nullptr) {}
 
-    StringLiteral(char* _raw) : Expr(NodeType::StringLiteral) {
+    StringLiteral(char* _raw)
+      : Expr(NodeType::StringLiteral) {
       size_t rawStrLen = strlen(_raw);
-      size_t valueStrLen = rawStrLen - 2; // minus the two quotes 
+      size_t valueStrLen = rawStrLen - 2;  // minus the two quotes
       raw = new char[rawStrLen + 1];
       value = new char[valueStrLen + 1];
       strcpy(raw, _raw);
@@ -210,7 +249,8 @@ public:
     }
 
     // Copy constructor
-    StringLiteral(const StringLiteral& other) : Expr(NodeType::StringLiteral) {
+    StringLiteral(const StringLiteral& other)
+      : Expr(NodeType::StringLiteral) {
       if (other.raw) {
         raw = new char[strlen(other.raw) + 1];
         strcpy(raw, other.raw);
@@ -226,7 +266,8 @@ public:
     }
 
     // Move constructor
-    StringLiteral(StringLiteral&& other) noexcept : Expr(NodeType::StringLiteral) {
+    StringLiteral(StringLiteral&& other) noexcept
+      : Expr(NodeType::StringLiteral) {
       raw = other.raw;
       value = other.value;
       other.raw = nullptr;
@@ -283,10 +324,14 @@ public:
    * Represents a data structure of key/value pairs.
    */
   typedef struct ObjectLiteral : Expr {
-    std::map<String, Expr*> properties;
+    std::map<String, std::unique_ptr<Expr>> properties;
 
     ObjectLiteral()
       : Expr(NodeType::ObjectLiteral) {}
+    // Delete copy constructor and copy assignment operator
+    ObjectLiteral(const ObjectLiteral&) = delete;
+    ObjectLiteral& operator=(const ObjectLiteral&) = delete;
+
   } ObjectLiteral;
 
   /**
@@ -295,12 +340,17 @@ public:
    * Represents a logical expression with left and right operands and an operator.
    */
   typedef struct LogicalExpr : Expr {
-    Expr* left;  /**< The left operand */
-    Expr* right; /**< The right operand */
-    char* op;    /**< The logical operator (e.g., "and", "or") */
+    std::unique_ptr<Expr> left;  /**< The left operand */
+    std::unique_ptr<Expr> right; /**< The right operand */
+    char* op;                    /**< The logical operator (e.g., "and", "or") */
 
     LogicalExpr()
       : Expr(NodeType::LogicalExpr), left(nullptr), right(nullptr), op(nullptr) {}
+
+    // Delete copy constructor and copy assignment operator
+    LogicalExpr(const LogicalExpr&) = delete;
+    LogicalExpr& operator=(const LogicalExpr&) = delete;
+
     ~LogicalExpr() {
       delete[] op;
     }
@@ -312,7 +362,7 @@ public:
    * Represents a block of statements enclosed in braces.
    */
   typedef struct BlockStmt : Stmt {
-    std::vector<Stmt*> body; /**< A list of statements within the block */
+    std::vector<std::unique_ptr<Stmt>> body; /**< A list of statements within the block */
 
     BlockStmt()
       : Stmt(NodeType::BlockStmt) {}
@@ -324,12 +374,16 @@ public:
    * Represents an if statement with a condition and consequent/alternate blocks.
    */
   typedef struct IfStmt : Stmt {
-    Expr* test;            /**< The condition being tested */
-    BlockStmt* consequent; /**< The block of statements executed if the condition is true */
-    BlockStmt* alternate;  /**< The block of statements executed if the condition is false (optional) */
+    std::unique_ptr<Expr> test;            /**< The condition being tested */
+    std::unique_ptr<BlockStmt> consequent; /**< The block of statements executed if the condition is true */
+    std::unique_ptr<BlockStmt> alternate;  /**< The block of statements executed if the condition is false (optional) */
 
     IfStmt()
       : Stmt(NodeType::IfStmt), test(nullptr), consequent(nullptr), alternate(nullptr) {}
+
+    // Delete copy constructor and copy assignment operator
+    IfStmt(const IfStmt&) = delete;
+    IfStmt& operator=(const IfStmt&) = delete;
   } IfStmt;
 
   /**
@@ -338,11 +392,14 @@ public:
    * Represents a while loop with a condition and body.
    */
   typedef struct WhileStmt : Stmt {
-    Expr* test;      /**< The condition being tested */
-    BlockStmt* body; /**< The body of the while loop */
+    std::unique_ptr<Expr> test;      /**< The condition being tested */
+    std::unique_ptr<BlockStmt> body; /**< The body of the while loop */
 
     WhileStmt()
       : Stmt(NodeType::WhileStmt), test(nullptr), body(nullptr) {}
+    // Delete copy constructor and copy assignment operator
+    WhileStmt(const WhileStmt&) = delete;
+    WhileStmt& operator=(const WhileStmt&) = delete;
   } WhileStmt;
 
   /**
@@ -374,44 +431,26 @@ private:
   std::queue<Lexer::Token> tokens; /**< A queue of tokens to be processed */
   size_t currentStmtIndex;         /**< The current statement index in the program */
 
-  // Memory pools for various AST node types
-  MemoryPool<BinaryExpr, poolSize> binaryExprPool;
-  MemoryPool<Identifier, poolSize> identifierPool;
-  MemoryPool<NumericLiteral, poolSize> numericLiteralPool;
-  MemoryPool<StringLiteral, poolSize> stringLiteralPool;
-  MemoryPool<VarDeclaration, poolSize> varDeclarationPool;
-  MemoryPool<AssignmentExpr, poolSize> assignmentExprPool;
-  MemoryPool<CallExpr, poolSize> callExprPool;
-  MemoryPool<MemberExpr, poolSize> memberExprPool;
-  MemoryPool<ObjectLiteral, poolSize> objectLiteralPool;
-  MemoryPool<LogicalExpr, poolSize> logicalExprPool;
-  MemoryPool<BlockStmt, poolSize> blockStmtPool;
-  MemoryPool<IfStmt, poolSize> ifStmtPool;
-  MemoryPool<WhileStmt, poolSize> whileStmtPool;
-  MemoryPool<BreakStmt, poolSize> breakStmtPool;
-
-  void cleanup();
-
   // Parsing functions for different types of statements and expressions
-  Stmt* parseStmt();
-  Expr* parseExpr();
-  VarDeclaration* parseVarDeclaration();
-  IfStmt* parseIfStmt();
-  WhileStmt* parseWhileStmt();
-  BreakStmt* parseBreakStmt();
-  BlockStmt* parseBlockStmt();
-  Expr* parseLogicalExpr();
-  Expr* parseRelationalExpr();
-  Expr* parseAssignmentExpr();
-  Expr* parseObjectExpr();
-  Expr* parseAdditiveExpr();
-  Expr* parseMultiplicativeExpr();
-  Expr* parseCallMemberExpr();
-  Expr* parseCallExpr(Expr* caller);
-  void parseArgs(CallExpr* callExpr);
-  void parseArgsList(CallExpr* callExpr);
-  Expr* parseMemberExpr();
-  Expr* parsePrimaryExpr();
+  std::unique_ptr<Stmt> parseStmt();
+  std::unique_ptr<Expr> parseExpr();
+  std::unique_ptr<VarDeclaration> parseVarDeclaration();
+  std::unique_ptr<IfStmt> parseIfStmt();
+  std::unique_ptr<WhileStmt> parseWhileStmt();
+  std::unique_ptr<BreakStmt> parseBreakStmt();
+  std::unique_ptr<BlockStmt> parseBlockStmt();
+  std::unique_ptr<Expr> parseLogicalExpr();
+  std::unique_ptr<Expr> parseRelationalExpr();
+  std::unique_ptr<Expr> parseAssignmentExpr();
+  std::unique_ptr<Expr> parseObjectExpr();
+  std::unique_ptr<Expr> parseAdditiveExpr();
+  std::unique_ptr<Expr> parseMultiplicativeExpr();
+  std::unique_ptr<Expr> parseCallMemberExpr();
+  std::unique_ptr<CallExpr> parseCallExpr(std::unique_ptr<Expr>&& caller);
+  void parseArgs(std::unique_ptr<CallExpr>& callExpr);
+  void parseArgsList(std::unique_ptr<CallExpr>& callExpr);
+  std::unique_ptr<Expr> parseMemberExpr();
+  std::unique_ptr<Expr> parsePrimaryExpr();
 
   /**
    * @brief Checks if the end of the file (EOF) has been reached.
@@ -422,7 +461,7 @@ private:
   /**
    * @brief Pushes a statement to the program body.
    */
-  void push(Stmt* stmt);
+  void push(std::unique_ptr<Stmt>&& stmt);
 
   /**
    * @brief Looks up the `Token` at the front of the `tokens` queue.
@@ -444,13 +483,6 @@ private:
    * @throws ErrorHandler::restart with `expectedVal` and the actual value.
    */
   Lexer::Token expect(Lexer::TokenType type, const char* expectedVal);
-
-  /**
-   * @brief Copies the string into a new dynamically allocated array.
-   * @param src Pointer to the source string.
-   * @return A pointer to the destination string. 
-   */
-  char* strcpyNew(const char* src);
 
   // various toString functions
   void toStringNumericLiteral(const NumericLiteral* numLit);

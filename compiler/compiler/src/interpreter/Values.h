@@ -49,6 +49,17 @@ public:
      */
     RuntimeVal(ValueType _type)
       : type(_type) {}
+
+    /**
+     * @brief Destructor for RuntimeVal.
+     */
+    virtual ~RuntimeVal() = default;
+
+    /**
+     * @brief Clone function to create a deep copy of the RuntimeVal.
+     * @return A unique pointer to the cloned RuntimeVal.
+     */
+    virtual std::unique_ptr<RuntimeVal> clone() const = 0;
   } RuntimeVal;
 
   /**
@@ -60,6 +71,14 @@ public:
      */
     NullVal()
       : RuntimeVal(ValueType::Null) {}
+
+    /**
+     * @brief Clone function to create a deep copy of the NullVal.
+     * @return A unique pointer to the cloned NullVal.
+     */
+    std::unique_ptr<RuntimeVal> clone() const override {
+      return std::make_unique<NullVal>();
+    }
   } NullVal;
 
   /**
@@ -80,6 +99,10 @@ public:
      */
     BooleanVal(bool _value)
       : RuntimeVal(ValueType::Boolean), value(_value) {}
+
+    std::unique_ptr<RuntimeVal> clone() const override {
+      return std::make_unique<BooleanVal>(*this);
+    }
   } BooleanVal;
 
   /**
@@ -100,6 +123,10 @@ public:
      */
     NumberVal(int _value)
       : RuntimeVal(ValueType::Number), value(_value) {}
+
+    std::unique_ptr<RuntimeVal> clone() const override {
+      return std::make_unique<NumberVal>(*this);
+    }
   } NumberVal;
 
   /**
@@ -112,34 +139,90 @@ public:
 
     StringVal()
       : RuntimeVal(ValueType::String), str(nullptr) {}
-    StringVal(const char* _str) {
+    StringVal(const char* _str)
+      : RuntimeVal(ValueType::String) {
       size_t len = strlen(_str);
       str = new char[len + 1];
       strcpy(str, _str);
       str[len] = '\0';
     }
 
-    
+    /**
+     * @brief Copy constructor for StringVal.
+     * 
+     * Creates a deep copy of the given StringVal.
+     * @param other The StringVal to copy from.
+     */
+    StringVal(const StringVal& other)
+      : RuntimeVal(other.type) {
+      if (other.str) {
+        size_t len = strlen(other.str);
+        str = new char[len + 1];
+        strcpy(str, other.str);
+      } else {
+        str = nullptr;
+      }
+    }
+
+    /**
+     * @brief Move constructor for StringVal.
+     * 
+     * Transfers ownership of the string from the given StringVal.
+     * @param other The StringVal to move from.
+     */
+    StringVal(StringVal&& other) noexcept
+      : RuntimeVal(other.type), str(other.str) {
+      other.str = nullptr;
+    }
+
+    /**
+     * @brief Move assignment operator for StringVal.
+     * 
+     * Transfers ownership of the string from the given StringVal.
+     * @param other The StringVal to move from.
+     * @return A reference to this StringVal.
+     */
+    StringVal& operator=(StringVal&& other) noexcept {
+      if (this != &other) {
+        delete[] str;
+        str = other.str;
+
+        other.str = nullptr;
+      }
+      return *this;
+    }
 
     ~StringVal() {
       delete[] str;
     }
+
+    std::unique_ptr<RuntimeVal> clone() const override {
+      return std::make_unique<StringVal>(*this);
+    }
   } StringVal;
 
   typedef struct ObjectVal : RuntimeVal {
-    std::map<String, RuntimeVal> properties;
+    std::map<String, std::unique_ptr<RuntimeVal>> properties;
 
     ObjectVal()
       : RuntimeVal(ValueType::ObjectVal) {}
+
+    std::unique_ptr<RuntimeVal> clone() const override {
+      std::unique_ptr<ObjectVal> clonedObject = std::make_unique<ObjectVal>();
+      for (const auto& [key, value] : properties) {
+        clonedObject->properties[key] = value->clone();
+      }
+      return clonedObject;
+    }
   } ObjectVal;
 
   /**
    * @brief Function call typedef, used to define the type of a callable function.
    * 
-   * The function takes a vector of runtime values and an environment pointer, 
-   * and returns a runtime value.
+   * The function takes a vector of unique_ptr of runtime values and an environment pointer, 
+   * and returns a unique_ptr to a runtime value.
    */
-  using FunctionCall = std::function<RuntimeVal(std::vector<RuntimeVal> args, Environment* env)>;
+  using FunctionCall = std::function<std::unique_ptr<RuntimeVal>&&(std::vector<std::unique_ptr<RuntimeVal>>& args, Environment* env)>;
 
   /**
    * @brief A structure representing a native function value. Inherits from RuntimeVal.
@@ -148,10 +231,24 @@ public:
     FunctionCall call;  ///< The native function call handler.
 
     /**
-     * Default constructor initializing the type to NativeFn.
+     * @brief Default constructor initializing the type to NativeFn.
      */
     NativeFnVal()
       : RuntimeVal(ValueType::NativeFn) {}
+
+    /**
+     * @brief Constructor initializing the native function value with a function call handler.
+     * @param _call The function call handler to initialize the native function value with.
+     */
+    NativeFnVal(FunctionCall _call)
+      : RuntimeVal(ValueType::NativeFn), call(_call) {}
+    /**
+     * @brief Clone function to create a deep copy of the NativeFnVal.
+     * @return A unique pointer to the cloned NativeFnVal.
+     */
+    std::unique_ptr<RuntimeVal> clone() const override {
+      return std::make_unique<NativeFnVal>(*this);
+    }
   } NativeFnVal;
 
   /**
@@ -163,6 +260,10 @@ public:
      */
     BreakVal()
       : RuntimeVal(ValueType::Break) {}
+
+    std::unique_ptr<RuntimeVal> clone() const override {
+      return std::make_unique<BreakVal>(*this);
+    }
   } BreakVal;
 
   static String getString(ValueType valueType) {

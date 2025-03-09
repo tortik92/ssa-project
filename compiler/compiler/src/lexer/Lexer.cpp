@@ -3,7 +3,11 @@
 
 std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
   // clean up for fresh tokens
-  tokens = {};
+  while(!tokens.empty()) {
+    tokens.pop();
+  }
+
+  Serial.println("Cleaned up tokens");
 
   for (size_t i = 0; i < len; i++) {
     switch (code[i]) {
