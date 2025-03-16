@@ -9,14 +9,13 @@
 #include "ErrorHandler.h"
 #include "comm/PadsComm.h"
 #include "comm/BLEComm.h"
-#include "lexer/Lexer.h"
 #include "parser/Parser.h"
 #include "interpreter/Interpreter.h"
 
 PadsComm *padsComm = PadsComm::getInstance();
 BLEComm *btComm = BLEComm::getInstance();
-Lexer lexer;
-Parser parser = Parser(&lexer);
+
+Parser parser;
 Interpreter interpreter;
 
 uint8_t activePadCount = 0;
@@ -249,117 +248,17 @@ void loop() {
           Serial.println("---Reaktion End---");
           break;
         }
-      case phoneInput_tokenize:
-        {
-          char code[] = "variable_name anotherVar"; // "let something = \"anything\"; if(something == \"anything\") {print(\"hello\");}";
-
-          Serial.println(code);
-
-          ErrorHandler::printMemoryStats("before tokenizing");
-
-          std::queue<Lexer::Token> tokens = lexer.tokenize(code, strlen(code));
-
-          ErrorHandler::printMemoryStats("finished tokenizing");
-
-          Serial.println("Tokenized!");
-
-          while (!tokens.empty()) {
-            Lexer::Token token = std::move(tokens.front());
-            tokens.pop();
-            Serial.print("Value: \"");
-            Serial.print(token.value);
-            Serial.print("\"\nTokenType: ");
-            switch (token.type) {
-              case Lexer::TokenType::Let:
-                Serial.println("Let");
-                break;
-              case Lexer::TokenType::Const:
-                Serial.println("Const");
-                break;
-              case Lexer::TokenType::If:
-                Serial.println("If");
-                break;
-              case Lexer::TokenType::Else:
-                Serial.println("Else");
-                break;
-              case Lexer::TokenType::While:
-                Serial.println("While");
-                break;
-              case Lexer::TokenType::Break:
-                Serial.println("Break");
-                break;
-              case Lexer::TokenType::Identifier:
-                Serial.println("Identifier");
-                break;
-              case Lexer::TokenType::Equals:
-                Serial.println("Equals");
-                break;
-              case Lexer::TokenType::ArithmeticOperator:
-                Serial.println("ArithmeticOperator");
-                break;
-              case Lexer::TokenType::LogicalOperator:
-                Serial.println("LogicalOperator");
-                break;
-              case Lexer::TokenType::RelationalOperator:
-                Serial.println("RelationalOperator");
-                break;
-              case Lexer::TokenType::OpenParen:
-                Serial.println("OpenParen");
-                break;
-              case Lexer::TokenType::CloseParen:
-                Serial.println("CloseParen");
-                break;
-              case Lexer::TokenType::OpenBracket:
-                Serial.println("OpenBracket");
-                break;
-              case Lexer::TokenType::CloseBracket:
-                Serial.println("CloseBracket");
-                break;
-              case Lexer::TokenType::OpenBrace:
-                Serial.println("OpenBrace");
-                break;
-              case Lexer::TokenType::CloseBrace:
-                Serial.println("CloseBrace");
-                break;
-              case Lexer::TokenType::Number:
-                Serial.println("Number");
-                break;
-              case Lexer::TokenType::StringLiteral:
-                Serial.println("StringLiteral");
-                break;
-              case Lexer::TokenType::Semicolon:
-                Serial.println("Semicolon");
-                break;
-              case Lexer::TokenType::Colon:
-                Serial.println("Colon");
-                break;
-              case Lexer::TokenType::Comma:
-                Serial.println("Comma");
-                break;
-              case Lexer::TokenType::Dot:
-                Serial.println("Dot");
-                break;
-              case Lexer::TokenType::EndOfFile:
-                Serial.println("EOF");
-                break;
-                /*default:
-                break;*/
-            }
-          }
-
-          break;
-        }
       case phoneInput_parse:
         {
           char code[] = "let something = \"anything\"; if(something == \"anything\") {print(\"hello\");} else {let obj = {num:5,str:\"hello\"}; print(obj.num);}";
 
           ErrorHandler::printMemoryStats("before producing AST");
 
-          Parser::Program *program = parser.produceAST(code, strlen(code));
+          AstNodes::Program *program = parser.produceAST(code, sizeof(code) - 1);
 
           ErrorHandler::printMemoryStats("after producing AST");
 
-          if (program->kind == Parser::NodeType::Program)
+          if (program->kind == AstNodes::NodeType::Program)
             Serial.println("Program parsed successfully!");
 
           parser.printAST(program);
@@ -400,7 +299,7 @@ void loop() {
 
               Serial.println("Producing AST");
               ErrorHandler::printMemoryStats("before AST production");
-              Parser::Program *program = parser.produceAST(code_cstr, code.length() + 1);
+              AstNodes::Program *program = parser.produceAST(code_cstr, code.length() + 1);
               parser.printAST(program);
               Serial.println("Successfully parsed program");
               ErrorHandler::printMemoryStats("after AST production");

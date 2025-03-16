@@ -85,7 +85,6 @@ private:
   void createGlobalEnv();
 
   Environment* parent;             /**< The parent environment for resolution of variables. */
-  NativeFunctions nativeFunctions; /**< The container for native functions in the environment. */
 
   std::map<String, std::unique_ptr<Values::RuntimeVal>> variables; /**< Map of variables in the environment. */
   std::set<String> constants;                                      /**< Set of constant variables that cannot be reassigned. */

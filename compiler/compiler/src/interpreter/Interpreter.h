@@ -23,7 +23,7 @@ public:
    * @param env The environment in which the AST node is evaluated.
    * @return The runtime value resulting from the evaluation of the AST node.
    */
-  std::unique_ptr<Values::RuntimeVal> evaluate(const Parser::Stmt* astNode, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evaluate(const AstNodes::Stmt* astNode, Environment* env);
 
 private:
   /**
@@ -33,7 +33,7 @@ private:
    * @param env The environment in which the program is evaluated.
    * @return The last evaluated value from the program body.
    */
-  std::unique_ptr<Values::RuntimeVal> evalProgram(const Parser::Program* program, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evalProgram(const AstNodes::Program* program, Environment* env);
 
   /**
    * @brief Evaluates a binary expression in the given environment.
@@ -42,7 +42,7 @@ private:
    * @param env The environment in which the expression is evaluated.
    * @return The resulting value from evaluating the binary expression.
    */
-  std::unique_ptr<Values::RuntimeVal> evalBinaryExpr(const Parser::BinaryExpr* binExp, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evalBinaryExpr(const AstNodes::BinaryExpr* binExp, Environment* env);
 
   /**
    * @brief Evaluates a variable declaration in the given environment.
@@ -51,7 +51,7 @@ private:
    * @param env The environment in which the declaration is evaluated.
    * @return The resulting value from declaring the variable.
    */
-  std::unique_ptr<Values::RuntimeVal> evalVarDeclaration(const Parser::VarDeclaration* declaration, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evalVarDeclaration(const AstNodes::VarDeclaration* declaration, Environment* env);
 
   /**
    * @brief Evaluates an if statement in the given environment.
@@ -60,7 +60,7 @@ private:
    * @param env The environment in which the if statement is evaluated.
    * @return The result of evaluating the consequent or alternate block.
    */
-  std::unique_ptr<Values::RuntimeVal> evalIfStmt(const Parser::IfStmt* ifStmt, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evalIfStmt(const AstNodes::IfStmt* ifStmt, Environment* env);
 
   /**
    * @brief Evaluates a while statement in the given environment.
@@ -69,7 +69,7 @@ private:
    * @param env The environment in which the while statement is evaluated.
    * @return The result of evaluating the while loop.
    */
-  std::unique_ptr<Values::RuntimeVal> evalWhileStmt(const Parser::WhileStmt* whileStmt, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evalWhileStmt(const AstNodes::WhileStmt* whileStmt, Environment* env);
 
   /**
    * @brief Evaluates a break statement in the given environment.
@@ -78,7 +78,7 @@ private:
    * @param env The environment in which the break statement is evaluated.
    * @return A break value indicating the break action.
    */
-  std::unique_ptr<Values::BreakVal> evalBreakStmt(const Parser::BreakStmt* breakStmt, Environment* env);
+  std::unique_ptr<Values::BreakVal> evalBreakStmt(const AstNodes::BreakStmt* breakStmt, Environment* env);
 
   /**
    * @brief Evaluates a block of statements in the given environment.
@@ -87,7 +87,7 @@ private:
    * @param parent The environment of the parent block.
    * @return The result of the last evaluated statement in the block.
    */
-  std::unique_ptr<Values::RuntimeVal> evalBlockStmt(const Parser::BlockStmt* blockStmt, Environment* parent);
+  std::unique_ptr<Values::RuntimeVal> evalBlockStmt(const AstNodes::BlockStmt* blockStmt, Environment* parent);
 
   /**
    * @brief Evaluates a logical expression in the given environment.
@@ -96,7 +96,7 @@ private:
    * @param env The environment in which the logical expression is evaluated.
    * @return The resulting boolean value from evaluating the logical expression.
    */
-  std::unique_ptr<Values::BooleanVal> evalLogicalExpr(const Parser::LogicalExpr* logicalExpr, Environment* env);
+  std::unique_ptr<Values::BooleanVal> evalLogicalExpr(const AstNodes::LogicalExpr* logicalExpr, Environment* env);
 
   /**
    * @brief Evaluates an identifier (variable) in the given environment.
@@ -105,7 +105,7 @@ private:
    * @param env The environment in which the identifier is evaluated.
    * @return The value associated with the identifier in the environment.
    */
-  std::unique_ptr<Values::RuntimeVal> evalIdentifier(const Parser::Identifier* ident, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evalIdentifier(const AstNodes::Identifier* ident, Environment* env);
 
   /**
    * @brief Evaluates a numeric binary expression (e.g., addition, subtraction) in the given environment.
@@ -147,7 +147,7 @@ private:
    * @param env The environment in which the assignment expression is evaluated.
    * @return The result of the assignment expression evaluation.
    */
-  std::unique_ptr<Values::RuntimeVal> evalAssignmentExpr(const Parser::AssignmentExpr* node, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evalAssignmentExpr(const AstNodes::AssignmentExpr* node, Environment* env);
 
   /**
    * @brief Evaluates an object expression in the given environment.
@@ -156,7 +156,7 @@ private:
    * @param env The environment in which the assignment expression is evaluated.
    * @return The result of the object expression evaluation.
    */
-  std::unique_ptr<Values::ObjectVal> evalObjectExpr(const Parser::ObjectLiteral* obj, Environment* env);
+  std::unique_ptr<Values::ObjectVal> evalObjectExpr(const AstNodes::ObjectLiteral* obj, Environment* env);
 
   /**
    * @brief Evaluates a function call expression in the given environment.
@@ -165,7 +165,7 @@ private:
    * @param env The environment in which the call expression is evaluated.
    * @return The result of evaluating the function call.
    */
-  std::unique_ptr<Values::RuntimeVal> evalCallExpr(const Parser::CallExpr* expr, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evalCallExpr(const AstNodes::CallExpr* expr, Environment* env);
 
   /**
    * @brief Evaluates a member expression in the given environment.
@@ -174,5 +174,5 @@ private:
    * @param env The environment in which the member expression is evaluated.
    * @return The result of evaluating the member expression.
    */
-  std::unique_ptr<Values::RuntimeVal> evalMemberExpr(const Parser::MemberExpr* member, Environment* env);
+  std::unique_ptr<Values::RuntimeVal> evalMemberExpr(const AstNodes::MemberExpr* member, Environment* env);
 };

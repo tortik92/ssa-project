@@ -222,7 +222,7 @@ public:
    * The function takes a vector of unique_ptr of runtime values and an environment pointer, 
    * and returns a unique_ptr to a runtime value.
    */
-  using FunctionCall = std::function<std::unique_ptr<RuntimeVal>&&(std::vector<std::unique_ptr<RuntimeVal>>& args, Environment* env)>;
+  using FunctionCall = std::function<std::unique_ptr<RuntimeVal>(std::vector<std::unique_ptr<RuntimeVal>>& args, Environment* env)>;
 
   /**
    * @brief A structure representing a native function value. Inherits from RuntimeVal.

@@ -1,44 +1,44 @@
 #include "Interpreter.h"
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evaluate(const Parser::Stmt* astNode, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evaluate(const AstNodes::Stmt* astNode, Environment* env) {
   ESP.wdtFeed();
   switch (astNode->kind) {
-    case Parser::NodeType::NumericLiteral:
-      return std::make_unique<Values::NumberVal>(static_cast<const Parser::NumericLiteral*>(astNode)->num);
-    case Parser::NodeType::StringLiteral:
-      return std::make_unique<Values::StringVal>(static_cast<const Parser::StringLiteral*>(astNode)->value);
-    case Parser::NodeType::Identifier:
-      return evalIdentifier(static_cast<const Parser::Identifier*>(astNode), env);
-    case Parser::NodeType::BinaryExpr:
-      return evalBinaryExpr(static_cast<const Parser::BinaryExpr* >(astNode), env);
-    case Parser::NodeType::VarDeclaration:
-      return evalVarDeclaration(static_cast<const Parser::VarDeclaration* >(astNode), env);
-    case Parser::NodeType::IfStmt:
-      return evalIfStmt(static_cast<const Parser::IfStmt* >(astNode), env);
-    case Parser::NodeType::WhileStmt:
-      return evalWhileStmt(static_cast<const Parser::WhileStmt*>(astNode), env);
-    case Parser::NodeType::BreakStmt:
-      return evalBreakStmt(static_cast<const Parser::BreakStmt*>(astNode), env);
-    case Parser::NodeType::BlockStmt:
-      return evalBlockStmt(static_cast<const Parser::BlockStmt* >(astNode), env);
-    case Parser::NodeType::LogicalExpr:
-      return evalLogicalExpr(static_cast<const Parser::LogicalExpr* >(astNode), env);
-    case Parser::NodeType::AssignmentExpr:
-      return evalAssignmentExpr(static_cast<const Parser::AssignmentExpr*>(astNode), env);
-    case Parser::NodeType::ObjectLiteral:
-      return evalObjectExpr(static_cast<const Parser::ObjectLiteral*>(astNode), env);
-    case Parser::NodeType::CallExpr:
-      return evalCallExpr(static_cast<const Parser::CallExpr*>(astNode), env);
-    case Parser::NodeType::MemberExpr:
-      return evalMemberExpr(static_cast<const Parser::MemberExpr*>(astNode), env);
-    case Parser::NodeType::Program:
-      return evalProgram(static_cast<const Parser::Program*>(astNode), env);
+    case AstNodes::NodeType::NumericLiteral:
+      return std::make_unique<Values::NumberVal>(static_cast<const AstNodes::NumericLiteral*>(astNode)->num);
+    case AstNodes::NodeType::StringLiteral:
+      return std::make_unique<Values::StringVal>(static_cast<const AstNodes::StringLiteral*>(astNode)->value);
+    case AstNodes::NodeType::Identifier:
+      return evalIdentifier(static_cast<const AstNodes::Identifier*>(astNode), env);
+    case AstNodes::NodeType::BinaryExpr:
+      return evalBinaryExpr(static_cast<const AstNodes::BinaryExpr* >(astNode), env);
+    case AstNodes::NodeType::VarDeclaration:
+      return evalVarDeclaration(static_cast<const AstNodes::VarDeclaration* >(astNode), env);
+    case AstNodes::NodeType::IfStmt:
+      return evalIfStmt(static_cast<const AstNodes::IfStmt* >(astNode), env);
+    case AstNodes::NodeType::WhileStmt:
+      return evalWhileStmt(static_cast<const AstNodes::WhileStmt*>(astNode), env);
+    case AstNodes::NodeType::BreakStmt:
+      return evalBreakStmt(static_cast<const AstNodes::BreakStmt*>(astNode), env);
+    case AstNodes::NodeType::BlockStmt:
+      return evalBlockStmt(static_cast<const AstNodes::BlockStmt* >(astNode), env);
+    case AstNodes::NodeType::LogicalExpr:
+      return evalLogicalExpr(static_cast<const AstNodes::LogicalExpr* >(astNode), env);
+    case AstNodes::NodeType::AssignmentExpr:
+      return evalAssignmentExpr(static_cast<const AstNodes::AssignmentExpr*>(astNode), env);
+    case AstNodes::NodeType::ObjectLiteral:
+      return evalObjectExpr(static_cast<const AstNodes::ObjectLiteral*>(astNode), env);
+    case AstNodes::NodeType::CallExpr:
+      return evalCallExpr(static_cast<const AstNodes::CallExpr*>(astNode), env);
+    case AstNodes::NodeType::MemberExpr:
+      return evalMemberExpr(static_cast<const AstNodes::MemberExpr*>(astNode), env);
+    case AstNodes::NodeType::Program:
+      return evalProgram(static_cast<const AstNodes::Program*>(astNode), env);
   }
 
   return std::make_unique<Values::NullVal>();
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalProgram(const Parser::Program* program, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalProgram(const AstNodes::Program* program, Environment* env) {
   std::unique_ptr<Values::RuntimeVal> lastEvaluated = std::make_unique<Values::NullVal>();
 
   for (size_t i = 0; i < program->body.size(); i++) {
@@ -51,13 +51,13 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalProgram(const Parser::Progr
   return lastEvaluated;
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalVarDeclaration(const Parser::VarDeclaration* declaration, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalVarDeclaration(const AstNodes::VarDeclaration* declaration, Environment* env) {
   Serial.println("evalVarDeclaration");
   std::unique_ptr<Values::RuntimeVal> val = declaration->value ? evaluate(declaration->value.get(), env) : std::make_unique<Values::NullVal>();
   return env->declareVar(declaration->ident, std::move(val), declaration->constant);
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalIfStmt(const Parser::IfStmt* ifStmt, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalIfStmt(const AstNodes::IfStmt* ifStmt, Environment* env) {
   std::unique_ptr<Values::RuntimeVal> result = evaluate(ifStmt->test.get(), env);
   Serial.println("Evaluated test of if statement");
   if (result->type != Values::ValueType::Boolean) {
@@ -74,15 +74,15 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalIfStmt(const Parser::IfStmt
   return std::make_unique<Values::NullVal>();
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalWhileStmt(const Parser::WhileStmt* whileStmt, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalWhileStmt(const AstNodes::WhileStmt* whileStmt, Environment* env) {
   std::unique_ptr<Values::RuntimeVal> testResult = evaluate(whileStmt->test.get(), env);
 
   if (testResult->type != Values::ValueType::Boolean) {
     ErrorHandler::restart("Expected boolean value in while statement condition");
   } else {
     Environment* childEnv = new Environment(env);
-    Parser::BlockStmt* whileStmtBody = whileStmt->body.get();
-    std::vector<std::unique_ptr<Parser::Stmt>>& blockStmtBody = whileStmtBody->body;
+    AstNodes::BlockStmt* whileStmtBody = whileStmt->body.get();
+    std::vector<std::unique_ptr<AstNodes::Stmt>>& blockStmtBody = whileStmtBody->body;
     std::unique_ptr<Values::RuntimeVal> result;
 
     while (true) {
@@ -109,12 +109,12 @@ afterWhile:
   return std::make_unique<Values::NullVal>();
 }
 
-std::unique_ptr<Values::BreakVal> Interpreter::evalBreakStmt(const Parser::BreakStmt* breakStmt, Environment* env) {
+std::unique_ptr<Values::BreakVal> Interpreter::evalBreakStmt(const AstNodes::BreakStmt* breakStmt, Environment* env) {
   Serial.println("evalBreakStmt");
   return std::make_unique<Values::BreakVal>();
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalBlockStmt(const Parser::BlockStmt* blockStmt, Environment* parent) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalBlockStmt(const AstNodes::BlockStmt* blockStmt, Environment* parent) {
   Serial.println("evalBlockStmt");
   Environment* env = new Environment(parent);
   std::unique_ptr<Values::RuntimeVal> lastEvaluated;
@@ -126,7 +126,7 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalBlockStmt(const Parser::Blo
   return lastEvaluated;
 }
 
-std::unique_ptr<Values::BooleanVal> Interpreter::evalLogicalExpr(const Parser::LogicalExpr* logicalExpr, Environment* env) {
+std::unique_ptr<Values::BooleanVal> Interpreter::evalLogicalExpr(const AstNodes::LogicalExpr* logicalExpr, Environment* env) {
   Serial.println("evalLogicalExpr");
   std::unique_ptr<Values::RuntimeVal> left = evaluate(logicalExpr->left.get(), env);
   std::unique_ptr<Values::RuntimeVal> right = evaluate(logicalExpr->right.get(), env);
@@ -157,7 +157,7 @@ std::unique_ptr<Values::BooleanVal> Interpreter::evalLogicalExpr(const Parser::L
   }
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalBinaryExpr(const Parser::BinaryExpr* binExp, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalBinaryExpr(const AstNodes::BinaryExpr* binExp, Environment* env) {
   Serial.println("evalBinaryExpr");
   std::unique_ptr<Values::RuntimeVal> left = evaluate(binExp->left.get(), env);
   std::unique_ptr<Values::RuntimeVal> right = evaluate(binExp->right.get(), env);
@@ -184,7 +184,7 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalBinaryExpr(const Parser::Bi
   return std::make_unique<Values::NullVal>();
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalIdentifier(const Parser::Identifier* ident, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalIdentifier(const AstNodes::Identifier* ident, Environment* env) {
   Serial.println("evalIdentifier");
   std::unique_ptr<Values::RuntimeVal> val = env->lookupVar(ident->symbol);
   return val;
@@ -276,18 +276,18 @@ std::unique_ptr<Values::BooleanVal> Interpreter::evalStringBinaryExpr(const Valu
   return boolVal;
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalAssignmentExpr(const Parser::AssignmentExpr* node, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalAssignmentExpr(const AstNodes::AssignmentExpr* node, Environment* env) {
   Serial.println("evalAssignmentExpr");
-  if (node->assignee->kind != Parser::NodeType::Identifier) {
+  if (node->assignee->kind != AstNodes::NodeType::Identifier) {
     ErrorHandler::restart("Expected identifier on left side of assignment expression");
   }
 
-  const char* varname = static_cast<const Parser::Identifier*>(node->assignee.get())->symbol;
+  const char* varname = static_cast<const AstNodes::Identifier*>(node->assignee.get())->symbol;
 
   return env->assignVar(varname, evaluate(node->value.get(), env));
 }
 
-std::unique_ptr<Values::ObjectVal> Interpreter::evalObjectExpr(const Parser::ObjectLiteral* obj, Environment* env) {
+std::unique_ptr<Values::ObjectVal> Interpreter::evalObjectExpr(const AstNodes::ObjectLiteral* obj, Environment* env) {
   Serial.println("evalObjectExpr");
   std::unique_ptr<Values::ObjectVal> object = std::make_unique<Values::ObjectVal>();
 
@@ -298,16 +298,18 @@ std::unique_ptr<Values::ObjectVal> Interpreter::evalObjectExpr(const Parser::Obj
   return object;
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalCallExpr(const Parser::CallExpr* expr, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalCallExpr(const AstNodes::CallExpr* expr, Environment* env) {
   Serial.println("evalCallExpr");
   std::vector<std::unique_ptr<Values::RuntimeVal>> args;
   if (!expr->args.empty()) {
     args.reserve(expr->args.size());
 
-    for (size_t i = 0; i < args.size(); i++) {
-      Serial.println("Found function argument");
+    for (size_t i = 0; i < expr->args.size(); i++) {
+      Serial.println("Found function argument ");
       args.push_back(evaluate(expr->args[i].get(), env));
     }
+  } else {
+    Serial.println("No function arguments found");
   }
 
   std::unique_ptr<Values::RuntimeVal> fn = evaluate(expr->caller.get(), env);
@@ -321,14 +323,15 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalCallExpr(const Parser::Call
   Values::NativeFnVal* function = static_cast<Values::NativeFnVal*>(fn.get());
 
   Serial.print("Found function ");
-  Serial.println(static_cast<const Parser::Identifier*>(expr->caller.get())->symbol);
+  Serial.println(static_cast<const AstNodes::Identifier*>(expr->caller.get())->symbol);
 
 
   std::unique_ptr<Values::RuntimeVal> result = function->call(args, env);
+  Serial.println("Called function");
   return result;
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalMemberExpr(const Parser::MemberExpr* member, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalMemberExpr(const AstNodes::MemberExpr* member, Environment* env) {
   Serial.println("evalMemberExpr");
 
   std::unique_ptr<Values::RuntimeVal> objectVal = evaluate(member->object.get(), env);
@@ -349,7 +352,7 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalMemberExpr(const Parser::Me
 
 
   } else {
-    const Parser::Identifier* identifier = static_cast<const Parser::Identifier*>(member->property.get());
+    const AstNodes::Identifier* identifier = static_cast<const AstNodes::Identifier*>(member->property.get());
     propertyName = identifier->symbol;
   }
 

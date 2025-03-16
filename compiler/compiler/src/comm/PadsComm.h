@@ -17,9 +17,10 @@
 class PadsComm {
 public:
   /**
-   * @brief Deleted copy constructor to prevent copying.
+   * @brief Delete the copy constructor and assignment operator.
    */
-  PadsComm(const PadsComm& copy) = delete;
+  PadsComm(const PadsComm&) = delete;
+  PadsComm& operator=(const PadsComm&) = delete;
 
   /**
    * @brief Gets the singleton instance of PadsComm.

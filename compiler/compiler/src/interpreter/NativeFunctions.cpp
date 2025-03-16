@@ -3,7 +3,9 @@
 std::unique_ptr<Values::RuntimeVal> NativeFunctions::print(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope) {
   Serial.println("In Print");
   if (args.size() != 1) {
-    ErrorHandler::restart("1 argument expected for function print()");
+    Serial.print("args size: ");
+    Serial.println(args.size());
+    ErrorHandler::restart("Too many arguments in function call 'print()'");
   }
 
   switch (args[0]->type) {
@@ -22,11 +24,12 @@ std::unique_ptr<Values::RuntimeVal> NativeFunctions::print(std::vector<std::uniq
       break;
     case Values::ValueType::String:
       Serial.println(static_cast<Values::StringVal*>(args[0].get())->str);
+      break;
     case Values::ValueType::ObjectVal:
       {
         Serial.println("{");
 
-        std::map<String, std::unique_ptr<Values::RuntimeVal>> properties = std::move(static_cast<Values::ObjectVal*>(args[0].get())->properties);
+        const std::map<String, std::unique_ptr<Values::RuntimeVal>>& properties = static_cast<Values::ObjectVal*>(args[0].get())->properties;
 
         for (const auto& [key, value] : properties) {
           Serial.print(key);
@@ -107,9 +110,13 @@ std::unique_ptr<Values::RuntimeVal> NativeFunctions::playSound(std::vector<std::
     parsedArgs[i] = static_cast<const Values::NumberVal*>(args[i].get())->value;
   }
 
-  padsComm->playSingleSound(parsedArgs[0], parsedArgs[1], parsedArgs[2]);
+  PadsComm::WaitResult result = padsComm->playSingleSound(parsedArgs[0], parsedArgs[1], parsedArgs[2]);
 
-  return std::make_unique<Values::BooleanVal>(true);
+  if (result == PadsComm::WaitResult::PadOccupied) {
+    return std::make_unique<Values::NumberVal>(1);
+  } else {
+    return std::make_unique<Values::NumberVal>(0);
+  }
 }
 
 std::unique_ptr<Values::RuntimeVal> NativeFunctions::playCorrectActionJingle(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope) {
