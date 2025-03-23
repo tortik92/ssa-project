@@ -1,9 +1,6 @@
 #ifndef UNIT_TEST
-#include <list>
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <espnow.h>
 
 #include "Constants.h"
 #include "ErrorHandler.h"
@@ -40,9 +37,7 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
   Serial.print(" 0x");
   Serial.println(*incomingData, HEX);
 
-  if (*incomingData == padInput_padOccupied) {
-    padsComm->setPadOccupied(mac, incomingData);
-  }
+  padsComm->gotMessageFromPad(mac, incomingData);
 }
 
 
@@ -51,6 +46,7 @@ void setup() {
   // init connections
   Serial.begin(115200);
 
+  // debugging
   delay(500);
   Serial.setDebugOutput(true);
 
@@ -58,6 +54,7 @@ void setup() {
   Serial.println(ESP.getResetReason());
   Serial.println(ESP.getResetInfo());
 
+  // ESP-NOW
   padsComm->initEspNow(OnDataSent, OnDataRecv);
 
   // random seed
@@ -76,43 +73,44 @@ void loop() {
       case phoneInput_makeSound_pad3:
         padsComm->playSingleSound(soundsArray[2], 1000, 2);
         break;
-      case phoneInput_makeSound_pad4:
-        padsComm->playSingleSound(soundsArray[3], 1000, 3);
-        break;
       // all hex codes from here on out are undocumented and just for testing purposes
       case 0x05:
         padsComm->play8Sounds(soundsArray, correctActionDurations);
         break;
       case 0x06:
         padsComm->playWinnerJingle();
-        padsComm->waitWithEventChecks(3000);
+        padsComm->waitWithCancelCheck(3000);
         padsComm->playLoserJingle();
-        padsComm->waitWithEventChecks(3000);
+        padsComm->waitWithCancelCheck(3000);
         padsComm->playCorrectActionJingle();
-        padsComm->waitWithEventChecks(3000);
+        padsComm->waitWithCancelCheck(3000);
         padsComm->playWrongActionJingle();
         break;
       case 0x07:
         padsComm->waitForPlayerOnAnyPad();
-        if (padsComm->isPadOccupied(1)) {
+        if (padsComm->isPadOccupied(0)) {
           padsComm->playWinnerJingle();
         } else {
           padsComm->playLoserJingle();
         }
         break;
       case 0x08:
-        padsComm->waitForPlayerOnPad(1);
-        if (padsComm->isPadOccupied(1)) {
-          Serial.println("SUCCESS");
+        padsComm->waitForPlayersOnAllActivePads();
+        if (padsComm->isPadOccupied(0) && padsComm->isPadOccupied(1) && padsComm->isPadOccupied(2)) {
+          padsComm->playWinnerJingle();
         } else {
-          Serial.println("FAILURE");
+          padsComm->playLoserJingle();
         }
+        break;
+      case 0x09:
+        padsComm->waitForPlayerOnAnyPad();
+        padsComm->playLoserJingle();
         break;
       case phoneInput_gameSelection_Memory:
         {
           Serial.println("Memory start");
 
-          bool easyMemory = true;
+          bool easyMemory = false;
 
           if (easyMemory) {
             Serial.println("Playing easy memory");
@@ -122,11 +120,14 @@ void loop() {
             while (true) {
               // select random pad and deactivate for next round
               while (selectedPad == selectedLastRound) {
-                selectedPad = random(maxAllowedPads);
+                selectedPad = random(padsCount);
               }
               selectedLastRound = selectedPad;
               Serial.print("Selected correct pad: ");
               Serial.println(selectedPad, DEC);
+
+              // wait a bit to avoid confusion
+              padsComm->waitWithCancelCheck(1000);
 
               // play tone on correct pad
               padsComm->playSingleSound(soundsArray[selectedPad], 1000, selectedPad);
@@ -151,34 +152,35 @@ void loop() {
             uint8_t soundSeq[maxRounds];
             memset(soundSeq, UINT8_MAX, maxRounds);
 
-            for (size_t round = 0; round < maxRounds; round++) {
-              soundSeq[round] = random(maxAllowedPads);
+            for (size_t currentRound = 0; currentRound < maxRounds; currentRound++) {
+              soundSeq[currentRound] = random(padsCount);
 
               // play sound sequence on pads in order
               Serial.print("Pad order: [");
-              for (size_t j = 0; j <= round; j++) {
+              for (size_t j = 0; j <= currentRound; j++) {
                 uint8_t padIndex = soundSeq[j];
 
                 Serial.print(padIndex);
-                Serial.print(j + 1 != round ? "," : "]\n");
+                Serial.print(j + 1 <= currentRound ? "," : "]\n");
 
                 padsComm->playSingleSound(soundsArray[padIndex], 1000, padIndex);
+                padsComm->waitWithCancelCheck(500);
               }
 
               // check for correct pads
-              for (size_t j = 0; j <= round; j++) {
+              for (size_t j = 0; j <= currentRound; j++) {
                 padsComm->waitForPlayerOnAnyPad();
 
-                if (padsComm->isPadOccupied(soundSeq[j])) {
+                if (!padsComm->isPadOccupied(soundSeq[j])) {
                   padsComm->playLoserJingle();
                   return;
                 } else /* Correct pad */ {
                   padsComm->playCorrectActionJingle();
+                  padsComm->waitWithCancelCheck(1000);
                 }
               }
             }
 
-            padsComm->waitWithEventChecks(1000);
             padsComm->playWinnerJingle();
           }
 
@@ -189,79 +191,38 @@ void loop() {
         {
           Serial.println("Reaktion start");
 
-          activePadCount = 2;
-          int correctIndex = random(chordLen);
-          std::vector<int> usable;
-          for (int i = 0; i < paramLen; i++) {
-            if (soundsArray[i] != 0) {
-              usable.push_back(soundsArray[i]);
-            }
-          }
-          usable.shrink_to_fit();
-
-
-          // play all possible sounds so players know
-          {
-            int soundLenArray[paramLen] = { 500, 500, 500, 500, 0, 0, 0, 0 };
-            padsComm->play8Sounds(soundsArray, soundLenArray);
-
-            padsComm->waitWithEventChecks(3000);
-          }
-
-          int countdownTones[paramLen] = { 440, 440, 440, 880, 0, 0, 0, 0 };
-          int countdownLen[paramLen] = { 1000, 1000, 1000, 1000, 0, 0, 0, 0 };
-          while (activePadCount > 1) {
-            padsComm->waitWithEventChecks(3000);
-
-            // play correct sound
-            padsComm->playSingleSound(soundsArray[correctIndex], 500);
-            padsComm->waitWithEventChecks(3000);
-
-            // play countdown before game begins
+          while(true) {
+            // countdown
             padsComm->play8Sounds(countdownTones, countdownLen);
+            padsComm->waitWithCancelCheck(random(2000, 5000)); // wait between 2-5 seconds
+            padsComm->playSingleSound(880, 250); // starting signal (JUMP ON PAD AS FAST AS POSSIBLE)
+            std::variant<int, PadsComm::WaitResult> firstOccupiedIndex = padsComm->waitForPlayerOnAnyPad();
 
-            // repeat sound playing until correct tone is played
-            while (!usable.empty()) {
-              int randomIndex = random(usable.size());
-              padsComm->playSingleSound(usable[randomIndex], 500);
-              usable.erase(usable.begin() + randomIndex);
-              if (!usable.empty()) {
-                padsComm->waitWithEventChecks(3000);
+            if (std::holds_alternative<PadsComm::WaitResult>(firstOccupiedIndex)) {
+              switch (std::get<PadsComm::WaitResult>(firstOccupiedIndex))
+              {
+              case PadsComm::WaitResult::Timeout:
+                Serial.println("No pad occupied, returning...");
+                break;
+              case PadsComm::WaitResult::UserAbort:
+                Serial.println("User aborted, returning...");
+                break;
+              case PadsComm::WaitResult::PadMsgDeliveryError:
+                Serial.println("Error occurred sending message to pad, returning...");
+                break;
+              case PadsComm::WaitResult::PadOccupied:
+                Serial.println("Pad occupied, but no index returned (should not happen), returning...");
+                break;
               }
+              padsComm->playLoserJingle();
+              break;
+            } else {
+              padsComm->playCorrectActionJingle(std::get<int>(firstOccupiedIndex));
+              padsComm->waitWithCancelCheck(1000);
             }
-
-            Serial.println("Correct tone played, waiting for player on pads");
-
-            PadsComm::WaitResult ret = padsComm->waitForPlayerOnAnyPad();
-            if (ret == PadsComm::WaitResult::PadOccupied) {
-              for (int i = 0; i < maxAllowedPads; i++) {
-                if (padsComm->isPadOccupied(i)) {
-                  padsComm->playWinnerJingle(i);
-                }
-              }
-            }
-
-            activePadCount--;
+            
           }
-
-          padsComm->playCorrectActionJingle();
-          Serial.println("---Reaktion End---");
-          break;
-        }
-      case phoneInput_parse:
-        {
-          char code[] = "let something = \"anything\"; if(something == \"anything\") {print(\"hello\");} else {let obj = {num:5,str:\"hello\"}; print(obj.num);}";
-
-          ErrorHandler::printMemoryStats("before producing AST");
-
-          AstNodes::Program *program = parser.produceAST(code, sizeof(code) - 1);
-
-          ErrorHandler::printMemoryStats("after producing AST");
-
-          if (program->kind == AstNodes::NodeType::Program)
-            Serial.println("Program parsed successfully!");
-
-          parser.printAST(program);
+          Serial.println("Reaktion End");
           break;
         }
       case phoneInput_interpret:
@@ -276,16 +237,17 @@ void loop() {
 
           while (true) {
             if (Serial.available()) {
+              // if (btComm->hasUnreadBytes()) { String code = btComm->readCode();
               String code = Serial.readStringUntil('\n');
 
-              if (code.startsWith("AT") || code.startsWith("OK")) {
+              /* if (code.startsWith("AT") || code.startsWith("OK")) {
                 Serial.print("Got HC-05 code ");
                 Serial.println(code);
                 if (code.equals("OK+LOST")) {
                   return;
                 }
                 continue;
-              }
+              }*/
 
               if (code.equalsIgnoreCase("exit")) {
                 break;
@@ -303,11 +265,11 @@ void loop() {
               parser.printAST(program);
               Serial.println("Successfully parsed program");
               ErrorHandler::printMemoryStats("after AST production");
-              ESP.wdtFeed();
+              yield();
 
               std::unique_ptr<Values::RuntimeVal> val = interpreter.evaluate(program, &env);
               ErrorHandler::printMemoryStats("after evaluation");
-              ESP.wdtFeed();
+              yield();
 
 
               Serial.print("Value: ");

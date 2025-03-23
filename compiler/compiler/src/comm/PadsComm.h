@@ -1,5 +1,7 @@
 #pragma once
 
+#include <variant>
+
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 #include <Arduino.h>
@@ -33,14 +35,6 @@ public:
     return instance;
   }
 
-  /**
-   * @brief Destroys the singleton instance of PadsComm.
-   */
-  static void destroyInstance() {
-    delete instance;
-    instance = nullptr;
-  }
-
   // Structs and Enums
 
   /**
@@ -69,25 +63,9 @@ public:
    */
   typedef struct Pad {
     uint8_t macAddr[6]; /**< MAC address of the pad. */
-    bool isOccupied; /**< True if the pad is occupied, false otherwise. */
+    volatile bool isOccupied; /**< True if the pad is occupied, false otherwise. */
     bool isActive; /**< True if the pad is active, false otherwise. */
   } Pad;
-
-  /**
-   * @enum PadsState
-   * @brief Represents different states in the pad communication process.
-   */
-  enum class PadsState {
-    Init, /**< Initial state. */
-    Idle, /**< Pads are idle and not in use. */
-    WaitingForSpecificPadOccupied, /**< Waiting for a specific pad to be occupied. */
-    SpecificPadOccupied, /**< Specific pad has been occupied. */
-    WaitingForAnyPadOccupied, /**< Waiting for any pad to be occupied. */
-    AnyPadOccupied, /**< Any pad has been occupied. */
-    WaitingForAllActivePadsOccupied, /**< Waiting for all active pads to be occupied. */
-    AllActivePadsOccupied, /**< All active pads have been occupied. */
-    Abort /**< Operation has been aborted. */
-  };
 
   /**
    * @enum WaitResult
@@ -95,6 +73,8 @@ public:
    */
   enum class WaitResult {
     PadOccupied, /**< A pad has been occupied. */
+    UserAbort, /**< The user has sent an abort signal. */
+    PadMsgDeliveryError, /**< An error occurred sending the message to the pad. */
     Timeout /**< The waiting operation timed out. */
   };
 
@@ -103,7 +83,7 @@ public:
    * @param soundVal The value representing the sound to be played.
    * @param soundLenMs The duration of the sound in milliseconds.
    * @param padIndex The index of the pad to play the sound on (default: anyPad).
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @return The result of the wait operation (either UserAbort or Timeout).
    */
   WaitResult playSingleSound(const int soundVal, const int soundLenMs, uint8_t padIndex = anyPad);
   
@@ -112,63 +92,69 @@ public:
    * @param soundVal Array of values representing the sounds to be played.
    * @param soundLenMs Array of durations for each sound in milliseconds.
    * @param padIndex The index of the pad to play the sounds on (default: anyPad).
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @return The result of the wait operation (either UserAbort or Timeout).
    */
   WaitResult play8Sounds(const int soundVal[paramLen], const int soundLenMs[paramLen], uint8_t padIndex = anyPad);
 
   /**
    * @brief Plays the correct action jingle on the specified pad.
    * @param padIndex The index of the pad to play the jingle on (default: anyPad).
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @return The result of the wait operation (either UserAbort or Timeout).
    */
   WaitResult playCorrectActionJingle(uint8_t padIndex = anyPad);
 
   /**
    * @brief Plays the wrong action jingle on the specified pad.
    * @param padIndex The index of the pad to play the jingle on (default: anyPad).
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @return The result of the wait operation (either UserAbort or Timeout).
    */
   WaitResult playWrongActionJingle(uint8_t padIndex = anyPad);
 
   /**
    * @brief Plays the winner jingle on the specified pad.
    * @param padIndex The index of the pad to play the jingle on (default: anyPad).
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @return The result of the wait operation (either UserAbort or Timeout).
    */
   WaitResult playWinnerJingle(uint8_t padIndex = anyPad);
 
   /**
    * @brief Plays the loser jingle on the specified pad.
    * @param padIndex The index of the pad to play the jingle on (default: anyPad).
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @return The result of the wait operation (either UserAbort or Timeout).
    */
   WaitResult playLoserJingle(uint8_t padIndex = anyPad);
 
   /**
    * @brief Waits for a player to occupy a specific pad.
    * @param padIndex The index of the pad to wait for (default: anyPad).
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @return The result of the wait operation (either PadOccupied, UserAbort or Timeout).
    */
   WaitResult waitForPlayerOnPad(uint8_t padIndex = anyPad);
 
   /**
    * @brief Waits for a player to occupy any active pad.
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @return The index of the successfully occupied pad or either of PadOccupied, UserAbort or Timeout.
    */
-  WaitResult waitForPlayerOnAnyPad();
+  std::variant<int, WaitResult> waitForPlayerOnAnyPad();
 
   /**
    * @brief Waits for players to occupy all active pads.
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @return The result of the wait operation (either PadOccupied, UserAbort or Timeout).
    */
   WaitResult waitForPlayersOnAllActivePads();
 
   /**
-   * @brief Waits for an event to occur within a specified time, with checks for certain events.
-   * @param ms The maximum duration to wait in milliseconds.
-   * @return The result of the wait operation (either PadOccupied or Timeout).
+   * @brief Waits for a specified time and checks if the user sent an abort signal.
+   * @param ms The duration to wait in milliseconds.
+   * @return True if the user sent an abort signal, false otherwise.
    */
-  WaitResult waitWithEventChecks(unsigned long ms);
+  bool waitWithCancelCheck(unsigned long ms);
+
+  /**
+   * @brief Checks if the user has sent an abort signal.
+   * @return True if the user has sent an abort signal, false otherwise.
+   */
+  bool checkForCancelSignal();
 
   /**
    * @brief Initializes ESP-NOW communication.
@@ -178,47 +164,22 @@ public:
   void initEspNow(esp_now_send_cb_t OnDataSent, esp_now_recv_cb_t OnDataRecv);
 
   /**
-   * @brief Cancels the current operation.
+   * @brief Sends a message to a specific pad.
+   * @param padIndex The index of the pad to send the message to. If padIndex is anyPad, the message is broadcasted.
+   * @return True if the message was sent successfully, else false.
    */
-  void cancelOperation();
+  bool espNowSendMsg(uint8_t padIndex);
 
   /**
-   * @brief Prepares the system to send data.
+   * @brief Processes a message received from a pad.
+   * @param mac The MAC address of the pad that sent the message.
+   * @param incomingData The data received from the pad.
+   * @param len The length of the data received.
    */
-  void prepareSend();
-
-  /**
-   * @brief Prepares the system to wait for incoming data.
-   */
-  void prepareWait();
-
-  /**
-   * @brief Finds the first empty slot in an array.
-   * @param arr The array to search.
-   * @param n The number of elements in the array.
-   * @return The index of the first empty slot, or -1 if none found.
-   */
-  int findFirstEmptySlot(uint8_t* arr, size_t n);
-
-  /**
-   * @brief Prints a message along with the MAC address in a readable format.
-   * @param msg The message to print.
-   * @param mac The MAC address to print.
-   */
-  void printWithMac(const char* msg, uint8_t* mac);
-
-  /**
-   * @brief Sets a pad's occupied state based on incoming data.
-   * @param mac The MAC address of the pad.
-   * @param incomingData The received message data.
-   */
-  void setPadOccupied(uint8_t* mac, uint8_t* incomingData);
-
-  /**
-   * @brief Checks if a pad is occupied.
-   * @param padIndex The index of the pad.
-   * @return True if the pad is occupied, false otherwise.
-   */
+  void gotMessageFromPad(uint8_t* mac, uint8_t* incomingData);
+  
+  // helper functions
+  void cancelCurrentPadsOperation(uint8_t cancelCode);
   bool isPadOccupied(uint8_t padIndex) const;
 private:
   /**
@@ -233,21 +194,15 @@ private:
 
   // Variables
   BLEComm* btComm = BLEComm::getInstance(); /**< Bluetooth communication instance. */
-  RecvMsg toRecvMsg; /**< Structure holding the received message data. */
   SendMsg toSendMsg; /**< Structure holding the data to be sent. */
-  Pad padsArray[maxAllowedPads]; /**< Array of pads, with a size defined by maxAllowedPads. */
-  PadsState padsState = PadsState::Init; /**< Current state of the pads communication process. */
-  uint8_t waitingForSpecificPadOccupied = UINT8_MAX; /**< Index of the pad being waited for to be occupied. */
-  uint8_t padOccupationChronology[maxAllowedPads] = { 0 }; /**< Tracks in which order the pads were occupied. */
+
+  Pad padsArray[padsCount]; /**< Array of pads. */
+
   uint8_t broadcastAddress[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }; /**< Broadcast MAC address for communication. */
   uint8_t myMACAddr[6] = { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x00 }; /**< MAC address of this device. */
-  uint8_t padMACAddrs[maxAllowedPads][6] = { /**< Array of MAC addresses for all pads. */
+  uint8_t padMACAddrs[padsCount][6] = { /**< Array of MAC addresses for all pads. */
     { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x01 },
     { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x02 },
     { 0x92, 0x53, 0x54, 0x4C, 0x50, 0x03 }
   };
-
-  // Methods
-  Pad* findPad(uint8_t index);
-  Pad* findPad(uint8_t* mac);
 };
