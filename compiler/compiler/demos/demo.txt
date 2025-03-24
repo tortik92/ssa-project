@@ -1,0 +1,22 @@
+const padsCount = 3;
+const padSounds = [880, 1760, 3520];
+let selectedPad = 255;
+let selectedLastRound = 255;
+
+while (true) {
+  while (selectedPad == selectedLastRound) {
+    selectedPad = random(padsCount);
+  }
+  selectedLastRound = selectedPad;
+  
+  delay(1000);
+  playSound(padSounds[selectedPad], 1000, selectedPad);
+  waitForPlayerOnAnyPad();
+  
+  if (isPadOccupied(selectedPad)) {
+    playWinnerJingle();
+  } else {
+	playLoserJingle();
+	break;
+  }
+}
