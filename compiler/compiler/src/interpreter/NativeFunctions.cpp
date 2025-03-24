@@ -60,30 +60,33 @@ std::unique_ptr<Values::RuntimeVal> NativeFunctions::print(std::vector<std::uniq
 }
 
 std::unique_ptr<Values::RuntimeVal> NativeFunctions::rnd(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope) {
-  uint8_t argsLen = 2;
-  char argNames[argsLen][4] = { "min", "max" };
-  bool required[argsLen] = { false, true };
-  int parsedArgs[argsLen] = { 0, 1 };
+  int returnValue = 0;
 
-  for (uint8_t i = 0; i < argsLen; i++) {
-    if (i >= args.size()) {
-      if (required[i]) {
-        ErrorHandler::restart("Required argument '", argNames[i], "' not given for 'random(max)'");
-      } else {
-        continue;
-      }
+  switch (args.size())
+  {
+  case 0:
+    ErrorHandler::restart("Required argument 'max' not given for 'random(max)'");
+    break;
+  case 1:
+    if (args[0]->type != Values::ValueType::Number) {
+      ErrorHandler::restart("Expected Number for 'max' of 'random(max)'");
     }
-
-    if (args[i]->type != Values::ValueType::Number) {
-      ErrorHandler::restart("Expected Number for '", argNames[i], "' of 'random(min, max)'");
+    returnValue = random(static_cast<const Values::NumberVal*>(args[0].get())->value);
+    break;
+  case 2:
+    if (args[0]->type != Values::ValueType::Number) {
+      ErrorHandler::restart("Expected Number for 'min' of 'random(min, max)'");
+    } else if (args[1]->type != Values::ValueType::Number) {
+      ErrorHandler::restart("Expected Number for 'max' of 'random(min, max)'");
     }
-
-    parsedArgs[i] = static_cast<const Values::NumberVal*>(args[i].get())->value;
+    returnValue = random(static_cast<const Values::NumberVal*>(args[0].get())->value, static_cast<const Values::NumberVal*>(args[1].get())->value);
+    break;
+  default:
+    ErrorHandler::restart("Too many arguments given for 'random(min, max)'");
+    break;
   }
 
-  int rnd = random(parsedArgs[0], parsedArgs[1]);
-
-  return std::make_unique<Values::NumberVal>(rnd);
+  return std::make_unique<Values::NumberVal>(returnValue);
 }
 
 std::unique_ptr<Values::RuntimeVal> NativeFunctions::playSound(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope) {
@@ -110,13 +113,9 @@ std::unique_ptr<Values::RuntimeVal> NativeFunctions::playSound(std::vector<std::
     parsedArgs[i] = static_cast<const Values::NumberVal*>(args[i].get())->value;
   }
 
-  PadsComm::WaitResult result = padsComm->playSingleSound(parsedArgs[0], parsedArgs[1], parsedArgs[2]);
+  padsComm->playSingleSound(parsedArgs[0], parsedArgs[1], parsedArgs[2]);
 
-  if (result == PadsComm::WaitResult::PadOccupied) {
-    return std::make_unique<Values::NumberVal>(1);
-  } else {
-    return std::make_unique<Values::NumberVal>(0);
-  }
+  return std::make_unique<Values::NullVal>();
 }
 
 std::unique_ptr<Values::RuntimeVal> NativeFunctions::playCorrectActionJingle(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope) {
@@ -222,6 +221,21 @@ std::unique_ptr<Values::RuntimeVal> NativeFunctions::waitForPlayersOnAllActivePa
 
   return std::make_unique<Values::BooleanVal>(true);
 }
+
+std::unique_ptr<Values::RuntimeVal> NativeFunctions::waitWithCancelCheck(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope) {
+  PadsComm* padsComm = PadsComm::getInstance();
+
+  if (args.size() != 1) {
+    ErrorHandler::restart("1 parameter expected for 'waitWithCancelCheck(delay)'");
+  } else if (args[0]->type != Values::ValueType::Number) {
+    ErrorHandler::restart("Expected Number for 'waitWithCancelCheck(delay)'");
+  }
+
+  bool userAborted = padsComm->waitWithCancelCheck(static_cast<Values::NumberVal*>(args[0].get())->value);
+
+  return std::make_unique<Values::BooleanVal>(userAborted);
+}
+
 
 std::unique_ptr<Values::RuntimeVal> NativeFunctions::isPadOccupied(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope) {
   PadsComm* padsComm = PadsComm::getInstance();

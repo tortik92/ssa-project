@@ -19,5 +19,6 @@ public:
   static std::unique_ptr<Values::RuntimeVal> waitForPlayerOnPad(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope);
   static std::unique_ptr<Values::RuntimeVal> waitForPlayerOnAnyPad(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope);
   static std::unique_ptr<Values::RuntimeVal> waitForPlayersOnAllActivePads(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope);
+  static std::unique_ptr<Values::RuntimeVal> waitWithCancelCheck(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope);
   static std::unique_ptr<Values::RuntimeVal> isPadOccupied(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope);
 };

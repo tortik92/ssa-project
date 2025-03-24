@@ -107,15 +107,16 @@ void test_parser_if_stmt_logical_expr() {
   AstNodes::IfStmt* ifStmt = static_cast<AstNodes::IfStmt*>(program->body[0].get());
   TEST_ASSERT_EQUAL(AstNodes::NodeType::LogicalExpr, ifStmt->test->kind);
 
-  AstNodes::LogicalExpr* logicalExpr = static_cast<AstNodes::LogicalExpr*>(ifStmt->test.get());
-  TEST_ASSERT_EQUAL(AstNodes::NodeType::LogicalExpr, logicalExpr->left->kind);
-  AstNodes::LogicalExpr* andLogicalExpr = static_cast<AstNodes::LogicalExpr*>(logicalExpr->left.get());
+  AstNodes::LogicalExpr* andLogicalExpr = static_cast<AstNodes::LogicalExpr*>(ifStmt->test.get());
   TEST_ASSERT_EQUAL(AstNodes::NodeType::Identifier, andLogicalExpr->left->kind);
   TEST_ASSERT_EQUAL_STRING("true", static_cast<AstNodes::Identifier*>(andLogicalExpr->left.get())->symbol);
-  TEST_ASSERT_EQUAL(AstNodes::NodeType::Identifier, andLogicalExpr->right->kind);
-  TEST_ASSERT_EQUAL_STRING("false", static_cast<AstNodes::Identifier*>(andLogicalExpr->right.get())->symbol);
-  TEST_ASSERT_EQUAL(AstNodes::NodeType::Identifier, logicalExpr->right->kind);
-  TEST_ASSERT_EQUAL_STRING("true", static_cast<AstNodes::Identifier*>(logicalExpr->right.get())->symbol);
+  TEST_ASSERT_EQUAL(AstNodes::NodeType::LogicalExpr, andLogicalExpr->right->kind);
+
+  AstNodes::LogicalExpr* orLogicalExpr = static_cast<AstNodes::LogicalExpr*>(andLogicalExpr->right.get());
+  TEST_ASSERT_EQUAL(AstNodes::NodeType::Identifier, orLogicalExpr->left->kind);
+  TEST_ASSERT_EQUAL_STRING("false", static_cast<AstNodes::Identifier*>(orLogicalExpr->left.get())->symbol);
+  TEST_ASSERT_EQUAL(AstNodes::NodeType::Identifier, orLogicalExpr->right->kind);
+  TEST_ASSERT_EQUAL_STRING("true", static_cast<AstNodes::Identifier*>(orLogicalExpr->right.get())->symbol);
 
   TEST_ASSERT_EQUAL(1, ifStmt->consequent->body.size());
   TEST_ASSERT_EQUAL(AstNodes::NodeType::VarDeclaration, ifStmt->consequent->body[0]->kind);

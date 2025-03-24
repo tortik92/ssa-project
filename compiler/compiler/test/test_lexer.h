@@ -26,21 +26,25 @@ void test_lexer_single_tokens() {
   tokens.pop();
   TEST_ASSERT_EQUAL(Lexer::TokenType::CloseBracket, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("]", tokens.front().value);
+  TEST_ASSERT_EQUAL(Lexer::TokenType::EndOfFile, tokens.back().type);
 }
 
 void test_lexer_numbers() {
   char code[] = "123 4567";
   std::queue<Lexer::Token> tokens = lexer.tokenize(code, sizeof(code));
+  TEST_ASSERT_EQUAL(3, tokens.size());
   TEST_ASSERT_EQUAL(Lexer::TokenType::Number, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("123", tokens.front().value);
   tokens.pop();
   TEST_ASSERT_EQUAL(Lexer::TokenType::Number, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("4567", tokens.front().value);
+  TEST_ASSERT_EQUAL(Lexer::TokenType::EndOfFile, tokens.back().type);
 }
 
 void test_lexer_keywords() {
   char code[] = "let const if else while break";
   std::queue<Lexer::Token> tokens = lexer.tokenize(code, sizeof(code));
+  TEST_ASSERT_EQUAL(7, tokens.size());
   TEST_ASSERT_EQUAL(Lexer::TokenType::Let, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("let", tokens.front().value);
   tokens.pop();
@@ -58,11 +62,13 @@ void test_lexer_keywords() {
   tokens.pop();
   TEST_ASSERT_EQUAL(Lexer::TokenType::Break, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("break", tokens.front().value);
+  TEST_ASSERT_EQUAL(Lexer::TokenType::EndOfFile, tokens.back().type);
 }
 
 void test_lexer_operators() {
   char code[] = "+ - * / %";
   std::queue<Lexer::Token> tokens = lexer.tokenize(code, sizeof(code));
+  TEST_ASSERT_EQUAL(6, tokens.size());
   TEST_ASSERT_EQUAL(Lexer::TokenType::ArithmeticOperator, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("+", tokens.front().value);
   tokens.pop();
@@ -77,11 +83,13 @@ void test_lexer_operators() {
   tokens.pop();
   TEST_ASSERT_EQUAL(Lexer::TokenType::ArithmeticOperator, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("%", tokens.front().value);
+  TEST_ASSERT_EQUAL(Lexer::TokenType::EndOfFile, tokens.back().type);
 }
 
 void test_lexer_identifiers() {
   char code[] = "var1 myVariable another_One test123";
   std::queue<Lexer::Token> tokens = lexer.tokenize(code, sizeof(code));
+  TEST_ASSERT_EQUAL(5, tokens.size());
   TEST_ASSERT_EQUAL(Lexer::TokenType::Identifier, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("var1", tokens.front().value);
   tokens.pop();
@@ -93,4 +101,5 @@ void test_lexer_identifiers() {
   tokens.pop();
   TEST_ASSERT_EQUAL(Lexer::TokenType::Identifier, tokens.front().type);
   TEST_ASSERT_EQUAL_STRING("test123", tokens.front().value);
+  TEST_ASSERT_EQUAL(Lexer::TokenType::EndOfFile, tokens.back().type);
 }

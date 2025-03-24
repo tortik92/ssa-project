@@ -1,7 +1,7 @@
 #include "Interpreter.h"
 
 std::unique_ptr<Values::RuntimeVal> Interpreter::evaluate(const AstNodes::Stmt* astNode, Environment* env) {
-  ESP.wdtFeed();
+  yield();
   switch (astNode->kind) {
     case AstNodes::NodeType::NumericLiteral:
       return std::make_unique<Values::NumberVal>(static_cast<const AstNodes::NumericLiteral*>(astNode)->num);
@@ -350,7 +350,7 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalMemberExpr(const AstNodes::
       ErrorHandler::restart("Computed property must evaluate to a string");
     }
 
-
+    propertyName = static_cast<Values::StringVal*>(propertyVal.get())->str;
   } else {
     const AstNodes::Identifier* identifier = static_cast<const AstNodes::Identifier*>(member->property.get());
     propertyName = identifier->symbol;

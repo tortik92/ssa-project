@@ -58,5 +58,7 @@ void Environment::createGlobalEnv() {
   declareVar("waitForPlayerOnAnyPad", std::make_unique<Values::NativeFnVal>(NativeFunctions::waitForPlayerOnAnyPad), true);
   declareVar("waitForPlayersOnAllActivePads", std::make_unique<Values::NativeFnVal>(NativeFunctions::waitForPlayersOnAllActivePads), true);
 
+  declareVar("delay", std::make_unique<Values::NativeFnVal>(NativeFunctions::waitWithCancelCheck), true);
+
   declareVar("isPadOccupied", std::make_unique<Values::NativeFnVal>(NativeFunctions::isPadOccupied), true);
 }

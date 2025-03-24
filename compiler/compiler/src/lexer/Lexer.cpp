@@ -3,11 +3,9 @@
 
 std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
   // clean up for fresh tokens
-  while(!tokens.empty()) {
+  while (!tokens.empty()) {
     tokens.pop();
   }
-
-  Serial.println("Cleaned up tokens");
 
   for (size_t i = 0; i < len; i++) {
     switch (code[i]) {
@@ -49,7 +47,7 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
           addToken(&code[i], 2, TokenType::RelationalOperator);
           i++;
         } else {
-          ErrorHandler::restart("Character '!' not recognized");
+          unrecognizedCharacter('!');
         }
         break;
       case '=':
@@ -75,15 +73,15 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
       case '"':
         {
           size_t strLen = 1;
-          while(i + strLen < len && code[i + strLen] != '"') {
+          while (i + strLen < len && code[i + strLen] != '"') {
             strLen++;
           }
 
-          if(i + strLen >= len || code[i + strLen] != '"') {
-            ErrorHandler::restart("Expected closing '\"' for string literal");
+          if (i + strLen >= len || code[i + strLen] != '"') {
+            ErrorHandler::reportError("Expected closing '\"' for string literal");
           }
 
-          addToken(&code[i], strLen + 1, TokenType::StringLiteral); // +1 for closing quote
+          addToken(&code[i], strLen + 1, TokenType::StringLiteral);  // +1 for closing quote
           i += strLen;
           break;
         }
@@ -117,8 +115,8 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
           addToken(&code[i], identLen, tokenType);
           i += identLen - 1;
         } else if (!isSpace(code[i]) && code[i] != '\0') {
-          ErrorHandler::restart("Character \"", &code[i], "\" not recognized");
-          return tokens;
+          unrecognizedCharacter(code[i]);
+          continue;
         }
         break;
     }
@@ -136,9 +134,11 @@ void Lexer::addToken(const char* src, size_t srcLen, TokenType tokenType) {
   strncpy(value, src, srcLen);
   value[srcLen] = '\0';
 
-  if (tokens.size() < maxTokens) {
-    tokens.push(Token(value, tokenType));
-  } else {
-    ErrorHandler::restart("Too many tokens in program!");
-  }
+  tokens.push(Token(value, tokenType));
+}
+
+void Lexer::unrecognizedCharacter(char c) {
+  char errMsg[30];
+  snprintf(errMsg, 29, "Character \"%c\" not recognized", c);
+  ErrorHandler::reportError(errMsg);
 }

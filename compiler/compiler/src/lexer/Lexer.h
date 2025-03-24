@@ -30,8 +30,8 @@ public:
     While,  ///< Token for the 'while' keyword
     Break,  ///< Token for the 'break' keyword
 
-    Identifier,  ///< Token for identifiers (variable names, etc.)
-    Number,      ///< Token for numerical literals
+    Identifier,     ///< Token for identifiers (variable names, etc.)
+    Number,         ///< Token for numerical literals
     StringLiteral,  ///< Token for string literals
 
     Equals,              ///< Token for '=' operator
@@ -129,14 +129,14 @@ public:
      */
     Token& operator=(Token&& other) noexcept {
       if (this != &other) {
-        delete[] value;  // Free existing memory
+        delete[] value;       // Free existing memory
         value = other.value;  // Transfer ownership
         type = other.type;
         other.value = nullptr;
       }
       return *this;
     }
-    
+
 
     /**
      * @brief Destructor.
@@ -164,7 +164,7 @@ private:
   /**
    * @brief Array of known keywords and their corresponding token types.
    */
-  const Token keywords[keywordCount]{
+  const Token keywords[keywordCount] = {
     Token("let", TokenType::Let),
     Token("const", TokenType::Const),
     Token("if", TokenType::If),
@@ -185,4 +185,6 @@ private:
    * to the `tokens` queue. If the queue is full, it triggers an error.
    */
   void addToken(const char* src, size_t srcLen, TokenType tokenType);
+
+  void unrecognizedCharacter(char c);
 };

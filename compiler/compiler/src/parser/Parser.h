@@ -22,7 +22,6 @@ public:
    */
   Parser() {
     this->lexer = new Lexer();
-    currentStmtIndex = 0;
   }
 
   ~Parser() {
@@ -43,10 +42,9 @@ public:
    */
   void printAST(const AstNodes::Program* program);
 private:
-  AstNodes::Program program;                 /**< The root program node of the AST */
+  AstNodes::Program program;       /**< The root program node of the AST */
   Lexer* lexer;                    /**< The lexer used for tokenizing the input */
   std::queue<Lexer::Token> tokens; /**< A queue of tokens to be processed */
-  size_t currentStmtIndex;         /**< The current statement index in the program */
 
   // Parsing functions for different types of statements and expressions
   std::unique_ptr<AstNodes::Stmt> parseStmt();
@@ -64,8 +62,6 @@ private:
   std::unique_ptr<AstNodes::Expr> parseMultiplicativeExpr();
   std::unique_ptr<AstNodes::Expr> parseCallMemberExpr();
   std::unique_ptr<AstNodes::CallExpr> parseCallExpr(std::unique_ptr<AstNodes::Expr>&& caller);
-  void parseArgs(std::unique_ptr<AstNodes::CallExpr>& callExpr);
-  void parseArgsList(std::unique_ptr<AstNodes::CallExpr>& callExpr);
   std::unique_ptr<AstNodes::Expr> parseMemberExpr();
   std::unique_ptr<AstNodes::Expr> parsePrimaryExpr();
 
@@ -79,6 +75,11 @@ private:
    * @brief Pushes a statement to the program body.
    */
   void push(std::unique_ptr<AstNodes::Stmt>&& stmt);
+
+  /**
+   * @brief Synchronizes the parser by skipping tokens until a statement boundary is reached.
+   */
+  void synchronize();
 
   /**
    * @brief Looks up the `Token` at the front of the `tokens` queue.
@@ -95,11 +96,11 @@ private:
   /**
    * @brief Checks if the `Token` at the front of the `tokens` queue has the given `TokenType`.
    * @param type The expected `TokenType`.
-   * @param expectedVal The value used in the error message if the given types do not equal.
+   * @param errMsg The error message used if the given types do not equal.
    * @return The expected `Token`.
    * @throws ErrorHandler::restart with `expectedVal` and the actual value.
    */
-  Lexer::Token expect(Lexer::TokenType type, const char* expectedVal);
+  Lexer::Token expect(Lexer::TokenType type, const char* errMsg);
 
   // various toString functions
   void toStringNumericLiteral(const AstNodes::NumericLiteral* numLit);

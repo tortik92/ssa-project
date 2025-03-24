@@ -4,7 +4,14 @@ AstNodes::Program* Parser::produceAST(char* code, size_t len) {
   tokens = lexer->tokenize(code, len);
 
   while (!endOfFile()) {
-    push(parseStmt());
+    std::unique_ptr<AstNodes::Stmt> stmt = parseStmt();
+    
+    if(!stmt) {
+      synchronize();
+      continue;
+    }
+    
+    push(std::move(stmt));
   }
 
   program.body.shrink_to_fit();
@@ -31,14 +38,16 @@ std::unique_ptr<AstNodes::Stmt> Parser::parseStmt() {
       return parseBreakStmt();
     default:
       Serial.println("Parsing expr");
-      return parseExpr();
+      std::unique_ptr<AstNodes::Stmt> result = parseExpr();
+      expect(Lexer::TokenType::Semicolon, "Expected ';' after expression");
+      return result;
   }
 }
 
 std::unique_ptr<AstNodes::VarDeclaration> Parser::parseVarDeclaration() {
   Serial.println("parseVarDeclaration");
   const bool isConstant = eat().type == Lexer::TokenType::Const;
-  Lexer::Token varName = expect(Lexer::TokenType::Identifier, "identifier after let/const");
+  Lexer::Token varName = expect(Lexer::TokenType::Identifier, "Expected identifier after 'let'/'const'");
 
   std::unique_ptr<AstNodes::VarDeclaration> varDecl = std::make_unique<AstNodes::VarDeclaration>();
   varDecl->constant = isConstant;
@@ -50,7 +59,7 @@ std::unique_ptr<AstNodes::VarDeclaration> Parser::parseVarDeclaration() {
   if (at().type == Lexer::TokenType::Semicolon) {
     eat();
     if (isConstant) {
-      ErrorHandler::restart("Uninitialized const variable");
+      ErrorHandler::reportError("const variable must be assigned a value");
     }
 
     varDecl->value = nullptr;
@@ -62,6 +71,8 @@ std::unique_ptr<AstNodes::VarDeclaration> Parser::parseVarDeclaration() {
   varDecl->value = parseExpr();
   expect(Lexer::TokenType::Semicolon, ";");
 
+  Serial.println("return parseVarDeclaration");
+
   return varDecl;
 }
 
@@ -70,9 +81,10 @@ std::unique_ptr<AstNodes::IfStmt> Parser::parseIfStmt() {
   eat();  // consume 'if'
   std::unique_ptr<AstNodes::IfStmt> ifStmt = std::make_unique<AstNodes::IfStmt>();
 
-  expect(Lexer::TokenType::OpenParen, "(");
+  expect(Lexer::TokenType::OpenParen, "Expected '(' after keyword 'if'");
   ifStmt->test = parseExpr();
-  expect(Lexer::TokenType::CloseParen, ")");
+  if(!ifStmt->test) return nullptr;
+  expect(Lexer::TokenType::CloseParen, "Expected ')' after if statement test");
 
   ifStmt->consequent = parseBlockStmt();
   ifStmt->alternate = nullptr;
@@ -80,6 +92,8 @@ std::unique_ptr<AstNodes::IfStmt> Parser::parseIfStmt() {
     eat();  // consume 'else'
     ifStmt->alternate = parseBlockStmt();
   }
+
+  Serial.println("return parseIfStmt");
 
   return ifStmt;
 }
@@ -89,11 +103,14 @@ std::unique_ptr<AstNodes::WhileStmt> Parser::parseWhileStmt() {
   eat();  // consume 'while'
   std::unique_ptr<AstNodes::WhileStmt> whileStmt = std::make_unique<AstNodes::WhileStmt>();
 
-  expect(Lexer::TokenType::OpenParen, "(");
+  expect(Lexer::TokenType::OpenParen, "Expected '(' after keyword 'while'");
   whileStmt->test = parseExpr();
-  expect(Lexer::TokenType::CloseParen, ")");
+  if(!whileStmt->test) return nullptr;
+  expect(Lexer::TokenType::CloseParen, "Expected ')' after while statement test");
 
   whileStmt->body = parseBlockStmt();
+
+  Serial.println("return parseWhileStmt");
 
   return whileStmt;
 }
@@ -102,26 +119,31 @@ std::unique_ptr<AstNodes::BreakStmt> Parser::parseBreakStmt() {
   Serial.println("parseBreakStmt");
   eat();  // consume 'break'
   std::unique_ptr<AstNodes::BreakStmt> breakStmt = std::make_unique<AstNodes::BreakStmt>();
-  expect(Lexer::TokenType::Semicolon, ";");
+  expect(Lexer::TokenType::Semicolon, "Expected ';' after 'break'");
   return breakStmt;
 }
 
 std::unique_ptr<AstNodes::BlockStmt> Parser::parseBlockStmt() {
   Serial.println("parseBlockStmt");
-  expect(Lexer::TokenType::OpenBrace, "{");
+  expect(Lexer::TokenType::OpenBrace, "Expected block statement. Type '{' to start");
   std::unique_ptr<AstNodes::BlockStmt> blockStmt = std::make_unique<AstNodes::BlockStmt>();
   blockStmt->body.reserve(estimatedBlockStatements);
 
-  while (at().type != Lexer::TokenType::CloseBrace) {
-    if (endOfFile()) {
-      ErrorHandler::restart("Reached end of file, expected '}'");
+  while (!endOfFile() && at().type != Lexer::TokenType::CloseBrace) {
+    std::unique_ptr<AstNodes::Stmt> stmt = parseStmt();
+
+    if (!stmt) {
+      synchronize();
+      continue;
     }
 
-    blockStmt->body.push_back(parseStmt());
+    blockStmt->body.push_back(std::move(stmt));
   }
   blockStmt->body.shrink_to_fit();
 
-  eat();  // consume '}'
+  expect(Lexer::TokenType::CloseBrace, "Expected '}' to end block statement");
+
+  Serial.println("return parseBlockStmt");
 
   return blockStmt;
 }
@@ -135,12 +157,17 @@ std::unique_ptr<AstNodes::Expr> Parser::parseLogicalExpr() {
   Serial.println("parseLogicalExpr");
   std::unique_ptr<AstNodes::Expr> left = parseRelationalExpr();
 
+  if (!left) return nullptr;
+
   while (at().type == Lexer::TokenType::LogicalOperator) {  // and, or
     Lexer::Token op = eat();
 
     std::unique_ptr<AstNodes::LogicalExpr> logicalExpr = std::make_unique<AstNodes::LogicalExpr>();
     logicalExpr->left = std::move(left);
-    logicalExpr->right = parseRelationalExpr();
+    logicalExpr->right = parseLogicalExpr();
+    if(!logicalExpr->right) {
+      return nullptr;
+    }
     logicalExpr->op = op.value;
     op.value = nullptr;
 
@@ -155,6 +182,8 @@ std::unique_ptr<AstNodes::Expr> Parser::parseLogicalExpr() {
 std::unique_ptr<AstNodes::Expr> Parser::parseRelationalExpr() {
   Serial.println("parseRelationalExpr");
   std::unique_ptr<AstNodes::Expr> left = parseAssignmentExpr();
+
+  if (!left) return nullptr;
 
   while (strcmp(at().value, "<") == 0 || strcmp(at().value, "<=") == 0 || strcmp(at().value, ">") == 0 || strcmp(at().value, ">=") == 0 || strcmp(at().value, "==") == 0 || strcmp(at().value, "!=") == 0) {
     Lexer::Token op = eat();
@@ -177,16 +206,16 @@ std::unique_ptr<AstNodes::Expr> Parser::parseAssignmentExpr() {
   Serial.println("parseAssignmentExpr");
   std::unique_ptr<AstNodes::Expr> left = parseObjectExpr();
 
+  if (!left) return nullptr;
+
   if (at().type == Lexer::TokenType::Equals) {
     eat();
     if (left->kind != AstNodes::NodeType::Identifier) {
-      ErrorHandler::restart("Expected variable name for assignment");
+      ErrorHandler::reportError("Expected variable name for assignment");
     }
     std::unique_ptr<AstNodes::AssignmentExpr> assignmentExpr = std::make_unique<AstNodes::AssignmentExpr>();
     assignmentExpr->assignee = std::move(left);
     assignmentExpr->value = parseAssignmentExpr();
-
-    expect(Lexer::TokenType::Semicolon, ";");
 
     return assignmentExpr;
   }
@@ -207,7 +236,7 @@ std::unique_ptr<AstNodes::Expr> Parser::parseObjectExpr() {
   std::unique_ptr<AstNodes::ObjectLiteral> objectLiteral = std::make_unique<AstNodes::ObjectLiteral>();
 
   while (!endOfFile() && at().type != Lexer::TokenType::CloseBrace) {
-    Lexer::Token keyToken = expect(Lexer::TokenType::Identifier, "identifier");
+    Lexer::Token keyToken = expect(Lexer::TokenType::Identifier, "Expected identifier for object key");
 
     // options for { key, [...]} and { key }
     if (at().type == Lexer::TokenType::Comma || at().type == Lexer::TokenType::CloseBrace) {
@@ -216,18 +245,21 @@ std::unique_ptr<AstNodes::Expr> Parser::parseObjectExpr() {
       }
 
       objectLiteral->properties[keyToken.value] = nullptr;
-    } else {
-      expect(Lexer::TokenType::Colon, ":");
+    } else { // { key: value, [...]}
+      expect(Lexer::TokenType::Colon, "Expected ':' or ',' after object key");
       std::unique_ptr<AstNodes::Expr> value = parseExpr();
+      if(!value) {
+        return nullptr;
+      }
       objectLiteral->properties[keyToken.value] = std::move(value);
 
       if (at().type != Lexer::TokenType::CloseBrace) {
-        expect(Lexer::TokenType::Comma, ",");
+        expect(Lexer::TokenType::Comma, "Expected ',' or '}' after object key");
       }
     }
   }
 
-  expect(Lexer::TokenType::CloseBrace, "}");
+  expect(Lexer::TokenType::CloseBrace, "Expected '}' to end object literal");
 
   return objectLiteral;
 }
@@ -280,7 +312,7 @@ std::unique_ptr<AstNodes::Expr> Parser::parseCallMemberExpr() {
   Serial.println("parseCallMemberExpr");
   std::unique_ptr<AstNodes::Expr> member = parseMemberExpr();
 
-  if (at().type == Lexer::TokenType::OpenParen) {
+  if (member && at().type == Lexer::TokenType::OpenParen) {
     Serial.println("Found OpenParen");
     return parseCallExpr(std::move(member));
   }
@@ -295,31 +327,25 @@ std::unique_ptr<AstNodes::CallExpr> Parser::parseCallExpr(std::unique_ptr<AstNod
   std::unique_ptr<AstNodes::CallExpr> callExpr = std::make_unique<AstNodes::CallExpr>();
   callExpr->caller = std::move(caller);
 
-  parseArgs(callExpr);
-  expect(Lexer::TokenType::Semicolon, ";");
+  expect(Lexer::TokenType::OpenParen, "Expected '(' for function call");
+  if (at().type != Lexer::TokenType::CloseParen) {
+    while (true) {
+      std::unique_ptr<AstNodes::Expr> arg = parseExpr();
+      if (!arg) {
+        return nullptr;
+      }
+      callExpr->args.push_back(std::move(arg));
+
+      if(at().type == Lexer::TokenType::Comma) {
+        eat();
+      } else {
+        break;
+      }
+    }
+  }
+  expect(Lexer::TokenType::CloseParen, "Expected ')' for function call");
 
   return callExpr;
-}
-
-void Parser::parseArgs(std::unique_ptr<AstNodes::CallExpr>& callExpr) {
-  Serial.println("parseArgs");
-  expect(Lexer::TokenType::OpenParen, "(");
-  if (strcmp(at().value, ")") != 0) {
-    parseArgsList(callExpr);
-  }
-  expect(Lexer::TokenType::CloseParen, ")");
-}
-
-void Parser::parseArgsList(std::unique_ptr<AstNodes::CallExpr>& callExpr) {
-  Serial.println("parseArgsList");
-  
-  std::unique_ptr<AstNodes::Expr> firstParam = parseExpr();
-  callExpr->args.push_back(std::move(firstParam));
-
-  while (at().type == Lexer::TokenType::Comma) {
-    eat();
-    callExpr->args.push_back(parseExpr());
-  }
 }
 
 std::unique_ptr<AstNodes::Expr> Parser::parseMemberExpr() {
@@ -335,15 +361,19 @@ std::unique_ptr<AstNodes::Expr> Parser::parseMemberExpr() {
       property = parsePrimaryExpr();
 
       if (property->kind != AstNodes::NodeType::Identifier) {
-        ErrorHandler::restart("Cannot use dot operator without right hand side being an identifier");
+        ErrorHandler::reportError("Cannot use '.' without right hand side of member expression being an identifier");
+        return nullptr;
       }
 
       Serial.print("Found dot, property: ");
       Serial.println(static_cast<AstNodes::Identifier*>(property.get())->symbol);
-    } else {
+    } else if (op.type == Lexer::TokenType::OpenBracket) {
       computed = true;
       property = parseExpr();
-      expect(Lexer::TokenType::CloseBracket, "]");
+      expect(Lexer::TokenType::CloseBracket, "Expected ']' for computed member expression");
+    } else {
+      ErrorHandler::reportError("Expected '.' or '[' for member expression");
+      return nullptr;
     }
 
     std::unique_ptr<AstNodes::MemberExpr> memberExpr = std::make_unique<AstNodes::MemberExpr>();
@@ -405,7 +435,7 @@ std::unique_ptr<AstNodes::Expr> Parser::parsePrimaryExpr() {
         eat();  // consume '('
         std::unique_ptr<AstNodes::Expr> val = parseExpr();
 
-        expect(Lexer::TokenType::CloseParen, ")");
+        expect(Lexer::TokenType::CloseParen, "Expected ')'");
         return val;
       }
     default:
@@ -427,10 +457,10 @@ Lexer::Token Parser::eat() {
   return returnValue;
 }
 
-Lexer::Token Parser::expect(Lexer::TokenType type, const char* expectedVal) {
+Lexer::Token Parser::expect(Lexer::TokenType type, const char* errMsg) {
   Lexer::Token prev = eat();
   if (prev.type != type) {
-    ErrorHandler::missingToken(expectedVal);
+    ErrorHandler::restart(errMsg);
   }
   Serial.print("Found expected '");
   Serial.print(prev.value);
@@ -444,11 +474,25 @@ bool Parser::endOfFile() {
 
 void Parser::push(std::unique_ptr<AstNodes::Stmt>&& stmt) {
   program.body.push_back(std::move(stmt));
+}
 
-  if (currentStmtIndex < estimatedProgramStatements) {
-    currentStmtIndex++;
-  } else {
-    ErrorHandler::restart("Too many statements in program");
+void Parser::synchronize() {
+  while (!endOfFile()) {
+    switch (at().type) {
+      case Lexer::TokenType::Semicolon:
+        eat();
+        return;
+      case Lexer::TokenType::Let:
+      case Lexer::TokenType::Const:
+      case Lexer::TokenType::If:
+      case Lexer::TokenType::While:
+      case Lexer::TokenType::Break:
+      case Lexer::TokenType::Else:
+
+        return;
+      default:
+        eat();
+    }
   }
 }
 

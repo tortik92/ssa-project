@@ -119,7 +119,7 @@ void loop() {
 
             while (true) {
               // select random pad and deactivate for next round
-              while (selectedPad == selectedLastRound) {
+              while (selectedPad == selectedLastRound) {  
                 selectedPad = random(padsCount);
               }
               selectedLastRound = selectedPad;
@@ -129,7 +129,7 @@ void loop() {
               // wait a bit to avoid confusion
               padsComm->waitWithCancelCheck(1000);
 
-              // play tone on correct pad
+              // play tone on correct pad 
               padsComm->playSingleSound(soundsArray[selectedPad], 1000, selectedPad);
               Serial.println("Played correct sound once");
 

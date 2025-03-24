@@ -33,14 +33,30 @@ public:
   }
 
   /**
-   * @brief Handles out-of-memory errors for a specific node type.
-   * @param nodeType The type of node that ran out of memory.
+   * @brief Reports a debug message.
+   * @param debug The debug message to print.
    */
-  static void outOfMemoryForNodes(const char* nodeType) {
-    Serial.print("Out of memory for ");
-    Serial.print(nodeType);
-    Serial.println(" nodes");
-    actualRestart();
+  static void reportDebug(const char* debug) {
+    Serial.print("[DEBUG] ");
+    Serial.println(debug);
+  }
+
+  /**
+   * @brief Reports a warning message.
+   * @param warning The warning message to print.
+   */
+  static void reportWarning(const char* warning) {
+    Serial.print("[WARN] ");
+    Serial.println(warning);
+  }
+
+  /**
+   * @brief Reports an error message.
+   * @param err The error message to print.
+   */
+  static void reportError(const char* err) {
+    Serial.print("[ERROR] ");
+    Serial.println(err);
   }
 
   /**
