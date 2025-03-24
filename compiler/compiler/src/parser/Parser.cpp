@@ -229,7 +229,7 @@ std::unique_ptr<AstNodes::Expr> Parser::parseObjectExpr() {
   Serial.println("parseObjectExpr");
 
   if (at().type != Lexer::TokenType::OpenBrace) {
-    return parseAdditiveExpr();
+    return parseArrayExpr();
   }
 
   eat();
@@ -262,6 +262,44 @@ std::unique_ptr<AstNodes::Expr> Parser::parseObjectExpr() {
   expect(Lexer::TokenType::CloseBrace, "Expected '}' to end object literal");
 
   return objectLiteral;
+}
+
+std::unique_ptr<AstNodes::Expr> Parser::parseArrayExpr() {
+  Serial.println("parseObjectExpr");
+
+  if (at().type != Lexer::TokenType::OpenBracket) {
+    return parseAdditiveExpr();
+  }
+
+  eat();
+  std::unique_ptr<AstNodes::ArrayLiteral> arrayLiteral = std::make_unique<AstNodes::ArrayLiteral>();
+
+
+  while (!endOfFile() && at().type != Lexer::TokenType::CloseBracket) {
+    std::unique_ptr<AstNodes::Expr> arrayElement = parseExpr();
+
+    if (arrayLiteral->elements.empty()) {
+      arrayLiteral->elementDataType = arrayElement->kind;
+    } else if (arrayElement->kind != arrayLiteral->elementDataType) {
+      ErrorHandler::reportError("Array elements must be of the same type");
+      return nullptr;
+    }
+
+    if (at().type == Lexer::TokenType::Comma || at().type == Lexer::TokenType::CloseBracket) {
+      if (at().type == Lexer::TokenType::Comma) {
+        eat();
+      }
+
+      arrayLiteral->elements.push_back(std::move(arrayElement));
+    } else {
+      ErrorHandler::reportError("Expected ',' or ']' after array element");
+      return nullptr;
+    }
+  }
+
+  expect(Lexer::TokenType::CloseBracket, "Expected ']' to end array literal");
+
+  return arrayLiteral;
 }
 
 std::unique_ptr<AstNodes::Expr> Parser::parseAdditiveExpr() {
@@ -613,6 +651,19 @@ void Parser::toStringObjectLiteral(const AstNodes::ObjectLiteral* objectLiteral)
   Serial.print("}}");
 }
 
+void Parser::toStringArrayLiteral(const AstNodes::ArrayLiteral* arrayLiteral) {
+  Serial.print("{\"type\":\"arrayLiteral\",\"elementDataType\":\"");
+  Serial.print(AstNodes::nodeTypeToString(arrayLiteral->elementDataType));
+  Serial.print("\",\"elements\":[");
+  for (size_t i = 0; i < arrayLiteral->elements.size(); i++) {
+    toString(arrayLiteral->elements[i].get());
+    if (i + 1 < arrayLiteral->elements.size()) {
+      Serial.print(",");
+    }
+  }
+  Serial.print("]}");
+}
+
 void Parser::toStringCallExpr(const AstNodes::CallExpr* callExpr) {
   Serial.print("{\"type\":\"callExpr\",\"caller\":");
   toString(callExpr->caller.get());
@@ -687,6 +738,9 @@ void Parser::toString(const AstNodes::Stmt* stmt) {
       break;
     case AstNodes::NodeType::ObjectLiteral:
       toStringObjectLiteral(static_cast<const AstNodes::ObjectLiteral*>(stmt));
+      break;
+    case AstNodes::NodeType::ArrayLiteral:
+      toStringArrayLiteral(static_cast<const AstNodes::ArrayLiteral*>(stmt));
       break;
     case AstNodes::NodeType::CallExpr:
       toStringCallExpr(static_cast<const AstNodes::CallExpr*>(stmt));

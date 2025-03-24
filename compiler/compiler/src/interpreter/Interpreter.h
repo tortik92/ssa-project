@@ -159,6 +159,15 @@ private:
   std::unique_ptr<Values::ObjectVal> evalObjectExpr(const AstNodes::ObjectLiteral* obj, Environment* env);
 
   /**
+   * @brief Evaluates an array expression in the given environment.
+   * 
+   * @param array The array expression to be evaluated.
+   * @param env The environment in which the array expression is evaluated.
+   * @return The result of the array expression evaluation.
+   */
+  std::unique_ptr<Values::ArrayVal> evalArrayExpr(const AstNodes::ArrayLiteral* array, Environment* env);
+
+  /**
    * @brief Evaluates a function call expression in the given environment.
    * 
    * @param expr The call expression to be evaluated.

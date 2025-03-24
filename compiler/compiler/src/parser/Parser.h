@@ -58,6 +58,7 @@ private:
   std::unique_ptr<AstNodes::Expr> parseRelationalExpr();
   std::unique_ptr<AstNodes::Expr> parseAssignmentExpr();
   std::unique_ptr<AstNodes::Expr> parseObjectExpr();
+  std::unique_ptr<AstNodes::Expr> parseArrayExpr();
   std::unique_ptr<AstNodes::Expr> parseAdditiveExpr();
   std::unique_ptr<AstNodes::Expr> parseMultiplicativeExpr();
   std::unique_ptr<AstNodes::Expr> parseCallMemberExpr();
@@ -115,7 +116,9 @@ private:
   void toStringBreakStmt(const AstNodes::BreakStmt* breakStmt);
   void toStringAssignmentExpr(const AstNodes::AssignmentExpr* assignmentExpr);
   void toStringObjectLiteral(const AstNodes::ObjectLiteral* objectLiteral);
+  void toStringArrayLiteral(const AstNodes::ArrayLiteral* arrayLiteral);
   void toStringCallExpr(const AstNodes::CallExpr* callExpr);
   void toStringMemberExpr(const AstNodes::MemberExpr* memberExpr);
+  void toStringNodeType(const AstNodes::NodeType type);
   void toString(const AstNodes::Stmt* stmt);
 };

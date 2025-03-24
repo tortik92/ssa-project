@@ -51,6 +51,23 @@ void test_parser_object_var_decl() {
   TEST_ASSERT_EQUAL_STRING("hello", static_cast<AstNodes::StringLiteral*>(obj->properties["b"].get())->value);
 }
 
+void test_parser_array_var_decl() {
+  char code[] = "let x = [440, 880, 1760];";
+  Parser parser = Parser();
+  AstNodes::Program* program = parser.produceAST(code, sizeof(code) - 1);
+  TEST_ASSERT_EQUAL(1, program->body.size());
+  AstNodes::VarDeclaration* varDecl = static_cast<AstNodes::VarDeclaration*>(program->body[0].get());
+  TEST_ASSERT_EQUAL(false, varDecl->constant);
+  TEST_ASSERT_EQUAL_STRING("x", varDecl->ident);
+  TEST_ASSERT_EQUAL(AstNodes::NodeType::ArrayLiteral, varDecl->value->kind);
+  AstNodes::ArrayLiteral* arr = static_cast<AstNodes::ArrayLiteral*>(varDecl->value.get());
+  TEST_ASSERT_EQUAL(AstNodes::NodeType::NumericLiteral, arr->elementDataType);
+  TEST_ASSERT_EQUAL(3, arr->elements.size());
+  TEST_ASSERT_EQUAL(440, static_cast<AstNodes::NumericLiteral*>(arr->elements[0].get())->num);
+  TEST_ASSERT_EQUAL(880, static_cast<AstNodes::NumericLiteral*>(arr->elements[1].get())->num);
+  TEST_ASSERT_EQUAL(1760, static_cast<AstNodes::NumericLiteral*>(arr->elements[2].get())->num);
+}
+
 void test_parser_assignment_expr() {
   char code[] = "let x = 5; x = 10;";
   Parser parser = Parser();

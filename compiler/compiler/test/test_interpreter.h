@@ -171,7 +171,7 @@ void test_interpreter_call_expr() {
   TEST_ASSERT_LESS_THAN(42, rndVal);
 }
 
-void test_interpreter_member_expr() {
+void test_interpreter_obj_member_expr() {
   char code[] = "let x = {name: \"John\", age: 30}; let y = x.name;";
   Parser parser;
   Environment env;
@@ -183,7 +183,7 @@ void test_interpreter_member_expr() {
   TEST_ASSERT_EQUAL_STRING("John", static_cast<Values::StringVal *>(val.get())->str);
 }
 
-void test_interpreter_member_expr_computed() {
+void test_interpreter_obj_member_expr_computed() {
   char code[] = "let x = {name: \"John\", age: 30}; let y = x[\"name\"];";
   Parser parser;
   Environment env;
@@ -193,4 +193,16 @@ void test_interpreter_member_expr_computed() {
 
   std::unique_ptr<Values::RuntimeVal> val = interpreter.evaluate(program, &env);
   TEST_ASSERT_EQUAL_STRING("John", static_cast<Values::StringVal *>(val.get())->str);
+}
+
+void test_interpreter_array_member_expr() {
+  char code[] = "let x = [1, 2, 3]; let y = x[1];";
+  Parser parser;
+  Environment env;
+  Interpreter interpreter;
+
+  AstNodes::Program *program = parser.produceAST(code, sizeof(code) - 1);
+
+  std::unique_ptr<Values::RuntimeVal> val = interpreter.evaluate(program, &env);
+  TEST_ASSERT_EQUAL(2, static_cast<Values::NumberVal *>(val.get())->value);
 }

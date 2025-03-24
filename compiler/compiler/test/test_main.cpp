@@ -26,6 +26,7 @@ void setup() {
   RUN_TEST(test_parser_number_var_decl);
   RUN_TEST(test_parser_string_var_decl);
   RUN_TEST(test_parser_object_var_decl);
+  RUN_TEST(test_parser_array_var_decl);
   RUN_TEST(test_parser_assignment_expr);
 
   RUN_TEST(test_parser_if_stmt);
@@ -97,8 +98,9 @@ void setup() {
   RUN_TEST(test_interpreter_break_stmt);
 
   RUN_TEST(test_interpreter_call_expr);
-  RUN_TEST(test_interpreter_member_expr);
-  RUN_TEST(test_interpreter_member_expr_computed);
+  RUN_TEST(test_interpreter_obj_member_expr);
+  RUN_TEST(test_interpreter_obj_member_expr_computed);
+  RUN_TEST(test_interpreter_array_member_expr);
 
   UNITY_END();
 }

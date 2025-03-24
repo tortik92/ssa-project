@@ -48,6 +48,26 @@ std::unique_ptr<Values::RuntimeVal> NativeFunctions::print(std::vector<std::uniq
         Serial.println("}");
         break;
       }
+    case Values::ValueType::ArrayVal:
+      {
+        Serial.println("[");
+
+        const std::vector<std::unique_ptr<Values::RuntimeVal>>& elements = static_cast<Values::ArrayVal*>(args[0].get())->elements;
+
+        for (size_t i = 0; i < elements.size(); i++) {
+          // recursive call to print
+          std::vector<std::unique_ptr<Values::RuntimeVal>> callArgs;
+          callArgs.push_back(elements[i]->clone());
+          print(callArgs, scope);
+
+          if (i != elements.size() - 1) {
+            Serial.println(",");
+          }
+        }
+
+        Serial.println("]");
+        break;
+      }
     case Values::ValueType::NativeFn:
       Serial.println((unsigned int)&static_cast<const Values::NativeFnVal*>(args[0].get())->call);  // print memory address
       break;
@@ -205,9 +225,13 @@ std::unique_ptr<Values::RuntimeVal> NativeFunctions::waitForPlayerOnAnyPad(std::
     ErrorHandler::restart("No parameter expected for 'waitForPlayerOnAnyPad()'");
   }
 
-  padsComm->waitForPlayerOnAnyPad();
+  std::variant<int, PadsComm::WaitResult> result = padsComm->waitForPlayerOnAnyPad();
 
-  return std::make_unique<Values::BooleanVal>(true);
+  if(std::holds_alternative<PadsComm::WaitResult>(result)) {
+    return std::make_unique<Values::NumberVal>(-1);
+  } else {
+    return std::make_unique<Values::NumberVal>(std::get<int>(result));
+  }
 }
 
 std::unique_ptr<Values::RuntimeVal> NativeFunctions::waitForPlayersOnAllActivePads(std::vector<std::unique_ptr<Values::RuntimeVal>>& args, Environment* scope) {

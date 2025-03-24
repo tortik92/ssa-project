@@ -57,6 +57,7 @@ const uint8_t keywordCount = 8;
 // parser
 const uint8_t estimatedProgramStatements = 128;
 const uint8_t estimatedBlockStatements = 16;
+const uint8_t estimatedArrayElements = 8;
 
 // interpreter
 const uint8_t estimatedFunctionArgs = 8;

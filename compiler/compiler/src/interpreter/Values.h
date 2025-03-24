@@ -25,6 +25,7 @@ public:
     Number,     ///< Represents a numeric value.
     String,     ///< Represents a string value.
     ObjectVal,  ///< Represents an object value.
+    ArrayVal,   ///< Represents an array value.
     NativeFn,   ///< Represents a native function value.
     Break,      ///< Represents a break statement.
   };
@@ -216,6 +217,22 @@ public:
     }
   } ObjectVal;
 
+  typedef struct ArrayVal : RuntimeVal {
+    std::vector<std::unique_ptr<RuntimeVal>> elements;
+
+    ArrayVal()
+      : RuntimeVal(ValueType::ArrayVal) {}
+
+    std::unique_ptr<RuntimeVal> clone() const override {
+      std::unique_ptr<ArrayVal> clonedArray = std::make_unique<ArrayVal>();
+      clonedArray->elements.reserve(elements.size());
+      for (size_t i = 0; i < elements.size(); i++) {
+        clonedArray->elements.push_back(elements[i]->clone());
+      }
+      return clonedArray;
+    }
+  } ArrayVal;
+
   /**
    * @brief Function call typedef, used to define the type of a callable function.
    * 
@@ -277,6 +294,7 @@ private:
     { ValueType::Number, "Number" },
     { ValueType::String, "String" },
     { ValueType::ObjectVal, "ObjectVal" },
+    { ValueType::ArrayVal, "ArrayVal" },
     { ValueType::NativeFn, "NativeFn" },
     { ValueType::Break, "Break" }
   };

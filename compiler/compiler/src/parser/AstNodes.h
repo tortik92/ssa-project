@@ -29,6 +29,7 @@ public:
     NumericLiteral, /**< Represents a numeric literal */
     StringLiteral,  /**< Represents a string literal */
     ObjectLiteral,  /**< Represents an object declaration */
+    ArrayLiteral,   /**< Represents an array declaration */
     Identifier,     /**< Represents an identifier */
     BinaryExpr,     /**< Represents a binary expression */
     LogicalExpr     /**< Represents a logical expression */
@@ -321,6 +322,24 @@ public:
   } ObjectLiteral;
 
   /**
+   * @struct ArrayLiteral
+   * 
+   * Represents a linear data structure of elements of a specified data type.
+   */
+  typedef struct ArrayLiteral : Expr {
+    AstNodes::NodeType elementDataType;
+    std::vector<std::unique_ptr<AstNodes::Expr>> elements;
+
+    ArrayLiteral()
+      : Expr(NodeType::ArrayLiteral) {
+        elements.reserve(estimatedArrayElements);
+      }
+    // Delete copy constructor and copy assignment operator
+    ArrayLiteral(const ArrayLiteral&) = delete;
+    ArrayLiteral& operator=(const ArrayLiteral&) = delete;
+  } ArrayLiteral;
+
+  /**
    * @struct LogicalExpr
    * 
    * Represents a logical expression with left and right operands and an operator.
@@ -397,5 +416,27 @@ public:
     BreakStmt()
       : Stmt(NodeType::BreakStmt) {}
   } BreakStmt;
+
+  static String nodeTypeToString(NodeType type) {
+    return nodeTypeStrings.at(type);
+  }
 private:
+  static inline const std::map<NodeType, String> nodeTypeStrings = {
+    { NodeType::Program, "Program" },
+    { NodeType::VarDeclaration, "VarDeclaration" },
+    { NodeType::IfStmt, "IfStmt" },
+    { NodeType::WhileStmt, "WhileStmt" },
+    { NodeType::BreakStmt, "BreakStmt" },
+    { NodeType::BlockStmt, "BlockStmt" },
+    { NodeType::AssignmentExpr, "AssignmentExpr" },
+    { NodeType::CallExpr, "CallExpr" },
+    { NodeType::MemberExpr, "MemberExpr" },
+    { NodeType::NumericLiteral, "NumericLiteral" },
+    { NodeType::StringLiteral, "StringLiteral" },
+    { NodeType::ObjectLiteral, "ObjectLiteral" },
+    { NodeType::ArrayLiteral, "ArrayLiteral" },
+    { NodeType::Identifier, "Identifier" },
+    { NodeType::BinaryExpr, "BinaryExpr" },
+    { NodeType::LogicalExpr, "LogicalExpr" }
+  };
 };
