@@ -227,12 +227,7 @@ void loop() {
         }
       case phoneInput_interpret:
         {
-          ErrorHandler::printMemoryStats("before program");
-
           Environment env;
-
-          ErrorHandler::printMemoryStats("after env decl");
-
           Serial.println("\nReady to interpret!");
 
           while (true) {
@@ -258,56 +253,11 @@ void loop() {
 
               char *code_cstr = new char[code.length() + 1];
               code.toCharArray(code_cstr, code.length() + 1, 0);
-
-              Serial.println("Producing AST");
-              ErrorHandler::printMemoryStats("before AST production");
               AstNodes::Program *program = parser.produceAST(code_cstr, code.length() + 1);
+              yield();
               parser.printAST(program);
-              Serial.println("Successfully parsed program");
-              ErrorHandler::printMemoryStats("after AST production");
               yield();
-
-              std::unique_ptr<Values::RuntimeVal> val = interpreter.evaluate(program, &env);
-              ErrorHandler::printMemoryStats("after evaluation");
-              yield();
-
-
-              Serial.print("Value: ");
-              switch (val->type) {
-                case Values::ValueType::Null:
-                  Serial.println("Null");
-                  break;
-                case Values::ValueType::Boolean:
-                  {
-                    Serial.print("Boolean: ");
-                    Values::BooleanVal *boolVal = static_cast<Values::BooleanVal *>(val.get());
-                    Serial.println(boolVal->value);
-                    break;
-                  }
-                case Values::ValueType::Number:
-                  {
-                    Serial.print("Number: ");
-                    Values::NumberVal *numVal = static_cast<Values::NumberVal *>(val.get());
-                    Serial.println(numVal->value);
-                    break;
-                  }
-                case Values::ValueType::String:
-                  {
-                    Serial.println("String: ");
-                    Values::StringVal *stringVal = static_cast<Values::StringVal *>(val.get());
-                    Serial.println(stringVal->str);
-                    break;
-                  }
-                case Values::ValueType::NativeFn:
-                  Serial.println("NativeFn");
-                  break;
-                case Values::ValueType::ObjectVal:
-                  Serial.println("ObjectVal");
-                  break;
-                case Values::ValueType::Break:
-                  Serial.println("Break");
-                  break;
-              }
+              interpreter.evaluate(program, &env);
 
               delete[] code_cstr;
 

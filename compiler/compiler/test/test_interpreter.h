@@ -206,3 +206,15 @@ void test_interpreter_array_member_expr() {
   std::unique_ptr<Values::RuntimeVal> val = interpreter.evaluate(program, &env);
   TEST_ASSERT_EQUAL(2, static_cast<Values::NumberVal *>(val.get())->value);
 }
+
+void test_interpreter_array_member_assignment_expr() {
+  char code[] = "let x = [1, 2, 3]; x[1] = 42;";
+  Parser parser;
+  Environment env;
+  Interpreter interpreter;
+
+  AstNodes::Program *program = parser.produceAST(code, sizeof(code) - 1);
+
+  std::unique_ptr<Values::RuntimeVal> val = interpreter.evaluate(program, &env);
+  TEST_ASSERT_EQUAL(42, static_cast<Values::NumberVal *>(val.get())->value);
+}

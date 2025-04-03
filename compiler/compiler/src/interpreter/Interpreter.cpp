@@ -278,15 +278,80 @@ std::unique_ptr<Values::BooleanVal> Interpreter::evalStringBinaryExpr(const Valu
   return boolVal;
 }
 
-std::unique_ptr<Values::RuntimeVal> Interpreter::evalAssignmentExpr(const AstNodes::AssignmentExpr* node, Environment* env) {
+std::unique_ptr<Values::RuntimeVal> Interpreter::evalAssignmentExpr(const AstNodes::AssignmentExpr* assignmentExpr, Environment* env) {
   Serial.println("evalAssignmentExpr");
-  if (node->assignee->kind != AstNodes::NodeType::Identifier) {
-    ErrorHandler::restart("Expected identifier on left side of assignment expression");
+  switch (assignmentExpr->assignee->kind) {
+    {
+      case AstNodes::NodeType::Identifier:
+        {
+          const char* varname = static_cast<const AstNodes::Identifier*>(assignmentExpr->assignee.get())->symbol;
+          return env->assignVar(varname, evaluate(assignmentExpr->value.get(), env));
+        }
+      case AstNodes::NodeType::MemberExpr:
+        {
+          const AstNodes::MemberExpr* member = static_cast<const AstNodes::MemberExpr*>(assignmentExpr->assignee.get());
+          const char* varname = static_cast<const AstNodes::Identifier*>(member->object.get())->symbol;
+          std::unique_ptr<Values::RuntimeVal> memberVal = evaluate(member->object.get(), env);
+          std::unique_ptr<Values::RuntimeVal> propertyVal = evaluate(member->property.get(), env);
+
+          switch (memberVal->type) {
+            case Values::ValueType::ArrayVal:
+              {
+                Values::ArrayVal* array = static_cast<Values::ArrayVal*>(memberVal.get());
+                if (!member->computed) {
+                  ErrorHandler::restart("Cannot perform member access with '.' on array value");
+                }
+
+                if (propertyVal->type != Values::ValueType::Number) {
+                  ErrorHandler::restart("Computed property must evaluate to a number");
+                }
+
+                int index = static_cast<Values::NumberVal*>(propertyVal.get())->value;
+
+                if (index < 0 || index >= (int)array->elements.size()) {
+                  ErrorHandler::restart("Array index out of bounds");
+                }
+
+                array->elements[index] = evaluate(assignmentExpr->value.get(), env);
+                env->assignVar(varname, std::move(array->clone()));
+                return array->elements[index]->clone();
+              }
+            case Values::ValueType::ObjectVal:
+              {
+                Values::ObjectVal* obj = static_cast<Values::ObjectVal*>(memberVal.get());
+
+                String propertyName;
+                if (member->computed) {
+                  if (propertyVal->type != Values::ValueType::String) {
+                    ErrorHandler::restart("Computed object property must evaluate to a string");
+                  }
+
+                  propertyName = static_cast<Values::StringVal*>(propertyVal.get())->str;
+                } else {
+                  const AstNodes::Identifier* identifier = static_cast<const AstNodes::Identifier*>(member->property.get());
+                  propertyName = identifier->symbol;
+                }
+
+                if (obj->properties.find(propertyName) == obj->properties.end()) {
+                  char errMsg[100];
+                  snprintf(errMsg, sizeof(errMsg), "Cannot resolve object property name \"%s\"", propertyName.c_str());
+                  ErrorHandler::restart(errMsg);
+                }
+
+                obj->properties[propertyName] = evaluate(assignmentExpr->value.get(), env);
+                env->assignVar(varname, std::move(obj->clone()));
+                return obj->properties[propertyName]->clone();
+              }
+            default:
+              ErrorHandler::restart("Compiler Error (should not happen) Found assignment expression with member access on non-object/non-array value");
+              break;
+          }
+        }
+      default:
+        ErrorHandler::restart("Expected identifier or member expression on left side of assignment expression");
+        return nullptr;
+    }
   }
-
-  const char* varname = static_cast<const AstNodes::Identifier*>(node->assignee.get())->symbol;
-
-  return env->assignVar(varname, evaluate(node->value.get(), env));
 }
 
 std::unique_ptr<Values::ObjectVal> Interpreter::evalObjectExpr(const AstNodes::ObjectLiteral* obj, Environment* env) {
@@ -349,17 +414,17 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalCallExpr(const AstNodes::Ca
 std::unique_ptr<Values::RuntimeVal> Interpreter::evalMemberExpr(const AstNodes::MemberExpr* member, Environment* env) {
   Serial.println("evalMemberExpr");
 
-  std::unique_ptr<Values::RuntimeVal> objectVal = evaluate(member->object.get(), env);
+  std::unique_ptr<Values::RuntimeVal> memberVal = evaluate(member->object.get(), env);
 
-  if (objectVal->type == Values::ValueType::ObjectVal) {
-    Values::ObjectVal* obj = static_cast<Values::ObjectVal*>(objectVal.get());
+  if (memberVal->type == Values::ValueType::ObjectVal) {
+    Values::ObjectVal* obj = static_cast<Values::ObjectVal*>(memberVal.get());
 
     String propertyName;
     if (member->computed) {
       std::unique_ptr<Values::RuntimeVal> propertyVal = evaluate(member->property.get(), env);
 
       if (propertyVal->type != Values::ValueType::String) {
-        ErrorHandler::restart("Computed property must evaluate to a string");
+        ErrorHandler::restart("Computed object property must evaluate to a string");
       }
 
       propertyName = static_cast<Values::StringVal*>(propertyVal.get())->str;
@@ -369,12 +434,14 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalMemberExpr(const AstNodes::
     }
 
     if (obj->properties.find(propertyName) == obj->properties.end()) {
-      ErrorHandler::restart("Invalid property access: expected identifier");
+      char errMsg[100];
+      snprintf(errMsg, sizeof(errMsg), "Cannot resolve object property name \"%s\"", propertyName.c_str());
+      ErrorHandler::restart(errMsg);
     }
 
     return obj->properties[propertyName]->clone();
-  } else if (objectVal->type == Values::ValueType::ArrayVal) {
-    Values::ArrayVal* array = static_cast<Values::ArrayVal*>(objectVal.get());
+  } else if (memberVal->type == Values::ValueType::ArrayVal) {
+    Values::ArrayVal* array = static_cast<Values::ArrayVal*>(memberVal.get());
 
     if (member->computed) {
       std::unique_ptr<Values::RuntimeVal> propertyVal = evaluate(member->property.get(), env);
@@ -385,7 +452,7 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalMemberExpr(const AstNodes::
 
       int index = static_cast<Values::NumberVal*>(propertyVal.get())->value;
 
-      if (index < 0 || index >= (int) array->elements.size()) {
+      if (index < 0 || index >= (int)array->elements.size()) {
         ErrorHandler::restart("Array index out of bounds");
       }
 
@@ -396,5 +463,5 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalMemberExpr(const AstNodes::
   }
 
   ErrorHandler::restart("Cannot perform member access on non-object/non-array value");
-  return objectVal;
+  return memberVal;
 }

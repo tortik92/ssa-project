@@ -101,6 +101,7 @@ void setup() {
   RUN_TEST(test_interpreter_obj_member_expr);
   RUN_TEST(test_interpreter_obj_member_expr_computed);
   RUN_TEST(test_interpreter_array_member_expr);
+  RUN_TEST(test_interpreter_array_member_assignment_expr);
 
   UNITY_END();
 }
