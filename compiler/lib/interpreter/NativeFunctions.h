@@ -5,7 +5,7 @@
 
 #include "ErrorHandler.h"
 #include "Values.h"
-#include "comm/PadsComm.h"
+#include "PadsComm.h"
 
 class NativeFunctions {
 public:

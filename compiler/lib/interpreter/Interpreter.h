@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "ErrorHandler.h"
-#include "parser/Parser.h"
+#include "Parser.h"
 #include "Values.h"
 #include "Environment.h"
 

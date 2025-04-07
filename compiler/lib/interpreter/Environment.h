@@ -8,7 +8,7 @@
 #include "ErrorHandler.h"
 #include "Values.h"
 #include "NativeFunctions.h"
-#include "comm/PadsComm.h"
+#include "PadsComm.h"
 
 /**
  * @class Environment

@@ -1,0 +1,55 @@
+# Test Directory
+
+This directory contains unit tests for the SoundLeap SSA project. The tests are designed to validate the functionality of individual components and ensure the reliability of the system.
+
+## Overview
+
+The tests are implemented using the PlatformIO Unit Testing framework and cover various modules of the project, including the lexer, parser, interpreter, and runtime environment.
+
+## Running Tests
+
+To run the tests, use the PlatformIO Test Runner. Execute the following command in the root of the project:
+
+```sh
+pio test
+```
+
+This will compile and execute all the tests defined in this directory.
+
+## Test Coverage
+
+### Lexer Tests
+
+- Tokenization of single tokens, numbers, keywords, operators, and identifiers.
+
+### Parser Tests
+
+- Variable declarations (constants, numbers, strings, objects, arrays).
+- Expression parsing (assignment, additive, multiplicative).
+- Control structures (if, if-else, while, break).
+- Function calls and member expressions.
+
+### Values Tests
+
+- Constructors for null, boolean, number, string, and object types.
+- Copy and move semantics for strings and objects.
+- Object insertion and cloning.
+
+### Environment Tests
+
+- Global environment setup.
+- Variable declaration, assignment, lookup, and resolution.
+- Native function integration (e.g., random number generation).
+
+### Native Functions Tests
+
+- Built-in functions like print and rnd.
+
+### Interpreter Tests
+
+- Execution of variable declarations, expressions, control structures, and function calls.
+- Handling of object and array member expressions.
+
+## Additional Information
+
+For more details on PlatformIO Unit Testing, refer to the [official documentation](https://docs.platformio.org/en/latest/advanced/unit-testing/index.html).

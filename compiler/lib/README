@@ -1,0 +1,30 @@
+# Libraries
+
+This directory contains project-specific (private) libraries for the SoundLeap SSA project. These libraries are compiled into static libraries and linked into the executable file by PlatformIO.
+
+## Libraries Overview
+
+### `/lib/comm`
+This library handles communication-related functionality, including:
+- **`BLEComm`**: Bluetooth Low Energy communication.
+- **`PadsComm`**: Communication with external pads.
+
+### `/lib/interpreter`
+This library implements the core interpreter logic, including:
+- **`Environment`**: Manages the runtime environment.
+- **`Interpreter`**: Executes parsed code.
+- **`NativeFunctions`**: Provides built-in functions for the interpreter.
+- **`Values`**: Defines data structures for interpreter values.
+
+### `/lib/lexer`
+This library is responsible for lexical analysis, converting source code into tokens:
+- **`Lexer`**: Tokenizes the input source code.
+
+### `/lib/parser`
+This library handles parsing, converting tokens into an abstract syntax tree (AST):
+- **`AstNodes`**: Defines the structure of AST nodes.
+- **`Parser`**: Parses tokens into an AST.
+
+## Additional Information
+
+For more details on how PlatformIO handles libraries, refer to the [PlatformIO Library Dependency Finder documentation](https://docs.platformio.org/page/librarymanager/ldf.html).

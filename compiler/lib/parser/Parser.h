@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 
-#include "lexer/Lexer.h"
-#include "parser/AstNodes.h"
+#include "Lexer.h"
+#include "AstNodes.h"
 #include "ErrorHandler.h"
 
 /**

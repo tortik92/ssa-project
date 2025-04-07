@@ -4,10 +4,10 @@
 
 #include "Constants.h"
 #include "ErrorHandler.h"
-#include "comm/PadsComm.h"
-#include "comm/BLEComm.h"
-#include "parser/Parser.h"
-#include "interpreter/Interpreter.h"
+#include "PadsComm.h"
+#include "BLEComm.h"
+#include "Parser.h"
+#include "Interpreter.h"
 
 PadsComm *padsComm = PadsComm::getInstance();
 BLEComm *btComm = BLEComm::getInstance();
