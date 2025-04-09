@@ -1,160 +1,413 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+    <!-- Hier wird die Zeichenkodierung und das Layout für Mobilgeräte festgelegt -->
     <meta charset="UTF-8">
-    <meta name="viewport">
+    <meta name="viewport" >
     <title>SoundLeap!</title>
     <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="script.js" defer></script>
+    <script type="text/javascript" src="bot.js"></script>
+
 </head>
 <body>
-<section>
+<!-- Werkzeugleiste oben auf der Seite -->
+<section class="toolbar">
+    <div class="icon-group" aria-hidden="true">
 
-</section>
+        <!-- Schriftgröße ändern -->
+        <div class="icon" id="btn-minus" aria-hidden="true">-</div>
+        <div class="icon" id="btn-a" aria-hidden="true">A</div>
+        <div class="icon" id="btn-plus" aria-hidden="true">+</div>
 
-<section class="intro">
-    <div class="intro-section">
-        <div class="content" >
-            <h1>SoundLeap</h1>
-            <ul>
-                <li><span aria-hidden="true">✔</span> Intelligente Technologie für den Sport</li>
-                <li><span aria-hidden="true">✔</span> Rund um die Uhr einsatzbereit</li>
-                <li><span aria-hidden="true">✔</span> Inklusives Design für alle</li>
-            </ul>
+        <!-- Button für Standard-Design -->
+        <div class="icon normal" id="btn-normal" aria-hidden="true"></div>
+
+        <!-- Farbwahl für bessere Sichtbarkeit -->
+        <div class="icon yellow" id="btn-yellow-1" aria-hidden="true"></div>
+        <div class="icon yellow-inverse" id="btn-yellow-2" aria-hidden="true"></div>
+        <div class="icon blue" id="btn-blue" aria-hidden="true"></div>
+        <div class="icon white" id="btn-white" aria-hidden="true"></div>
+    </div>
+
+    <!-- Sprachauswahl: Deutsch oder Englisch -->
+        <div class="language-switch">
+            <a class="language" href="index.html" aria-label="Deutsch">DE</a>
+            <span id="slash">/</span>
+            <a class="language" href="test.html" aria-label="Englisch">EN</a>
         </div>
-    </div>
-    <div class="intro-image">
-        <img src="images/introbild.png" alt="Das Bild zeigt den Startbildschirm der App SOUNDLEAP. Der Hintergrund ist schwarz. In der Mitte steht groß der App-Name. Darunter ist ein Eingabefeld für einen sechsstelligen Code, der bereits ausgefüllt ist. Direkt darunter befindet sich ein lilafarbener Knopf mit der Aufschrift Connect, um die App zu starten." />
-    </div>
-
 </section>
 
+<!-- Navigation -->
 <section class="navigation">
-    <nav aria-label="Haupt">
-        <div>
-            <ul>
-                <li>
-                    <a href="#dasprodukt" tabindex="1" aria-label="Produkt, Gehe zum Bereich">Produkt</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#dieapp" tabindex="2" aria-label="App, Gehe zum Bereich">App</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#support" tabindex="3" aria-label="Hilfe, Gehe zum Bereich">Hilfe</a>
-                </li>
+    <nav aria-label="Hauptnavigation">
+        <!-- Menü-Symbol (Hamburger Menü) -->
+        <a href="#" id="toggle-button" class="toggle-button">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </a>
 
-                <li class="nav-item">
-                    <a href="#deinwerk" tabindex="4" aria-label="Dein Werk, Gehe zum Bereich " >Dein Werk</a>
-                </li>
-                <li class="nav-item">
-                    <a class="no-hover">Sprache:</a>
-                    <a href="index.html" aria-label="Wechseln zu " tabindex="5">Deutsch</a> <b>/</b>
-                    <a href="test.html" aria-label="Wechseln zu " tabindex="6">Englisch</a>
-                </li>
+        <!-- Liste der Navigationslinks -->
+        <div id="list-container" class="list-container">
+            <ul>
+                <li> <a href="#dasprodukt"  onclick=zeigeKapitel('dasprodukt') tabindex="1" aria-label="Produkt, Gehe zum Bereich" >Produkt</a></li>
+                <li> <a href="#dieapp" onclick=zeigeKapitel('dieapp')  tabindex="2" aria-label="App, Gehe zum Bereich" >App</a></li>
+                <li><a href="#selbstmachen" onclick= zeigeKapitel('selbstmachen') tabindex="3" aria-label="Selbst erstellen, Gehe zum Bereich" >Selbst erstellen</a></li>
+                <li><a href="#support"  onclick=zeigeKapitel('support') tabindex="4" aria-label="Hilfe, Gehe zum Bereich" >Hilfe</a></li>
+                <li><a href="#fragen"  onclick=zeigeKapitel('fragen') tabindex="5" aria-label="Fragen, Gehe zum Bereich" >Fragen</a></li>
             </ul>
         </div>
     </nav>
 </section>
 
+<!-- Startbereich der Seite -->
+<section class="intro">
+    <div class="intro-section">
+        <div class="content">
+            <h1>SoundLeap</h1>
 
+            <!-- Kurze Liste mit Vorteilen -->
+            <ul>
+                <li><span aria-hidden="true">✔</span> Intelligente Technologie für den Sport</li>
+                <li><span aria-hidden="true">✔</span> Rund um die Uhr einsatzbereit</li>
+                <li><span aria-hidden="true">✔</span> Inklusives Design für alle</li>
+            </ul>
 
-<section id="dasprodukt" class="product-section">
-    <div class="product-text">
-        <h3  tabindex="7">Produkt</h3>
-        <h2 tabindex="8">Was ist unser Produkt?</h2>
-        <p>
-            Unser Produkt sind spezielle weiche Pads, die mit Sensoren und Lautsprechern ausgestattet sind. Diese Pads können miteinander kommunizieren und sind über WLAN
-        </p>
-        <p>
-            vernetzt. Mithilfe einer Smartphone-App können Nutzer Spiele auswählen und die Einstellungen anpassen. Die Pads machen Geräusche, die den Nutzern helfen,
-        </p>
-        <p>
-            ihre Position zu erkennen und sich im Raum zu orientieren, sodass blinde und sehbehinderte Menschen Sport und Fitness auf eine neue, zugängliche Weise erleben können.
-        </p>
+        </div>
     </div>
-    <div class="product-image">
-        <img src="images/Matten.png" alt="Illustration of our inclusive product" aria-labelledby="product-title">
+
+    <!-- Bild zur Vorstellung -->
+    <div class="intro-image,gallery">
+        <img src="images/introbild.png" alt="Startbildschirm der SoundLeap App" class="gallery-img" />
     </div>
+
 </section>
 
-<section class="product-section">
+<!-- Produktbeschreibung -->
+<section id="dasprodukt" class="product-section" aria-label="Produkt" aria-hidden="true">
+    <div class="product-text">
+        <h2 tabindex="7">Produkt</h2>
+        <h3 tabindex="8">Was ist unser Produkt?</h3>
+
+        <p>
+            Unser Produkt sind spezielle weiche Pads, die mit Sensoren und Lautsprechern ausgestattet sind. Diese Pads können miteinander kommunizieren und sind über WLAN vernetzt. Mithilfe einer Smartphone-App können Nutzer Spiele auswählen und die Einstellungen anpassen. Die Pads machen Geräusche, die den Nutzern helfen, ihre Position zu erkennen und sich im Raum zu orientieren, sodass blinde und sehbehinderte Menschen Sport und Fitness auf eine neue, zugängliche Weise erleben können.
+        </p>
+
+    </div>
+
+    <!-- Bild zum Produkt -->
+    <div class="product-image,gallery">
+        <img src="images/pads.jpg" alt="Illustration unseres inklusiven Produkts" class="gallery-img" />
+        <br>
+        <br>
+    </div>
+
+    <!-- Zurück zur Navigation -->
+    <button class="navigation-button" onclick="location.href='#'">Zur Navigation</button>
+
+
+</section>
+
+<!-- Bereich mit weiterer Erklärung, wie das Produkt funktioniert -->
+<section class="product-section" aria-hidden="true">
     <div class="product-text">
         <h2 tabindex="9">Wie funktioniert unser Produkt?</h2>
+
+        <!-- Erklärung, wie die Pads über WLAN kommunizieren -->
         <p>
-            Die Pads kommunizieren miteinander über Wi-Fi. Wenn ein Spiel über die App ausgewählt wird, aktivieren sich die Pads und geben Geräusche von sich.
+            Die Pads kommunizieren miteinander über Wi-Fi. Wenn ein Spiel über die App ausgewählt wird, aktivieren sich die Pads und geben Geräusche von sich. Diese Geräusche verraten den Spielern die Position der Pads. So können sehbeeinträchtigte und blinde Personen die Pads finden und aktiv am Spiel teilnehmen.
         </p>
-        <p>
-            Diese Geräusche verraten den Spielern die Position der Pads. So können sehbeeinträchtigte und blinde Personen die Pads finden und aktiv am Spiel teilnehmen.
-        </p>
+
     </div>
-    <div class="product-image">
-        <img src="images/OurProduct.jpg" alt="Diagram explaining product functionality" aria-labelledby="product-use-title">
+
+    <!-- Bild zur Veranschaulichung -->
+    <div class="product-image,gallery">
+        <img src="images/log-architecture.jpg" alt="Diagramm zur Erklärung der Produktfunktionalität" class="gallery-img" />
+        <br>
+        <br>
     </div>
+
+    <!-- Button, um zurück zur Navigation zu gehen -->
+    <button class="navigation-button" onclick="location.href='#'">Zur Navigation</button>
 </section>
 
-<section class="product-section">
+<!-- Bereich mit einer Spielbeschreibung -->
+<section class="product-section" aria-hidden="true">
     <div class="product-text">
         <h2 tabindex="10">Wie spielt man mit unseren Matten?</h2>
+
+        <!-- Beschreibung eines Spiels mit den Matten (Memory) -->
         <p>
-            Ein Beispiel für ein Spiel ist Memory. Es gibt drei Matten. Zuerst wird das Geräusch von jeder Matte mehrmals abgespielt, damit sich der Spieler merken kann,
-        </p>
-        <p>
-            welcher Ton zu welcher Matte gehört. Danach werden mehrere Töne abgespielt, und der Spieler muss in der richtigen Reihenfolge auf die Matten steigen,
-        </p>
-        <p>
-            auf denen die Töne zuvor gehört wurden.
-        </p>
-        <br>
-        <p aria-hidden="true">
-            Ein weiteres Spiel wäre das Reaktionsspiel gibt es zwei Matten und zwei Spieler. Zuerst wird ein Geräusch abgespielt, das sich der Spieler merken muss.
-        </p>
-        <p aria-hidden="true">
-            Danach folgen verschiedene Töne, und einer davon ist der Ton, den der Spieler sich merken sollte. Wenn dieser Ton kommt, müssen die Spieler
-        </p>
-        <p aria-hidden="true">
-            schnell auf die richtige Matte steigen. Wer zuerst richtig steht, gewinnt.
+            Ein Beispiel für ein Spiel ist Memory. Es gibt drei Matten. Zuerst wird das Geräusch von jeder Matte mehrmals abgespielt, damit sich der Spieler merken kann, welcher Ton zu welcher Matte gehört. Danach werden mehrere Töne abgespielt, und der Spieler muss in der richtigen Reihenfolge auf die Matten steigen, auf denen die Töne zuvor gehört wurden.
         </p>
 
     </div>
-    <div class="product-image">
-        <img src="images/MATSGAME1.jpg" alt="This image shows a game called Memory, played by one person using three mats that each produce unique sounds. The player listens carefully to identify the sound's source, moves to the corresponding mat, and continues until all sounds are matched correctly, ending with a winning sound." aria-labelledby="product-mats-title">
+
+    <!-- Bild, das das Memory-Spiel zeigt -->
+    <div class="product-image,gallery">
+        <img src="images/MATSGAME1.jpg" alt="Spiel Memory mit Matten, bei dem der Spieler Geräusche hört und die Matten korrekt zuordnen muss." class="gallery-img" />
     </div>
+
+    <!-- Button zurück zur Navigation und Button zur nächsten Section -->
+    <button class="navigation-button" onclick="location.href='#'">Zur Navigation</button>
+    <button class="next-language" onclick="vorleseNaechstesKapitel('dasprodukt')" id="next-button">nächste section</button>
+
 </section>
 
-
-<section class="app-section">
+<!-- Bereich über die App -->
+<section id="dieapp" class="app-section" aria-hidden="true">
     <div class="app-text">
-        <h3 text-align="center" tabindex="11">App</h3>
-        <h2 tabindex="12">Wie schaut unsere App überhaupt aus?</h2>
+        <h2 tabindex="11">App</h2>
+        <h3 tabindex="12">Wie schaut unsere App überhaupt aus?</h3>
+
+        <!-- Erklärung, wie man die App benutzt -->
         <p>
-            Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+            Unsere App ist barrierefrei und einfach bedienbar. Zu Beginn registrierst du dich mit einem Code. Danach wählst du ein Spiel aus und konfigurierst es nach deinen Wünschen. Erst dann startest du das Spiel. Klare Beschriftungen, Alternativtexte und eine logische Navigation machen die App auch für Screenreader nutzbar.
         </p>
-    </div>
-    <div class="app-image">
-        <img src="images/App.png" alt="This image shows a game called Memory, played by one person using three mats that each produce unique sounds. The player listens carefully to identify the sound's source, moves to the corresponding mat, and continues until all sounds are matched correctly, ending with a winning sound." aria-labelledby="product-mats-title">
-    </div>
-</section>
 
-<section class="deinwerk-section">
-
-    <div class="deinwerk-text">
-        <h2 tabindex="13">Dein Werk</h2>
-        <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-        <br><br><br><br><br><br><br><br><br><br><br><br><br><br>
     </div>
 
-</section>
+    <!-- Mehrere Bilder von der App mit Alternativtext -->
+    <div class="image-box gallery">
+        <img src="/images/AppIntro.jpg" alt="Eine mobile App-Benutzeroberfläche mit einem Eingabefeld für einen 5-stelligen Code. Der Benutzer gibt „12345“ ein. Darunter befindet sich eine Schaltfläche mit der Aufschrift „Connect“.
+        Oben rechts ist ein Fragezeichen-Symbol für Hilfe. Der Hintergrund ist schwarz, und die Schrift ist weiß." class="gallery-img" />
+        <img src="/images/SpielAuswahl.jpg" alt="Ein Bildschirm mit der Überschrift „Select a game“. Es gibt drei auswählbare Spielmodi: „Reaction Game“ (kurze Beschreibung: „React and React“), „Memory“ (kurze Beschreibung: „Remember, where the pads are“), und „Himmel und Hölle“ (kurze Beschreibung auf Deutsch: „Springen und Überspringen“).
+        Der zweite Modus ist markiert. Unten befinden sich zwei Schaltflächen: „Back“ und „OK“." class="gallery-img" />
+        <img src="/images/SpielKnofiguration.jpg" alt="Eine Konfigurationsseite für das Spiel. Der Benutzer kann die Anzahl der Pads mit Plus- und Minus-Schaltflächen einstellen (aktuell auf 4 gesetzt). Eine Option „Endless?“ ist auf „NEIN“ gesetzt. Darunter gibt es eine Auswahl für den Soundtyp mit Pfeilen zur Anpassung.
+         Unten befinden sich die Schaltflächen „Back“ und „OK“." class="gallery-img" />
+        <img src="/images/SpielStart.jpg" alt="Eine Anweisung „Locate your pads!“ wird angezeigt. In der Mitte befinden sich vier quadratische Felder in Rot, Blau, Grün und einer weiteren Farbe, die die Pads darstellen.
+        Unten gibt es zwei Schaltflächen: „Back“ und „Start“." class="gallery-img" />
 
-<section class="support-section">
-
-    <div class="support-text">
-        <h2 tabindex="14">Support</h2>
-        <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-        <br><br><br><br><br><br><br><br><br><br><br><br><br><br>
     </div>
+
+    <!-- Zurück zur Navigation -->
+    <button class="navigation-button" style="margin-top: 200px" onclick="location.href='#'">Zur Navigation</button>
 
 </section>
+<!--<section class="app-section" aria-hidden="true">
+    <div class="app-text">
+        <h2>Wie navigiert man sich durch die App?</h2>
+    </div>
+    <button class="next-language" onclick="vorleseNaechstesKapitel('dieapp')" >nächste section</button>
+</section>
+-->
+<!-- Bereich: Selbst Spiele erstellen -->
+<section id="selbstmachen" class="selbstmachen-section" aria-hidden="true">
+    <div class="selbstmachen-text">
+        <h2 tabindex="13">Selbst erstellen</h2>
+        <h3 tabindex="14">Was hat es mit selbst erstellen aufsich?</h3>
 
-<section class="rights">
+        <!-- Erklärung, dass man eigene Spiele programmieren kann -->
+        <p>
+            Mit unserer eigenen Programmiersprache hast du die Möglichkeit, deine eigenen Spiele zu erstellen. Dies ermöglicht es dir, dein Gameplay mit einfachen Textbefehlen zu gestalten und zu steuern.
+        </p>
+
+        <h3 tabindex="15">Wie mache ich ein Spiel selber?</h3>
+
+        <!-- Schritt-für-Schritt-Erklärung -->
+        <p>
+            Du kannst beginnen, indem du den Bereich "Neues Spiel erstellen" in der App öffnest. Dort kannst du dein Spiel mit Text beschreiben. Jede Entscheidung und jedes Spielgeschehen wird mit einfachen Befehlen definiert. Um Aktionen und Reaktionen zu steuern, gibst du klare Befehle ein, die von der App erkannt werden. Bevor du dein Spiel veröffentlichst, kannst du es testen, um sicherzustellen, dass alles wie gewünscht funktioniert.
+        </p>
+
+        <br>
+    </div>
+
+    <!-- Zurück zur Navigation und Button für nächste Section -->
+    <button class="navigation-button" onclick="location.href='#'">Zur Navigation</button>
+    <button class="next-language" onclick="vorleseNaechstesKapitel('selbstmachen')">nächste section</button>
+</section>
+
+
+<!-- Support-Bereich mit Hilfethemen -->
+<section id="support" class="support-section" aria-hidden="true">
+    <h2 tabindex="16">Support</h2>
+
+    <div class="support-box-list">
+
+        <!-- Einzelne Boxen mit Infos, die in einem Modal geöffnet werden -->
+        <div class="support-box" data-modal-text="<h1>Login</h1><p>Um sich mit der App zu verbinden, geben Sie den <strong>6-stelligen Code</strong> ein, den Sie erhalten haben. Wenn Sie Probleme haben, wenden Sie sich an den Support oder versuchen Sie es erneut.</p>">
+            <h4>Login</h4>
+        </div>
+
+        <div class="support-box" data-modal-text="<h1>Technische Probleme</h1><p>Falls Sie auf technische Probleme stoßen, wie z.B. beim Laden der Seite, finden Sie hier Lösungen und Anleitungen, wie Sie diese beheben können.</p><h2>Fehlerbehebung</h2><p>Für weitere Fehlerbehebungen und Lösungen, prüfen Sie die technischen Details im Supportbereich.</p><ul><li><a href='#'>Weitere Details</a></li></ul>">
+            <h4>Technische Probleme</h4>
+        </div>
+
+        <div class="support-box" data-modal-text="<h1>Download</h1><p>Hier erhalten Sie Hilfe zu Fragen bezüglich Zahlungen, Rechnungen und Abonnements. Erfahren Sie, wie Sie Ihre Zahlungen verwalten oder eine Rückerstattung beantragen können.</p>">
+            <h4>Download</h4>
+        </div>
+
+        <div class="bottom-row">
+            <div class="support-box" data-modal-text="<h1>Datenschutz und Sicherheit</h1><p>Erfahren Sie mehr über unsere Datenschutzrichtlinien, wie wir Ihre Daten schützen und wie Sie die Sicherheit Ihres Kontos erhöhen können. <em>Wir geben Ihnen alle Informationen, die Sie für Ihre Sicherheit benötigen.</em></p>">
+                <h4>Datenschutz und Sicherheit</h4>
+            </div>
+
+            <div class="support-box" data-modal-text="<h1>Features und Updates</h1><p>Erfahren Sie mehr über die neuesten Features und Updates unserer App. <u>Hier finden Sie alle wichtigen Informationen</u> über neue Funktionen, Verbesserungen und Fehlerbehebungen.</p>">
+                <h4>Features und Updates</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot zum Fragen stellen -->
+    <h2>Free Chatbot</h2>
+    <div id="chatContainer" class="form-group">
+        <!-- Hier erscheinen die Nachrichten -->
+    </div>
+
+
+    <!-- Eingabe zum Schreiben und Buttons für Spracherkennung -->
+    <div class="form-group input-container">
+        <input type="text" class="form-control" id="userInput" placeholder="Enter your message here">
+
+        <!-- Buttons rechts neben dem Eingabefeld -->
+        <button class="btn btn-success" onclick="sendMessage()">Fragen!</button>
+        <button id="startStopButton" class="btn btn-primary"onclick="setupSpeechRecognition()">Aufnahme starten</button>
+    </div>
+
+
+    <!-- Sprachausgabe ein-/ausschalten -->
+    <div class="switch-container">
+        <label for="speechSwitch">🔊 Vorlesen aktivieren</label>
+        <label class="switch">
+            <input type="checkbox" id="speechSwitch">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <!-- Hier kommt die Antwort vom Bot -->
+    <div id="response"></div>
+
+    <br>
+    <br>
+
+    <!-- Buttons für Navigation -->
+    <button class="navigation-button" onclick="location.href='#'">Zur Navigation</button>
+    <button class="next-language" onclick="vorleseNaechstesKapitel('support')" >nächste section</button>
+</section>
+
+
+<!-- Bereich mit häufigen Fragen (FAQs) -->
+<section id="fragen" class="fragen-section" aria-hidden="true">
+    <h2>Fragen</h2>
+
+    <!-- Einzelne Fragen, die sich aufklappen lassen -->
+    <div class="faq-item" id="first-question">
+        <button class="faq-button" onclick="toggleAnswer(this)" aria-expanded="false">
+            Was ist der Zweck der Pads und wie funktionieren sie?
+            <span class="plus">+</span>
+        </button>
+        <div class="answer">
+            <p>Die Pads kommunizieren über WLAN und erzeugen Töne, die den Nutzern helfen, ihre Position zu bestimmen und aktiv am Spiel teilzunehmen.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <button class="faq-button" onclick="toggleAnswer(this)" aria-expanded="false">
+            Wie funktioniert die App?
+            <span class="plus">+</span>
+        </button>
+        <div class="answer">
+            <p>Die App ermöglicht es den Nutzern, Spiele auszuwählen und anzupassen. Sie bietet klare Beschriftungen und alternative Texte für eine einfache Navigation.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <button class="faq-button" onclick="toggleAnswer(this)" aria-expanded="false">
+            Was bedeutet "Do it yourself" bei der Spielauswahl?
+            <span class="plus">+</span>
+        </button>
+        <div class="answer">
+            <p>"Do it yourself" bedeutet, eine eigene Programmiersprache zu verwenden, um Spiele mit einfachen Textbefehlen zu erstellen.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <button class="faq-button" onclick="toggleAnswer(this)" aria-expanded="false">
+            Wie kann ich Pads in meinem Spiel verwenden?
+            <span class="plus">+</span>
+        </button>
+        <div class="answer">
+            <p>Die Pads geben Töne ab, die die Spieler durch das Spiel führen. So können sie die Pads finden und basierend auf den Tönen interagieren.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <button class="faq-button" onclick="toggleAnswer(this)" aria-expanded="false">
+            Wie lade ich die App herunter und installiere sie?
+            <span class="plus">+</span>
+        </button>
+        <div class="answer">
+            <p>Die App kann aus dem App Store heruntergeladen werden. Nutzer können sie installieren, indem sie den Anweisungen auf dem Bildschirm folgen.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <button class="faq-button" onclick="toggleAnswer(this)" aria-expanded="false">
+            Wie loge ich mich in die App?
+            <span class="plus">+</span>
+        </button>
+        <div class="answer">
+            <p>Für das Einlogen muss ein Code eingegeben werden, damit sich die Matten mit der App verbinden können.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <button class="faq-button" onclick="toggleAnswer(this)" aria-expanded="false">
+            Wie erstelle ich mein eigenes Spiel?
+            <span class="plus">+</span>
+        </button>
+        <div class="answer">
+            <p>Du kannst ein Spiel erstellen, indem du Textbefehle im Bereich „Neues Spiel erstellen“ eingibst und es testest, bevor du es veröffentlichst.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <button class="faq-button" onclick="toggleAnswer(this)" aria-expanded="false">
+            Wie funktioniert der Support?
+            <span class="plus">+</span>
+        </button>
+        <div class="answer">
+            <p>Der Support ist über die App erreichbar. Das Team steht bereit, um bei Fragen oder Problemen zu helfen.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <button class="faq-button" onclick="toggleAnswer(this)" aria-expanded="false">
+            Wie kann ich mein Spiel testen, bevor ich es veröffentliche?
+            <span class="plus">+</span>
+        </button>
+        <div class="answer">
+            <p>Du kannst dein Spiel innerhalb der App testen, um sicherzustellen, dass alle Befehle und Abläufe korrekt funktionieren, bevor du es veröffentlichst.</p>
+        </div>
+
+    </div>
+    <br>
+</section>
+
+<!-- Fenster für Infos bei Klick auf Support-Box -->
+<div id="myModal" class="modal-text">
+    <div class="modal-content-text">
+        <span id="closeBtn" class="close">&times;</span>
+        <p id="modalText"></p> <!-- Hier wird der Text angezeigt -->
+    </div>
+</div>
+
+<!-- Bild-Modalfenster -->
+<div id="myModalImage">
+    <span id="closeBtnImage" class="closeBtnImage">&times;</span>
+    <img id="modalImg" class="modal-content-image">
+</div>
+
+<!-- Pop-up mit Titel und Text -->
+<div class="popup" id="popup">
+    <h4 id="popup-title"></h4>
+    <p id="popup-text"></p>
+    <button onclick="closePopup()">Schließen</button>
+</div>
+
+<!-- Ganz unten: Copyright -->
+<section class="rights" aria-live="assertive">
     <p>&copy; 2025 SoundLeap. Alle Rechte vorbehalten.</p>
 </section>
 
