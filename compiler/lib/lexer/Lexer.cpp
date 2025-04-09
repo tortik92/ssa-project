@@ -2,49 +2,57 @@
 
 
 std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
-  // clean up for fresh tokens
-  while (!tokens.empty()) {
-    tokens.pop();
-  }
+  std::queue<Token> tokens;
 
   for (size_t i = 0; i < len; i++) {
     switch (code[i]) {
       case '(':
-        addToken(&code[i], 1, TokenType::OpenParen);
+        addToken(&code[i], 1, TokenType::OpenParen, tokens);
         break;
       case ')':
-        addToken(&code[i], 1, TokenType::CloseParen);
+        addToken(&code[i], 1, TokenType::CloseParen, tokens);
         break;
       case '[':
-        addToken(&code[i], 1, TokenType::OpenBracket);
+        addToken(&code[i], 1, TokenType::OpenBracket, tokens);
         break;
       case ']':
-        addToken(&code[i], 1, TokenType::CloseBracket);
+        addToken(&code[i], 1, TokenType::CloseBracket, tokens);
         break;
       case '{':
-        addToken(&code[i], 1, TokenType::OpenBrace);
+        addToken(&code[i], 1, TokenType::OpenBrace, tokens);
         break;
       case '}':
-        addToken(&code[i], 1, TokenType::CloseBrace);
+        addToken(&code[i], 1, TokenType::CloseBrace, tokens);
         break;
       case '+':
       case '-':
       case '*':
       case '/':
       case '%':
-        addToken(&code[i], 1, TokenType::ArithmeticOperator);
+        if (code[i] == '-' && i + 1 < len && isDigit(code[i + 1])) {
+          // negative number
+          size_t numLen = 1;
+          while (i + numLen < len && isDigit(code[i + numLen])) {
+            numLen++;
+          }
+
+          addToken(&code[i], numLen, TokenType::Number, tokens);
+          i += numLen - 1;
+        } else {
+          addToken(&code[i], 1, TokenType::ArithmeticOperator, tokens);
+        }
         break;
       case '<':
       case '>':
         {
           uint8_t tokLen = i + 1 < len && code[i + 1] == '=' ? 2 : 1;
-          addToken(&code[i], tokLen, TokenType::RelationalOperator);
+          addToken(&code[i], tokLen, TokenType::RelationalOperator, tokens);
           i += tokLen - 1;
         }
         break;
       case '!':
         if (i + 1 < len && code[i + 1] == '=') {
-          addToken(&code[i], 2, TokenType::RelationalOperator);
+          addToken(&code[i], 2, TokenType::RelationalOperator, tokens);
           i++;
         } else {
           unrecognizedCharacter('!');
@@ -52,23 +60,23 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
         break;
       case '=':
         if (i + 1 < len && code[i + 1] == '=') {
-          addToken(&code[i], 2, TokenType::RelationalOperator);
+          addToken(&code[i], 2, TokenType::RelationalOperator, tokens);
           i++;
         } else {
-          addToken(&code[i], 1, TokenType::Equals);
+          addToken(&code[i], 1, TokenType::Equals, tokens);
         }
         break;
       case ';':
-        addToken(&code[i], 1, TokenType::Semicolon);
+        addToken(&code[i], 1, TokenType::Semicolon, tokens);
         break;
       case ':':
-        addToken(&code[i], 1, TokenType::Colon);
+        addToken(&code[i], 1, TokenType::Colon, tokens);
         break;
       case ',':
-        addToken(&code[i], 1, TokenType::Comma);
+        addToken(&code[i], 1, TokenType::Comma, tokens);
         break;
       case '.':
-        addToken(&code[i], 1, TokenType::Dot);
+        addToken(&code[i], 1, TokenType::Dot, tokens);
         break;
       case '"':
         {
@@ -81,7 +89,7 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
             ErrorHandler::reportError("Expected closing '\"' for string literal");
           }
 
-          addToken(&code[i], strLen + 1, TokenType::StringLiteral);  // +1 for closing quote
+          addToken(&code[i], strLen + 1, TokenType::StringLiteral, tokens);  // +1 for closing quote
           i += strLen;
           break;
         }
@@ -94,7 +102,7 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
             numLen++;
           }
 
-          addToken(&code[i], numLen, TokenType::Number);
+          addToken(&code[i], numLen, TokenType::Number, tokens);
           i += numLen - 1;
         } else if (isAlpha(code[i]) || code[i] == '$' || code[i] == '_') {
           // identifier
@@ -112,7 +120,7 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
             }
           }
 
-          addToken(&code[i], identLen, tokenType);
+          addToken(&code[i], identLen, tokenType, tokens);
           i += identLen - 1;
         } else if (!isSpace(code[i]) && code[i] != '\0') {
           unrecognizedCharacter(code[i]);
@@ -123,13 +131,13 @@ std::queue<Lexer::Token> Lexer::tokenize(char* code, size_t len) {
   }
 
   char endOfFile[] = "EOF";
-  addToken(endOfFile, strlen(endOfFile), TokenType::EndOfFile);
+  addToken(endOfFile, strlen(endOfFile), TokenType::EndOfFile, tokens);
 
-  return std::move(tokens);
+  return tokens;
 }
 
 
-void Lexer::addToken(const char* src, size_t srcLen, TokenType tokenType) {
+void Lexer::addToken(const char* src, size_t srcLen, TokenType tokenType, std::queue<Token>& tokens) {
   char* value = new char[srcLen + 1];
   strncpy(value, src, srcLen);
   value[srcLen] = '\0';
@@ -139,6 +147,13 @@ void Lexer::addToken(const char* src, size_t srcLen, TokenType tokenType) {
 
 void Lexer::unrecognizedCharacter(char c) {
   char errMsg[30];
+  Serial.print("Unrecognized character: ");
+  Serial.print(c);
+  Serial.print(" ");
+  Serial.print(c, HEX);
+  Serial.print(" ");
+  Serial.println(c, DEC);
+
   snprintf(errMsg, 29, "Character \"%c\" not recognized", c);
   ErrorHandler::reportError(errMsg);
 }

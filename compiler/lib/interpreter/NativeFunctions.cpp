@@ -133,7 +133,12 @@ std::unique_ptr<Values::RuntimeVal> NativeFunctions::playSound(std::vector<std::
     parsedArgs[i] = static_cast<const Values::NumberVal*>(args[i].get())->value;
   }
 
-  padsComm->playSingleSound(parsedArgs[0], parsedArgs[1], parsedArgs[2]);
+  if (parsedArgs[0] == 0) {
+    padsComm->waitWithCancelCheck(parsedArgs[1]);
+  } else {
+    padsComm->playSingleSound(parsedArgs[0], parsedArgs[1], parsedArgs[2]);
+  }
+
 
   return std::make_unique<Values::NullVal>();
 }

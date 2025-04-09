@@ -82,30 +82,31 @@ std::unique_ptr<Values::RuntimeVal> Interpreter::evalWhileStmt(const AstNodes::W
   if (testResult->type != Values::ValueType::Boolean) {
     ErrorHandler::restart("Expected boolean value in while statement condition");
   } else {
-    Environment* childEnv = new Environment(env);
+    
     AstNodes::BlockStmt* whileStmtBody = whileStmt->body.get();
     std::vector<std::unique_ptr<AstNodes::Stmt>>& blockStmtBody = whileStmtBody->body;
     std::unique_ptr<Values::RuntimeVal> result;
 
     while (true) {
+      
       std::unique_ptr<Values::RuntimeVal> testResult = evaluate(whileStmt->test.get(), env);
       if (!static_cast<Values::BooleanVal*>(testResult.get())->value) {
         Serial.println("While test evaluated to false");
         break;
       }
 
+      Environment* childEnv = new Environment(env);
       for (size_t i = 0; i < blockStmtBody.size(); i++) {
         result = evaluate(blockStmtBody[i].get(), childEnv);
 
         if (result->type == Values::ValueType::Break) {
           Serial.println("\"break\" found in \"while\" loop, jumping...");
-          goto afterWhile;
+          delete childEnv;
+          return std::make_unique<Values::NullVal>();
         }
       }
+      delete childEnv;
     }
-afterWhile:
-
-    delete childEnv;
   }
 
   return std::make_unique<Values::NullVal>();

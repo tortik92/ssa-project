@@ -12,10 +12,70 @@
 PadsComm *padsComm = PadsComm::getInstance();
 BLEComm *btComm = BLEComm::getInstance();
 
-Parser parser;
-Interpreter interpreter;
-
 uint8_t activePadCount = 0;
+
+typedef struct GameConfig {
+  String name = "";
+  String uid = "0";
+  uint8_t numberOfPads = 0;
+  bool endless = false;
+  String soundType = "";
+} GameConfig;
+
+GameConfig gameConfig;
+
+void parseKeyValuePair(String pair) {
+  Serial.println("parseKeyValuePair");
+  // Find the position of the '=' symbol
+  int equalsIdx = pair.indexOf('=');
+  if (equalsIdx == -1) {
+    return;  // Invalid key-value pair, skip it
+  }
+
+  String key = pair.substring(0, equalsIdx);
+  String value = pair.substring(equalsIdx + 1);
+
+  // Trim leading and trailing spaces
+  key.trim();
+  value.trim();
+
+  // Handle each key-value pair and assign values to the gameConfig structure
+  if (key.equals("name")) {
+    gameConfig.name = value;
+  } else if (key.equals("uid")) {
+    gameConfig.uid = value;
+  } else if (key.equals("Number of Pads:")) {
+    gameConfig.numberOfPads = value.toInt();
+  } else if (key.equals("Endless?")) {
+    gameConfig.endless = (value == "true");
+  } else if (key.equals("Sound type:")) {
+    gameConfig.soundType = value;
+  }
+}
+
+void parseConfig(String configString) {
+  // Split the string by semicolons to get each key-value pair
+  int startIdx = 0;
+  int endIdx = configString.indexOf(';');
+
+  Serial.print("\"");
+  Serial.print(configString);
+  Serial.println("\"");
+
+  while (endIdx != -1) {
+    String pair = configString.substring(startIdx, endIdx);
+    Serial.print("Pair: ");
+    Serial.println(pair);
+    parseKeyValuePair(pair);
+
+    startIdx = endIdx + 1;
+    endIdx = configString.indexOf(';', startIdx);
+  }
+
+  // Parse the last pair (after the final semicolon)
+  String lastPair = configString.substring(startIdx);
+  parseKeyValuePair(lastPair);
+}
 
 // callback functions
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -119,7 +179,7 @@ void loop() {
 
             while (true) {
               // select random pad and deactivate for next round
-              while (selectedPad == selectedLastRound) {  
+              while (selectedPad == selectedLastRound) {
                 selectedPad = random(padsCount);
               }
               selectedLastRound = selectedPad;
@@ -129,7 +189,7 @@ void loop() {
               // wait a bit to avoid confusion
               padsComm->waitWithCancelCheck(1000);
 
-              // play tone on correct pad 
+              // play tone on correct pad
               padsComm->playSingleSound(soundsArray[selectedPad], 1000, selectedPad);
               Serial.println("Played correct sound once");
 
@@ -191,28 +251,27 @@ void loop() {
         {
           Serial.println("Reaktion start");
 
-          while(true) {
+          while (true) {
             // countdown
             padsComm->play8Sounds(countdownTones, countdownLen);
-            padsComm->waitWithCancelCheck(random(2000, 5000)); // wait between 2-5 seconds
-            padsComm->playSingleSound(880, 250); // starting signal (JUMP ON PAD AS FAST AS POSSIBLE)
+            padsComm->waitWithCancelCheck(random(2000, 5000));  // wait between 2-5 seconds
+            padsComm->playSingleSound(880, 250);                // starting signal (JUMP ON PAD AS FAST AS POSSIBLE)
             std::variant<int, PadsComm::WaitResult> firstOccupiedIndex = padsComm->waitForPlayerOnAnyPad();
 
             if (std::holds_alternative<PadsComm::WaitResult>(firstOccupiedIndex)) {
-              switch (std::get<PadsComm::WaitResult>(firstOccupiedIndex))
-              {
-              case PadsComm::WaitResult::Timeout:
-                Serial.println("No pad occupied, returning...");
-                break;
-              case PadsComm::WaitResult::UserAbort:
-                Serial.println("User aborted, returning...");
-                break;
-              case PadsComm::WaitResult::PadMsgDeliveryError:
-                Serial.println("Error occurred sending message to pad, returning...");
-                break;
-              case PadsComm::WaitResult::PadOccupied:
-                Serial.println("Pad occupied, but no index returned (should not happen), returning...");
-                break;
+              switch (std::get<PadsComm::WaitResult>(firstOccupiedIndex)) {
+                case PadsComm::WaitResult::Timeout:
+                  Serial.println("No pad occupied, returning...");
+                  break;
+                case PadsComm::WaitResult::UserAbort:
+                  Serial.println("User aborted, returning...");
+                  break;
+                case PadsComm::WaitResult::PadMsgDeliveryError:
+                  Serial.println("Error occurred sending message to pad, returning...");
+                  break;
+                case PadsComm::WaitResult::PadOccupied:
+                  Serial.println("Pad occupied, but no index returned (should not happen), returning...");
+                  break;
               }
               padsComm->playLoserJingle();
               break;
@@ -220,40 +279,64 @@ void loop() {
               padsComm->playCorrectActionJingle(std::get<int>(firstOccupiedIndex));
               padsComm->waitWithCancelCheck(1000);
             }
-            
           }
           Serial.println("Reaktion End");
           break;
         }
       case phoneInput_interpret:
         {
+          Parser parser;
+          Interpreter interpreter;
           Environment env;
+          bool configProvided = false;
+          String code;
           Serial.println("\nReady to interpret!");
 
           while (true) {
-            if (Serial.available()) {
-              // if (btComm->hasUnreadBytes()) { String code = btComm->readCode();
-              String code = Serial.readStringUntil('\n');
+            if (btComm->hasUnreadBytes()) {
 
-              /* if (code.startsWith("AT") || code.startsWith("OK")) {
+              String currentInput = btComm->readCode();
+
+              if (currentInput.startsWith("AT") || currentInput.startsWith("OK")) {
                 Serial.print("Got HC-05 code ");
-                Serial.println(code);
-                if (code.equals("OK+LOST")) {
-                  return;
+                Serial.println(currentInput);
+                if (currentInput.equals("OK+LOST")) {
+                  Serial.println("Exiting interpreter...");
+                  break;
                 }
                 continue;
-              }*/
+              }
 
-              if (code.equalsIgnoreCase("exit")) {
+              if (currentInput.equalsIgnoreCase("exit")) {
                 break;
               }
 
               Serial.println("Got string: ");
-              Serial.println(code);
+              Serial.println(currentInput);
 
-              char *code_cstr = new char[code.length() + 1];
-              code.toCharArray(code_cstr, code.length() + 1, 0);
-              AstNodes::Program *program = parser.produceAST(code_cstr, code.length() + 1);
+              if (!configProvided) {
+                Serial.println("Setting gameConfig...");
+                parseConfig(currentInput);
+                Serial.println("Parsed config");
+                currentInput = "";
+                configProvided = true;
+                continue;
+              }
+
+              Serial.println("Parsing code...");
+
+              if (!currentInput.endsWith("EOF")) {
+                Serial.println("Code not finished yet, waiting for EOF...");
+                code += currentInput;
+                continue;
+              } else {
+                currentInput.remove(currentInput.length() - 3);  // remove EOF
+                Serial.println("Code finished, removing EOF...");
+              }
+
+              char *code_cstr = new char[currentInput.length() + 1];
+              currentInput.toCharArray(code_cstr, currentInput.length() + 1, 0);
+              AstNodes::Program *program = parser.produceAST(code_cstr, currentInput.length() + 1);
               yield();
               parser.printAST(program);
               yield();
@@ -261,10 +344,17 @@ void loop() {
 
               delete[] code_cstr;
 
-              ErrorHandler::printMemoryStats("after program");
+              break;
             }
           }
 
+          gameConfig.uid = "0";
+          gameConfig.name = "";
+          gameConfig.numberOfPads = 0;
+          gameConfig.endless = false;
+          gameConfig.soundType = "";
+
+          btComm->sendGameEnded();
           Serial.println("Exiting...");
         }
         break;

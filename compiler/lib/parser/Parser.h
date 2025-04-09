@@ -16,10 +16,6 @@
  */
 class Parser {
 public:
-  /**
-   * @brief Constructor for the Parser class.
-   * @param lexer A pointer to the Lexer used for tokenizing the source code.
-   */
   Parser() {
     this->lexer = new Lexer();
   }
@@ -46,24 +42,127 @@ private:
   Lexer* lexer;                    /**< The lexer used for tokenizing the input */
   std::queue<Lexer::Token> tokens; /**< A queue of tokens to be processed */
 
-  // Parsing functions for different types of statements and expressions
+  /**
+   * @brief Parses a statement from the token stream.
+   * @return A unique pointer to the parsed statement.
+   */
   std::unique_ptr<AstNodes::Stmt> parseStmt();
+
+  /**
+   * @brief Parses an expression from the token stream.
+   * @return A unique pointer to the parsed expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseExpr();
+
+  /**
+   * @brief Parses a variable declaration statement.
+   * @return A unique pointer to the parsed variable declaration.
+   */
   std::unique_ptr<AstNodes::VarDeclaration> parseVarDeclaration();
+
+  /**
+   * @brief Parses an if statement.
+   * @return A unique pointer to the parsed if statement.
+   */
   std::unique_ptr<AstNodes::IfStmt> parseIfStmt();
+
+  /**
+   * @brief Parses a while statement.
+   * @return A unique pointer to the parsed while statement.
+   */
   std::unique_ptr<AstNodes::WhileStmt> parseWhileStmt();
+
+  /**
+   * @brief Parses a break statement.
+   * @return A unique pointer to the parsed break statement.
+   */
   std::unique_ptr<AstNodes::BreakStmt> parseBreakStmt();
+
+  /**
+   * @brief Parses a block statement.
+   * @return A unique pointer to the parsed block statement.
+   */
   std::unique_ptr<AstNodes::BlockStmt> parseBlockStmt();
+
+  /**
+   * @brief Parses a logical expression.
+   * Examples include 'a and b' or 'x or y'.
+   * @return A unique pointer to the parsed logical expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseLogicalExpr();
+
+  /**
+   * @brief Parses a relational expression.
+   * Examples of relational expressions include '<', '<=', '>', '>=', '==', and '!='.
+   * @return A unique pointer to the parsed relational expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseRelationalExpr();
+
+  /**
+   * @brief Parses an assignment expression.
+   * @return A unique pointer to the parsed assignment expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseAssignmentExpr();
+
+  /**
+   * @brief Parses an object expression.
+   * @return A unique pointer to the parsed object expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseObjectExpr();
+
+  /**
+   * @brief Parses an array expression.
+   * @return A unique pointer to the parsed array expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseArrayExpr();
+
+  /**
+   * @brief Parses an additive expression (e.g., addition and subtraction).
+   * 
+   * Examples include 'a + b' or 'x - y'.
+   * 
+   * @return A unique pointer to the parsed additive expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseAdditiveExpr();
+
+  /**
+   * @brief Parses a multiplicative expression (e.g., multiplication, division, and modulo).
+   * 
+   * Examples include 'a * b', 'x / y', or 'z % 2'.
+   * 
+   * @return A unique pointer to the parsed multiplicative expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseMultiplicativeExpr();
+
+  /**
+   * @brief Parses a call or member expression.
+   * @return A unique pointer to the parsed call or member expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseCallMemberExpr();
+
+  /**
+   * @brief Parses a function call expression.
+   * @param caller A unique pointer to the caller expression.
+   * @return A unique pointer to the parsed call expression.
+   */
   std::unique_ptr<AstNodes::CallExpr> parseCallExpr(std::unique_ptr<AstNodes::Expr>&& caller);
+
+  /**
+   * @brief Parses a member expression.
+   * 
+   * Examples include 'object.property' or 'array[index]'.
+   * 
+   * @return A unique pointer to the parsed member expression.
+   */
   std::unique_ptr<AstNodes::Expr> parseMemberExpr();
+
+  /**
+   * @brief Parses a primary expression (e.g., literals, identifiers, or grouped expressions).
+   * 
+   * Examples include '42', '"hello"', or '(a + b)'.
+   * 
+   * @return A unique pointer to the parsed primary expression.
+   */
   std::unique_ptr<AstNodes::Expr> parsePrimaryExpr();
 
   /**

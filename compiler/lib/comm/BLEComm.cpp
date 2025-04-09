@@ -13,3 +13,7 @@ uint8_t BLEComm::readByte() {
 String BLEComm::readCode() {
   return BTserial.readStringUntil('\n');
 }
+
+void BLEComm::sendGameEnded() {
+  BTserial.print(phoneOutput_gameEnded);
+}

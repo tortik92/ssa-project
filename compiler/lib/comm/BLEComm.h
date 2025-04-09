@@ -3,6 +3,8 @@
 #include <ESP8266WiFi.h>
 #include <SoftwareSerial.h>
 
+#include "Constants.h"
+
 /**
  * @class BLEComm
  * @brief Handles Bluetooth communication for the central module using SoftwareSerial.
@@ -54,6 +56,8 @@ public:
    * @return A string containing the received command or data.
    */
   String readCode();
+
+  void sendGameEnded();
 
 private:
   static BLEComm* instance;  ///< Singleton instance of BLEComm.

@@ -11,6 +11,8 @@ const uint8_t phoneInput_gameSelection_Reaktion = 0x11;
 const uint8_t phoneInput_interpret = 0x14;
 const uint8_t phoneInput_cancel = 0xFF;
 
+const uint8_t phoneOutput_gameEnded = 0xEE;
+
 // PadsComm I/0
 const uint8_t anyPad = UINT8_MAX;
 

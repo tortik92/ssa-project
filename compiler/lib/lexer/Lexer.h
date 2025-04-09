@@ -159,8 +159,6 @@ public:
   std::queue<Token> tokenize(char* code, size_t len);
 
 private:
-  std::queue<Token> tokens;  ///< A queue to hold the tokens generated during tokenization
-
   /**
    * @brief Array of known keywords and their corresponding token types.
    */
@@ -184,7 +182,7 @@ private:
    * This method creates a token from the given `src` and `tokenType` and adds it
    * to the `tokens` queue. If the queue is full, it triggers an error.
    */
-  void addToken(const char* src, size_t srcLen, TokenType tokenType);
+  void addToken(const char* src, size_t srcLen, TokenType tokenType, std::queue<Token>& tokens);
 
   void unrecognizedCharacter(char c);
 };

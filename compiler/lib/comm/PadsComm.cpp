@@ -17,9 +17,10 @@ PadsComm::WaitResult PadsComm::playSingleSound(const int soundVal, const int sou
 
   if(waitWithCancelCheck(soundLenMs)) {
     cancelCurrentPadsOperation(padOutput_cancelPlaySound);
+    return WaitResult::UserAbort;
   }
 
-  return waitWithCancelCheck(soundLenMs) ? WaitResult::UserAbort : WaitResult::Timeout;
+  return WaitResult::Timeout;
 }
 
 PadsComm::WaitResult PadsComm::play8Sounds(const int soundVal[paramLen], const int soundLenMs[paramLen], uint8_t padIndex) {
