@@ -1,0 +1,1263 @@
+
+/* Hier setzen wir grundlegende Styles für alle Elemente */
+* {
+    margin: 0; /* Entfernt den Standard-Margin */
+    padding: 0; /* Entfernt den Standard-Padding */
+    box-sizing: border-box; /* Stellt sicher, dass Padding und Border in die Gesamtbreite und -höhe einfließen */
+}
+
+/* Allgemeine Styles für den Body */
+body {
+    font-family: Arial, sans-serif; /* Setzt die Schriftart auf Arial */
+    line-height: 1.6; /* Zeilenhöhe für bessere Lesbarkeit */
+    margin: 0; /* Entfernt den Standard-Margin des Body */
+    padding: 0; /* Entfernt den Standard-Padding des Body */
+    background-color: #f4f4f4; /* Setzt den Hintergrund auf ein helles Grau */
+    font-size: 2rem; /* Setzt die Schriftgröße auf 2rem für bessere Lesbarkeit */
+}
+
+/* Styles für die Toolbar */
+.toolbar {
+    display: flex; /* Nutzt Flexbox, um die Elemente nebeneinander zu platzieren */
+    align-items: center; /* Zentriert die Items vertikal */
+    justify-content: space-between; /* Verteilt den Platz gleichmäßig zwischen den Items */
+    background-color: #fff; /* Setzt den Hintergrund auf Weiß */
+    padding: 10px 20px; /* Fügt Padding um die Toolbar herum hinzu */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Fügt einen leichten Schatten hinzu */
+    transition: background-color 0.3s, color 0.3s; /* Sanfte Übergänge für Farbänderungen */
+}
+
+/* Groupiert die Icons in der Toolbar */
+.icon-group {
+    display: flex; /* Nutzt Flexbox, um Icons nebeneinander zu platzieren */
+    align-items: center; /* Zentriert die Icons vertikal */
+    gap: 10px; /* Fügt Abstand zwischen den Icons hinzu */
+}
+
+/* Styling für jedes Icon */
+.icon {
+    width: 40px; /* Setzt die Breite der Icons */
+    height: 40px; /* Setzt die Höhe der Icons */
+    border-radius: 50%; /* Macht das Icon rund */
+    display: inline-flex; /* Macht das Icon zu einem Flex-Container */
+    justify-content: center; /* Zentriert das Icon */
+    align-items: center; /* Zentriert das Icon */
+    background-color: white; /* Setzt den Hintergrund des Icons auf Weiß */
+    border: 3px solid black; /* Fügt einen schwarzen Rand hinzu */
+    cursor: pointer; /* Zeigt an, dass das Icon klickbar ist */
+    position: relative; /* Ermöglicht es uns, das Checkmark im Icon zu positionieren */
+    transition: background-color 0.3s, color 0.3s, border 0.3s; /* Sanfte Übergänge für Farben und Border */
+}
+
+/* Wenn das Icon aktiv ist */
+.icon.active {
+    color: white; /* Setzt die Textfarbe auf Weiß */
+}
+
+/* Styling für die verschiedenen Checkmark-Farben, die je nach Icon geändert werden */
+.icon.active.color-active::after {
+    content: '\2714'; /* Das ist das Unicode-Zeichen für ein Häkchen */
+    position: absolute; /* Positioniert das Häkchen relativ zum Icon */
+    color: white; /* Setzt die Farbe des Häkchens auf Weiß */
+    font-size: 14px; /* Macht das Häkchen kleiner */
+}
+
+.icon.yellow.color-active::after {
+    color: black; /* Setzt die Farbe des Häkchens auf Schwarz, wenn das Icon Gelb ist */
+}
+
+.icon.yellow-inverse.color-active::after {
+    color: gold; /* Setzt die Farbe des Häkchens auf Gold, wenn das Icon Gelb-Inverse ist */
+}
+
+.icon.blue.color-active::after {
+    color: white; /* Setzt die Farbe des Häkchens auf Weiß, wenn das Icon Blau ist */
+}
+
+.icon.white.color-active::after {
+    color: blue; /* Setzt die Farbe des Häkchens auf Blau, wenn das Icon Weiß ist */
+}
+
+/* Styling für verschiedene Farbschemen der Icons */
+.icon.yellow {
+    background-color: gold; /* Setzt den Hintergrund des Icons auf Gold */
+    border: 3px solid black; /* Setzt einen schwarzen Rand um das Icon */
+}
+
+.icon.yellow-inverse {
+    background-color: black; /* Setzt den Hintergrund des Icons auf Schwarz */
+    border: 3px solid gold; /* Setzt einen goldenen Rand um das Icon */
+}
+
+.icon.blue {
+    background-color: blue; /* Setzt den Hintergrund des Icons auf Blau */
+    border: 3px solid white; /* Setzt einen weißen Rand um das Icon */
+}
+
+.icon.white {
+    background-color: white; /* Setzt den Hintergrund des Icons auf Weiß */
+    border: 3px solid blue; /* Setzt einen blauen Rand um das Icon */
+}
+
+/* Styling für bestimmte Buttons */
+#btn-minus {
+    font-size: 1.5rem; /* Setzt die Schriftgröße für den Minus-Button */
+}
+
+#btn-a {
+    font-size: 2rem; /* Setzt die Schriftgröße für den A-Button */
+    font-weight: bold; /* Setzt die Schrift fett */
+    color: black; /* Setzt die Schriftfarbe auf Schwarz */
+}
+
+#btn-plus {
+    font-size: 2.5rem; /* Setzt die Schriftgröße für den Plus-Button */
+    color: black; /* Setzt die Schriftfarbe auf Schwarz */
+}
+
+/* Styling für den Slash */
+#slash {
+    color: black; /* Setzt die Farbe für das Slash-Symbol auf Schwarz */
+}
+
+/* Styling für normale Icons */
+.icon.normal {
+    background-color: black; /* Setzt den Hintergrund des normalen Icons auf Schwarz */
+    border: 3px solid white; /* Setzt einen weißen Rand um das normale Icon */
+}
+
+/* Ein Layout für die Sprachumschaltung */
+.language-switch {
+    display: flex; /* Nutzt Flexbox, um die Sprachbuttons nebeneinander zu platzieren */
+    align-items: center; /* Zentriert die Items vertikal */
+    gap: 10px; /* Fügt Abstand zwischen den Buttons hinzu */
+}
+
+/* Wenn der Sprachumschalter aktiv ist */
+.language-switch.active {
+    font-weight: bold; /* Macht den Text fett */
+    font-size: 20px; /* Setzt die Schriftgröße auf 20px */
+}
+
+/* Styling für jedes Sprachelement */
+.language {
+    cursor: pointer; /* Zeigt an, dass das Sprachelement klickbar ist */
+    font-size: 1rem; /* Setzt die Schriftgröße auf 1rem */
+    position: relative; /* Positioniert das Sprachelement relativ */
+    transition: color 0.3s, font-weight 0.3s; /* Sanfter Übergang für Farben und Schriftgewicht */
+}
+
+/* Leere Klasse für Antworten (aktuell ungenutzt) */
+.answer {
+    /* Keine Styles definiert, könnte später benutzt werden */
+}
+
+/* Styles für die Liste der Support-Boxen */
+.support-box-list {
+    display: grid; /* Nutzt Grid, um die Boxen anzuordnen */
+    grid-template-columns: repeat(3, minmax(160px, 1fr)); /* 3 Spalten für größere Bildschirme */
+    gap: 10px; /* Fügt Abstand zwischen den Boxen hinzu */
+    padding: 20px; /* Fügt Padding um die Boxenliste hinzu */
+    border-radius: 12px; /* Rundet die Ecken der Boxenliste ab */
+    margin: 0 auto; /* Zentriert die Boxenliste horizontal */
+    max-width: 1200px; /* Maximale Breite für die Boxenliste */
+    margin-top: 100px; /* Fügt einen Abstand oben hinzu */
+    margin-bottom: 20px; /* Fügt einen Abstand unten hinzu */
+    align-items: center; /* Zentriert die Boxen vertikal */
+
+}
+
+/* Styling für jede einzelne Support-Box */
+.support-box {
+    background: white; /* Setzt den Hintergrund der Box auf Weiß */
+    padding: 15px 20px; /* Fügt Padding um den Inhalt der Box hinzu */
+    border-radius: 5px; /* Rundet die Ecken der Box ab */
+    box-shadow: 0px 5px 8px rgba(0, 0, 0, 0.12); /* Fügt einen Schatten hinzu */
+    display: flex; /* Macht die Box zu einem Flex-Container */
+    flex-direction: column; /* Stellt sicher, dass die Box-Inhalte untereinander angeordnet sind */
+    align-items: center; /* Zentriert die Inhalte horizontal */
+    justify-content: center; /* Zentriert die Inhalte vertikal */
+    text-align: center; /* Setzt den Text in der Box zentriert */
+    transition: transform 0.3s ease-in-out; /* Sanfter Übergang für die Animation */
+    cursor: pointer; /* Zeigt an, dass die Box klickbar ist */
+    font-weight: bold; /* Macht den Text fett */
+    border: 3px solid black; /* Fügt einen schwarzen Rand hinzu */
+}
+
+/* Hover-Effekt für die Boxen */
+.support-box:hover {
+    background: #e0e0e0; /* Verändert den Hintergrund beim Hover */
+}
+
+/* Styling für die untere Reihe der Boxen auf kleinen Bildschirmen */
+.bottom-row {
+    display: flex; /* Nutzt Flexbox für die untere Reihe */
+    justify-content: center; /* Zentriert die Boxen */
+    gap: 10px; /* Fügt Abstand zwischen den Boxen hinzu */
+    grid-column: span 3; /* Die untere Reihe nimmt alle 3 Spalten ein */
+    margin-top: 10px; /* Fügt Abstand oben hinzu */
+}
+/* Styling für verschiedene Sprachfarben */
+.language.yellow {
+    color: gold; /* Setzt die Textfarbe auf Gold für das gelbe Sprach-Design */
+}
+.language.yellow-inverse {
+    color: gold; /* Auch hier wird die Farbe auf Gold gesetzt für das Inverse Gelb */
+}
+
+.language.blue {
+    color: blue; /* Setzt die Textfarbe auf Blau für das blaue Sprach-Design */
+}
+
+.language.white {
+    color: white; /* Setzt die Textfarbe auf Weiß für das weiße Sprach-Design */
+}
+
+/* Hover-Effekt für Sprach-Links */
+.language:hover {
+    opacity: 0.7; /* Macht den Text etwas transparenter, wenn man mit der Maus darüber geht */
+    font-weight: bold; /* Macht den Text fett, wenn man mit der Maus darüber fährt */
+    font-size: 20px; /* Vergrößert die Schriftgröße, wenn man mit der Maus darüber fährt */
+}
+
+/* Styling für Social Media-Icons */
+.social {
+    margin-left: 10px; /* Fügt einen kleinen Abstand auf der linken Seite hinzu */
+    color: #3b5998; /* Standardfarbe für den Social Media-Link (Facebook Blau) */
+    font-size: 16px; /* Setzt die Schriftgröße für das Social Media Icon */
+    cursor: pointer; /* Zeigt an, dass das Icon klickbar ist */
+}
+
+/* Styling für Social Media Bilder */
+.social-image {
+    width: 30px; /* Setzt die Breite des Icons auf 30px */
+    height: 30px; /* Setzt die Höhe des Icons auf 30px */
+    display: inline-flex; /* Zeigt das Icon als Flex-Element */
+    justify-content: center; /* Zentriert das Icon */
+    align-items: center; /* Zentriert das Icon */
+    cursor: pointer; /* Zeigt an, dass das Icon klickbar ist */
+    position: relative; /* Positioniert das Icon relativ, um später mit dem Hover-Effekt zu arbeiten */
+    transition: background-color 0.3s, color 0.3s, border 0.3s; /* Sanfte Übergänge für den Hover-Effekt */
+}
+
+/* Hover-Effekt für Social Media Icons */
+.social:hover {
+    color: #2d4373; /* Verändert die Farbe des Icons auf einen dunkleren Farbton, wenn man mit der Maus darüber fährt */
+}
+
+/* Content-Bereich */
+.content {
+    padding: 20px; /* Fügt einen Abstand rund um den Inhalt hinzu */
+    font-size: inherit; /* Setzt die Schriftgröße auf die gleiche wie im Body */
+}
+
+/* Chatbot-Antwortbereich */
+#response {
+    margin-top: 20px; /* Fügt Abstand oben hinzu */
+    padding: 10px; /* Fügt Padding um die Antwort hinzu */
+    min-height: 50px; /* Setzt eine minimale Höhe für die Antwort */
+}
+
+#response h3 {
+    color: #333; /* Setzt die Textfarbe für die Antwortüberschrift */
+    font-size: 1.2em; /* Setzt die Schriftgröße der Antwortüberschrift */
+}
+
+#response strong {
+    color: #d9534f; /* Setzt die Textfarbe für den hervorgehobenen Text auf Rot */
+}
+
+#response ul {
+    padding-left: 20px; /* Fügt einen linken Abstand für die Listenelemente hinzu */
+}
+
+#response li {
+    margin-bottom: 5px; /* Fügt einen Abstand unter jedem Listenelement hinzu */
+}
+
+/* Formular für die Eingabe des Benutzers */
+.form-group {
+    margin-top: 10px; /* Fügt Abstand oben hinzu */
+    width: 100%; /* Setzt die Breite des Formulars auf 100% */
+}
+
+/* Container für das Eingabefeld und die Buttons */
+.input-container {
+    display: flex; /* Nutzt Flexbox, um Eingabefeld und Buttons nebeneinander anzuordnen */
+    justify-content: flex-end; /* Richtet die Elemente am rechten Rand aus */
+    align-items: center; /* Zentriert die Elemente vertikal */
+    width: 100%; /* Setzt die Breite des Containers auf 100% */
+}
+
+/* Styling für das Eingabefeld */
+.input-container .form-control {
+    flex: 1; /* Das Eingabefeld füllt den verfügbaren Platz aus */
+    margin-right: 10px; /* Fügt einen Abstand nach rechts hinzu */
+}
+
+/* Styling für die Buttons */
+.input-container .btn {
+    margin-left: 10px; /* Fügt einen Abstand nach links zwischen den Buttons hinzu */
+    display: flex; /* Nutzt Flexbox für den Button */
+    align-items: center; /* Zentriert die Buttons vertikal */
+    padding: 10px 20px; /* Fügt Padding in den Buttons hinzu */
+    line-height: 1; /* Setzt die Höhe des Textes im Button */
+}
+
+/* Switch Container für den Toggle-Schalter */
+.switch-container {
+    display: flex; /* Nutzt Flexbox für die Anordnung */
+    align-items: center; /* Zentriert die Elemente vertikal */
+    gap: 10px; /* Fügt einen Abstand zwischen den Elementen hinzu */
+    font-family: Arial, sans-serif; /* Setzt die Schriftart */
+    font-size: 2rem; /* Setzt die Schriftgröße */
+}
+
+/* Label für den Toggle-Schalter */
+.switch-container label {
+    font-size: 2rem; /* Setzt die Schriftgröße des Labels */
+}
+
+/* Styling für den Toggle-Schalter */
+.switch {
+    position: relative; /* Ermöglicht die Positionierung des Schaltflächen-Teils */
+    display: inline-block; /* Zeigt den Schalter als Block */
+    width: 60px; /* Setzt die Breite des Schalters */
+    height: 34px; /* Setzt die Höhe des Schalters */
+}
+
+.switch input {
+    opacity: 0; /* Macht das Eingabefeld unsichtbar */
+    width: 0; /* Setzt die Breite auf 0 */
+    height: 0; /* Setzt die Höhe auf 0 */
+}
+
+/* Der Slider (der Schieberegler) */
+.slider {
+    position: absolute; /* Positioniert den Slider relativ zum Container */
+    cursor: pointer; /* Zeigt den Cursor als Hand bei Hover */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc; /* Hintergrundfarbe des Schalters */
+    transition: 0.4s; /* Sanfter Übergang für die Hintergrundfarbe */
+    border-radius: 34px; /* Rundet die Ecken des Schalters ab */
+}
+
+/* Das kleine runde Element, das auf dem Slider bewegt wird */
+.slider:before {
+    position: absolute; /* Positioniert den kleinen Kreis im Slider */
+    content: ""; /* Leert den Inhalt */
+    height: 26px; /* Setzt die Höhe des kleinen Kreises */
+    width: 26px; /* Setzt die Breite des kleinen Kreises */
+    left: 4px; /* Positioniert den Kreis auf der linken Seite */
+    bottom: 4px; /* Positioniert den Kreis auf der unteren Seite */
+    background-color: white; /* Hintergrund des kleinen Kreises */
+    transition: 0.4s; /* Sanfter Übergang für die Bewegung */
+    border-radius: 50%; /* Macht den Kreis rund */
+}
+
+/* Wenn der Schalter aktiviert (checked) ist */
+input:checked + .slider {
+    background-color: #4CAF50; /* Ändert die Farbe des Schalters zu Grün */
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px); /* Bewegt den kleinen Kreis nach rechts */
+}
+
+/* Styling für das Benutzer-Eingabefeld */
+#userInput {
+    font-size: 2rem; /* Setzt die Schriftgröße für das Eingabefeld */
+    padding: 10px; /* Fügt Padding im Eingabefeld hinzu */
+    width: 60%; /* Setzt die Breite des Eingabefeldes auf 60% */
+    margin-right: 10px; /* Fügt Abstand nach rechts hinzu */
+    border-radius: 5px; /* Rundet die Ecken des Eingabefeldes ab */
+}
+
+/* Styling für die Buttons neben dem Eingabefeld */
+button {
+    font-size: 1.5rem; /* Setzt die Schriftgröße der Buttons */
+    padding: 12px 20px; /* Fügt Padding in den Buttons hinzu */
+    border-radius: 5px; /* Rundet die Ecken der Buttons ab */
+    margin-left: 10px; /* Fügt Abstand nach links zwischen den Buttons hinzu */
+}
+
+/* Spezifische Styling für den Start/Stop-Button */
+#startStopButton {
+    background-color: #007bff; /* Setzt den Hintergrund auf Blau */
+    color: white; /* Setzt die Schriftfarbe auf Weiß */
+    border: none; /* Entfernt den Rand */
+}
+
+#startStopButton:hover {
+    background-color: #0056b3; /* Dunkleres Blau beim Hover */
+}
+
+/* Styling für den Ask!-Button */
+button.btn-success {
+    background-color: #28a745; /* Setzt den Hintergrund auf Grün */
+    color: white; /* Setzt die Schriftfarbe auf Weiß */
+    border: none; /* Entfernt den Rand */
+}
+
+button.btn-success:hover {
+    background-color: #218838; /* Dunkleres Grün beim Hover */
+}
+
+/* Vorlesen-Button Container */
+.switch-container label {
+    font-size: 1.2rem; /* Setzt die Schriftgröße des Labels */
+    margin-right: 10px; /* Fügt Abstand nach rechts hinzu */
+}
+
+.switch-container .switch input {
+    width: 50px; /* Setzt die Breite des Schalters */
+    height: 26px; /* Setzt die Höhe des Schalters */
+}
+
+/* Styling für den Chat-Container */
+#chatContainer {
+    height: 300px; /* Setzt die Höhe des Chat-Bereichs */
+    overflow-y: auto; /* Ermöglicht das Scrollen, wenn der Inhalt größer wird */
+    border: 1px solid #ccc; /* Fügt einen Rand um den Chatbereich hinzu */
+    padding: 10px; /* Fügt Padding im Chatbereich hinzu */
+    display: flex; /* Nutzt Flexbox für die Anordnung der Chat-Inhalte */
+    flex-direction: column; /* Ordnet die Elemente vertikal an */
+    gap: 10px; /* Fügt einen Abstand zwischen den Chat-Nachrichten hinzu */
+    margin-top: 30px; /* Fügt einen Abstand oben hinzu */
+    border-radius: 5px; /* Rundet die Ecken des Chatbereichs ab */
+    background-color: #f9f9f9;/* Setzt den Hintergrund auf ein helles Grau */
+}
+
+
+/* Styling für Chat-Nachrichten */
+.message {
+    padding: 10px; /* Fügt Padding um die Nachrichten hinzu */
+    border-radius: 10px; /* Macht die Ecken der Nachricht rund */
+    max-width: 70%; /* Maximale Breite der Nachricht auf 70% des Containers */
+    word-wrap: break-word; /* Damit lange Wörter umgebrochen werden, wenn sie zu lang sind */
+}
+
+/* Benutzer-Nachricht: wird rechts ausgerichtet */
+.userMessage {
+    align-self: flex-end; /* Stellt sicher, dass die Nachricht rechts erscheint */
+}
+
+/* Chatbot-Nachricht: wird links ausgerichtet */
+.chatbotMessage {
+    align-self: flex-start; /* Stellt sicher, dass die Nachricht links erscheint */
+}
+
+/* Farben für die Navigationselemente */
+.toolbar .language,
+.toolbar .social {
+    color: black; /* Setzt die Farbe auf Schwarz für Sprach- und Social Media-Icons */
+}
+
+/* Navigation-Button: Für den Button, der immer unten rechts sichtbar ist */
+.navigation-button{
+    position: fixed; /* Macht den Button fixiert auf der Seite */
+    bottom: 10px; /* Setzt den Abstand von unten auf 10px */
+    right: 10px; /* Setzt den Abstand von rechts auf 10px */
+    background-color: black; /* Schwarze Hintergrundfarbe */
+    color: white; /* Weiße Schriftfarbe */
+    padding: 10px 15px; /* Padding für den Button */
+    border: 2px solid black; /* Rand um den Button */
+    border-radius: 5px; /* Abgerundete Ecken für den Button */
+    cursor: pointer; /* Zeigt den Mauszeiger als Hand, wenn man darüber fährt */
+    font-size: 2rem; /* Setzt die Schriftgröße auf 2rem */
+    transition: background 0.3s ease; /* Sanfter Übergang, wenn man mit der Maus drüber fährt */
+}
+
+/* Button für die nächste Sprache, der links positioniert ist */
+.next-language {
+    position: absolute; /* Positioniert relativ zur Section */
+    bottom: 10px; /* Setzt den Abstand von unten auf 10px */
+    left: 10px; /* Setzt den Abstand von links auf 10px */
+    background-color: black; /* Schwarze Hintergrundfarbe */
+    color: white; /* Weiße Schriftfarbe */
+    padding: 10px 15px; /* Padding für den Button */
+    border: 2px solid black; /* Rand um den Button */
+    border-radius: 5px; /* Abgerundete Ecken für den Button */
+    cursor: pointer; /* Zeigt den Mauszeiger als Hand, wenn man darüber fährt */
+    font-size: 2rem; /* Setzt die Schriftgröße auf 2rem */
+    transition: background 0.3s ease; /* Sanfter Übergang für die Hintergrundfarbe */
+}
+
+/* Wenn die Sprache aktiv ist, ändert sich die Farbe */
+.toolbar .language.active {
+    color: #f4b400; /* Gelbe Farbe für aktive Sprache */
+}
+
+/* Styling für die Navigation */
+.navigation{
+    display: flex; /* Flexbox-Layout für die Navigation */
+    align-items: center; /* Zentriert die Navigationselemente vertikal */
+    justify-content: space-between; /* Verteilt die Navigationselemente gleichmäßig */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Schatteneffekt für die Navigation */
+    transition: background-color 0.3s, color 0.3s; /* Sanfte Übergänge für die Farben */
+    width: 100%; /* Stellt sicher, dass die Navigation die ganze Breite einnimmt */
+}
+
+nav {
+    min-height: 80px; /* Mindesthöhe für die Navigation */
+    display: flex; /* Flexbox-Layout für die Navigation */
+    justify-content: center; /* Zentriert die Navigation horizontal */
+    align-items: center; /* Zentriert die Navigation vertikal */
+    background-color: black; /* Schwarzer Hintergrund für die Navigation */
+    padding: 20px 100px; /* Padding auf der linken und rechten Seite */
+    position: relative; /* Relativ positioniert, damit der Toggle-Button oben rechts funktioniert */
+    width: 100%; /* Stellt sicher, dass die Navigation die ganze Breite einnimmt */
+    border-bottom: 1px solid white; /* Weißer Rand unten */
+    border-top: 1px solid white; /* Weißer Rand oben */
+}
+
+/* Styling für die Navigations-Links */
+nav ul {
+    display: flex; /* Flexbox für die Links */
+    list-style: none; /* Entfernt die Aufzählungszeichen */
+    align-items: center; /* Zentriert die Links vertikal */
+}
+
+nav ul li {
+    margin-right: 25px; /* Fügt einen Abstand zwischen den Links hinzu */
+}
+
+nav ul li:last-child {
+    margin-right: 0; /* Entfernt den Abstand für den letzten Link */
+}
+
+nav ul li a {
+    text-decoration: none; /* Entfernt die Unterstreichung von Links */
+    font-size:2rem; /* Setzt die Schriftgröße auf 2rem */
+    font-weight: 500; /* Setzt die Schriftstärke */
+    padding: 8px 15px; /* Fügt Padding zum Link hinzu */
+    border-radius: 5px; /* Abgerundete Ecken für die Links */
+}
+
+/* Hover-Effekt für Links in der Navigation */
+nav ul li a:hover {
+    background-color: #555; /* Dunklerer Hintergrund, wenn man mit der Maus über den Link fährt */
+}
+
+/* Button-Styling in der Navigation */
+nav ul li button {
+    text-decoration: none; /* Entfernt die Unterstreichung von Buttons */
+    font-size:2rem; /* Setzt die Schriftgröße auf 2rem */
+    font-weight: 500; /* Setzt die Schriftstärke */
+    padding: 8px 15px; /* Fügt Padding zu den Buttons hinzu */
+    border-radius: 5px; /* Abgerundete Ecken für Buttons */
+    background-color: transparent; /* Transparenten Hintergrund für den Button */
+    border: none; /* Entfernt den Rand des Buttons */
+}
+
+/* Styling für den Toggle-Button (Hamburger Menü) */
+.toggle-button{
+    position: absolute; /* Positioniert den Button relativ zur Navigation */
+    top: 25px; /* Abstand von oben */
+    right: 25px; /* Abstand von rechts */
+    display: none; /* Versteckt den Toggle-Button standardmäßig */
+    flex-direction: column; /* Stapelt die Bars vertikal */
+    justify-content: space-between; /* Platz für die drei Linien */
+    width: 30px; /* Breite des Toggle-Buttons */
+    height: 23px; /* Höhe des Toggle-Buttons */
+}
+
+/* Styling für jede Linie im Toggle-Button */
+.toggle-button .bar{
+    height: 4px; /* Höhe der Linien */
+    width: 100%; /* Setzt die Breite der Linien auf 100% des Containers */
+    background-color: white; /* Weiße Farbe für die Linien */
+    border-radius: 100px; /* Macht die Linien rund */
+}
+
+/* Styling für die Intro-Sektion */
+.intro {
+    display: flex; /* Flexbox für die Anordnung */
+    justify-content: space-between; /* Verteilt die Inhalte gleichmäßig */
+    align-items: center; /* Zentriert die Inhalte vertikal */
+    padding: 50px; /* Fügt Padding hinzu */
+    margin-left: 150px; /* Abstand nach links */
+    color: black; /* Schwarze Schriftfarbe */
+}
+
+/* Styling für die Text-Sektion im Intro */
+.intro-section {
+    flex: 1; /* Lässt die Text-Sektion den verfügbaren Platz ausfüllen */
+    margin-right: 20px; /* Fügt einen Abstand nach rechts hinzu */
+}
+
+/* Styling für den Titel im Intro */
+.intro .content h1 {
+    font-size: 3rem; /* Große Schriftgröße für den Titel */
+    margin-bottom: 15px; /* Abstand unter dem Titel */
+    margin-left: 60px; /* Abstand nach links */
+}
+
+/* Styling für die Liste im Intro */
+.intro .content ul {
+    list-style: none; /* Entfernt die Aufzählungszeichen */
+}
+
+/* Styling für jedes Listenelement im Intro */
+.intro .content ul li {
+    flex: 2; /* Lässt jedes Listenelement den Platz ausfüllen */
+    margin-right: 30px; /* Fügt einen Abstand nach rechts hinzu */
+    text-align: left; /* Text links ausrichten */
+    margin-left: 60px; /* Fügt Abstand nach links hinzu */
+}
+
+/* Styling für das Bild im Intro */
+.intro-image {
+    flex: 1; /* Lässt das Bild den restlichen Platz ausfüllen */
+    max-width: 400px; /* Begrenzung der maximalen Breite des Bildes */
+    display: flex; /* Flexbox für das Bild */
+    justify-content: center; /* Zentriert das Bild */
+}
+
+.intro-image img {
+    max-width: 100%; /* Bild soll die gesamte Breite des Containers einnehmen */
+    height: auto; /* Höhe des Bildes automatisch anpassen */
+    display: block; /* Bild als Block-Element */
+    margin: 0 auto; /* Zentriert das Bild */
+}
+
+/* Styling für die Produkt-Sektion */
+.product-section {
+    color: black; /* Schwarze Schriftfarbe */
+    display: flex; /* Flexbox für die Produkt-Sektion */
+    justify-content: space-between; /* Verteilt die Inhalte gleichmäßig */
+    align-items: flex-start; /* Richtet die Elemente am oberen Rand aus */
+    margin: 50px 50px; /* Fügt Abstand nach oben und unten hinzu */
+    padding: 20px; /* Fügt Padding zum Container hinzu */
+    flex-wrap: wrap; /* Ermöglicht das Umfließen von Elementen */
+    position: relative; /* Positioniert relativ zum Container */
+    border: 2px solid black; /* Schwarzer Rand um die Sektion */
+    border-right: none; /* Kein Rand rechts */
+    border-left: none; /* Kein Rand links */
+    border-bottom: none; /* Kein Rand unten */
+}
+
+/* Styling für den Text im Produktbereich */
+.product-text {
+    flex: 2; /* Lässt den Textbereich den verfügbaren Platz ausfüllen */
+    margin-right: 30px; /* Fügt Abstand nach rechts hinzu */
+    text-align: left; /* Text links ausrichten */
+}
+
+/* Styling für die Überschrift im Produktbereich */
+.product-text h2 {
+    font-size: 4rem; /* Sehr große Schriftgröße für den Titel */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+.product-text h3 {
+    font-size: 4rem; /* Sehr große Schriftgröße für den Titel */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Styling für das Produktbild */
+.product-image {
+    flex: 1; /* Lässt das Bild den restlichen Platz ausfüllen */
+    height: auto; /* Höhe des Bildes automatisch anpassen */
+    max-width: 100%; /* Bild soll die gesamte Breite des Containers einnehmen */
+    object-fit: contain; /* Bild vollständig anzeigen */
+}
+
+.product-image img {
+    width: 100%; /* Setzt die Breite des Bildes auf 100% */
+    border-radius: 15px; /* Abgerundete Ecken für das Bild */
+    object-fit: contain; /* Bild soll vollständig und im richtigen Verhältnis angezeigt werden */
+}
+.product-text p {
+    line-height: 1.6; /* Zeilenabstand für besseren Lesefluss */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* App-Sektion: Abschnitt, der die App-Daten zeigt */
+.app-section{
+    display: flex; /* Flexbox, um die Elemente nebeneinander anzuzeigen */
+    align-items: flex-start; /* Oben ausrichten */
+    justify-content: space-between; /* Platz zwischen den Elementen */
+    gap:10px; /* Abstand zwischen den Elementen */
+    margin: 50px 50px; /* Abstand rund um die Sektion */
+    padding: 20px; /* Innenabstand (Padding) */
+    border: 2px solid black; /* Schwarzer Rand um den Abschnitt */
+    border-right: none; /* Kein Rand rechts */
+    border-left: none; /* Kein Rand links */
+    border-bottom: none; /* Kein Rand unten */
+    color: black; /* Schwarze Textfarbe */
+    position: relative; /* Relativ positioniert für spätere Anpassungen */
+}
+
+/* Textbereich in der App-Sektion */
+.app-text{
+    flex: 2; /* Nimmt den doppelten Platz ein im Vergleich zum Bild */
+    margin-right: 30px; /* Abstand nach rechts */
+    text-align: left; /* Text links ausrichten */
+}
+
+/* Große Überschrift im App-Bereich */
+.app-text h2 {
+    font-size: 4rem; /* Große Schriftgröße */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Unterüberschrift im App-Bereich */
+.app-text h3 {
+    font-size: 4rem; /* Große Schriftgröße */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Text im App-Bereich */
+.app-text p {
+    line-height: 1.6; /* Zeilenabstand für besseren Lesefluss */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Bildbereich in der App-Sektion */
+.app-image {
+    height: auto; /* Höhe des Bildes passt sich automatisch an */
+    border-radius: 10px; /* Abgerundete Ecken für das Bild */
+    object-fit: contain; /* Bild wird vollständig und proportional angezeigt */
+    max-height: 300px; /* Maximale Höhe des Bildes */
+}
+
+/* Bild im App-Bereich */
+.app-image img {
+    width: 100%; /* Bild nimmt 100% der Breite ein */
+    border-radius: 15px; /* Abgerundete Ecken für das Bild */
+    object-fit: cover; /* Bild wird so skaliert, dass es den Container vollständig ausfüllt */
+}
+
+/* Box für Bilder im "Image Box"-Bereich */
+.image-box {
+    grid-template-columns: repeat(2, 1fr); /* Zwei Spalten für das Grid */
+    gap: 15px; /* Abstand zwischen den Bildern */
+    margin: 0 auto; /* Zentriert die Box */
+    padding: 20px; /* Innenabstand für die Box */
+    background-color: #f4f4f4; /* Hintergrundfarbe der Box */
+    border-radius: 8px; /* Abgerundete Ecken für die Box */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Schatten für die Box */
+    flex: 1; /* Flexibilität, um Platz einzunehmen */
+    max-width: 400px; /* Maximale Breite der Box */
+    display: grid; /* Nutzt Grid-Layout für die Bilder */
+    justify-content: center; /* Zentriert den Inhalt */
+    margin-bottom:40px; /* Abstand nach unten */
+}
+
+/* Bildstil in der Image Box */
+.image-box img {
+    max-width: 100%; /* Bild nimmt maximal 100% der Breite ein */
+    height: auto; /* Höhe des Bildes passt sich automatisch an */
+    display: block; /* Bild wird als Block-Element angezeigt */
+    margin: 0 auto; /* Zentriert das Bild */
+    border-radius: 8px; /* Abgerundete Ecken für das Bild */
+    margin-bottom: 20px; /* Abstand unter dem Bild */
+}
+
+/* Abschnitt für "Selbst machen" */
+.selbstmachen-section{
+    display: flex; /* Flexbox für Anordnung der Elemente */
+    position:relative; /* Relativ positioniert für Flexibilität */
+    justify-content: space-between; /* Platz zwischen den Elementen */
+    align-items: flex-start; /* Oben ausrichten */
+    margin: 50px 50px; /* Abstand rund um die Sektion */
+    padding: 20px; /* Innenabstand für die Sektion */
+    flex-wrap: wrap; /* Erlaubt den Umbruch von Elementen */
+    border: 2px solid black; /* Rand um den Bereich */
+    border-right: none; /* Kein Rand rechts */
+    border-left: none; /* Kein Rand links */
+    border-bottom: none; /* Kein Rand unten */
+    color: black; /* Schwarze Schriftfarbe */
+}
+
+/* Textbereich für "Selbst machen"-Sektion */
+.selbstmachen-text {
+    flex: 2; /* Nimmt den doppelten Platz wie das Bild ein */
+    margin-right: 30px; /* Abstand nach rechts */
+    text-align: left; /* Text links ausrichten */
+}
+
+/* Überschrift im "Selbst machen"-Bereich */
+.selbstmachen-text h2 {
+    font-size: 4rem; /* Sehr große Schriftgröße */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Unterüberschrift im "Selbst machen"-Bereich */
+.selbstmachen-text h3 {
+    font-size: 4rem; /* Sehr große Schriftgröße */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Text im "Selbst machen"-Bereich */
+.selbstmachen-text p {
+    line-height: 1.6; /* Zeilenabstand für bessere Lesbarkeit */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Bildbereich im "Selbst machen"-Bereich */
+.selbstmachen-image {
+    flex: 1; /* Nimmt den restlichen Platz ein */
+    max-width: 200px; /* Maximale Breite des Bildes */
+}
+
+/* Bild im "Selbst machen"-Bereich */
+.selbstmachen-image img {
+    width: 100%; /* Bild nimmt 100% der Breite ein */
+    border-radius: 15px; /* Abgerundete Ecken für das Bild */
+    object-fit: cover; /* Bild wird skaliert, um den Container vollständig auszufüllen */
+}
+
+/* Support-Sektion für Hilfebereich */
+.support-section {
+    display: flex; /* Flexbox für die Anordnung */
+    justify-content: space-between; /* Platz zwischen den Elementen */
+    flex-direction: column; /* Vertikale Anordnung der Elemente */
+    align-items: flex-start; /* Oben ausrichten */
+    margin: 50px 50px; /* Abstand rund um die Sektion */
+    padding: 20px; /* Innenabstand für die Sektion */
+    flex-wrap: wrap; /* Erlaubt das Umfließen von Elementen */
+    border: 2px solid black; /* Rand um den Bereich */
+    border-right: none; /* Kein Rand rechts */
+    border-left: none; /* Kein Rand links */
+    position:relative; /* Relativ positioniert für Flexibilität */
+}
+
+/* Textbereich im Support-Bereich */
+.support-text {
+}
+
+/* Überschrift im Support-Bereich */
+.support-text h2 {
+    font-size: 4rem; /* Sehr große Schriftgröße */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Unterüberschrift im Support-Bereich */
+.support-text h3 {
+    font-size: 4rem; /* Sehr große Schriftgröße */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Text im Support-Bereich */
+.support-text p {
+    line-height: 1.6; /* Zeilenabstand für bessere Lesbarkeit */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Bild im Support-Bereich */
+.support-image {
+    flex: 1; /* Nimmt den restlichen Platz ein */
+    height:auto; /* Höhe wird automatisch angepasst */
+    max-width: 100%; /* Bild nimmt maximal 100% der Breite ein */
+    object-fit: contain; /* Bild bleibt proportional */
+}
+
+/* Bildstil im Support-Bereich */
+.support-image img {
+    width: 100%; /* Bild nimmt die gesamte Breite ein */
+    border-radius: 15px; /* Abgerundete Ecken für das Bild */
+    object-fit: contain; /* Bild bleibt proportional */
+}
+
+/* Styling für Themenboxen */
+.topic {
+    margin: 20px 90px; /* Abstand nach oben und unten */
+    padding: 10px; /* Innenabstand für die Box */
+    border-radius: 5px; /* Abgerundete Ecken */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Schatten für die Box */
+}
+
+/* Überschrift in den Themenboxen */
+.topic h3 {
+    margin: 0; /* Kein Abstand oben */
+}
+
+/* Text in den Themenboxen */
+.topic p {
+    margin-top: 10px; /* Abstand nach oben */
+}
+
+/* KI-Box für spezielle Info-Box */
+.ki-box {
+    margin-top: 40px; /* Abstand nach oben */
+    padding: 20px; /* Innenabstand für die Box */
+    background-color: #e9f7ff; /* Helles Blau für den Hintergrund */
+    border: 1px solid #bce0f2; /* Rand in einem hellen Blau */
+    border-radius: 10px; /* Abgerundete Ecken für die Box */
+    text-align: center; /* Zentriert den Text */
+}
+
+/* Überschrift in der KI-Box */
+.ki-box h3 {
+    margin-top: 0; /* Kein Abstand oben */
+    color: #0078d4; /* Blau für die Überschrift */
+}
+
+/* Fragen-Sektion für FAQ-Bereich */
+.fragen-section{
+    width: 90%; /* 90% der Breite */
+    max-width: 800px; /* Maximale Breite auf 800px beschränkt */
+    margin-right: auto; /* Zentriert den Bereich */
+    margin: 50px 50px; /* Abstand rund um die Sektion */
+}
+
+/* Textbereich in der Fragen-Sektion */
+.fragen-text {
+    flex: 2; /* Nimmt den doppelten Platz wie das Bild ein */
+    margin-right: 30px; /* Abstand nach rechts */
+    text-align: left; /* Text links ausrichten */
+}
+
+/* Überschrift in der Fragen-Sektion */
+.fragen-text h2 {
+    font-size: 4rem; /* Sehr große Schriftgröße */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Unterüberschrift in der Fragen-Sektion */
+.fragen-text h3 {
+    font-size: 4rem; /* Sehr große Schriftgröße */
+    margin-bottom: 15px; /* Abstand unter der Überschrift */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Text in der Fragen-Sektion */
+.fragen-text p {
+    line-height: 1.6; /* Zeilenabstand für bessere Lesbarkeit */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Bild im Fragen-Bereich */
+.fragen-image {
+    flex: 1; /* Nimmt den restlichen Platz ein */
+    max-width: 200px; /* Maximale Breite des Bildes */
+}
+/* Stil für das Bild im FAQ-Bereich */
+.fragen-image img {
+    width: 100%; /* Bild nimmt die gesamte Breite ein */
+    border-radius: 15px; /* Abgerundete Ecken für das Bild */
+    object-fit: cover; /* Bild wird so skaliert, dass es den Container ausfüllt, ohne das Bild zu verzerren */
+}
+
+/* Container für die FAQ-Liste */
+.faq-container {
+    width: 90%; /* 90% der Breite */
+    max-width: 800px; /* Maximale Breite auf 800px beschränkt */
+    margin: auto; /* Zentriert den Container */
+}
+
+/* Einzelne FAQ-Elemente */
+.faq-item {
+    border-bottom: 1px solid black; /* Schwarze Linie unten */
+    padding: 10px 0; /* Abstand oben und unten */
+}
+
+/* Button für jede FAQ-Frage */
+.faq-button {
+    width: 100%; /* Button nimmt die ganze Breite ein */
+    text-align: left; /* Text links ausrichten */
+    background: none; /* Kein Hintergrund */
+    border: none; /* Kein Rand */
+    font-weight: bold; /* Fettschrift */
+    cursor: pointer; /* Zeigt den Mauszeiger als Hand an */
+    padding: 10px; /* Innenabstand */
+    display: flex; /* Flexbox für die Anordnung der Elemente */
+    font-size: 2rem; /* Große Schriftgröße */
+    justify-content: space-between; /* Platz zwischen den Elementen */
+    align-items: center; /* Vertikal zentrieren */
+}
+
+/* Spezieller Stil für die erste FAQ-Frage */
+#first-question {
+    border-top: 1px solid black; /* Linie oben */
+}
+
+/* Wenn der FAQ-Button fokussiert wird */
+.faq-button:focus {
+    outline: 2px solid blue; /* Blauer Rahmen um den Button */
+}
+
+/* Stil für das Pluszeichen im FAQ-Button */
+.plus {
+    font-size: 2rem; /* Große Schriftgröße für das Pluszeichen */
+}
+
+/* Antworttext, der standardmäßig ausgeblendet ist */
+.answer {
+    display: none; /* Antwort ist zunächst nicht sichtbar */
+    padding: 10px; /* Innenabstand */
+    font-size: 2rem; /* Große Schriftgröße */
+}
+
+/* Liste der Fragen im FAQ-Bereich */
+.question-list {
+    list-style-type: decimal; /* Nummerierte Liste */
+    margin-bottom: 20px; /* Abstand nach unten */
+}
+
+/* Stil für die einzelnen Fragen in der Liste */
+.question-list li {
+    margin: 20px 90px; /* Abstand oben und unten */
+    cursor: pointer; /* Mauszeiger wird zur Hand */
+    color:black; /* Schwarzer Text */
+}
+
+/* Stil für die Fragen, wenn man mit der Maus darüber fährt */
+.question-list li:hover {
+    text-decoration: underline; /* Unterstreichung, wenn man mit der Maus darüber fährt */
+}
+
+/* Liste für detaillierte Fragen */
+.detailed-list {
+    list-style-type: none; /* Keine Aufzählungszeichen */
+    margin-left: 90px; /* Abstand nach links */
+}
+
+/* Stil für jedes Element in der detaillierten Liste */
+.detailed-list li {
+    margin: 15px 0; /* Abstand oben und unten */
+    padding: 10px; /* Innenabstand */
+    border: 1px solid #ddd; /* Grauer Rand */
+    background-color: #f9f9f9; /* Heller Hintergrund */
+}
+
+/* Abstand oben für Text in der detaillierten Liste */
+.detailed-list li p {
+    margin-top: 10px; /* Abstand nach oben */
+}
+
+/* Stil für den Footer (Rechte) */
+.rights {
+    background-color: black; /* Schwarzer Hintergrund */
+    color: white; /* Weißer Text */
+    text-align: center; /* Zentrierter Text */
+    padding: 20px; /* Innenabstand */
+    bottom: 0; /* Am unteren Rand der Seite */
+    width: 100%; /* Breite 100% */
+    font-size: 2rem; /* Große Schriftgröße */
+    line-height: 1.6; /* Zeilenhöhe für besseren Lesefluss */
+    border: 2px solid black; /* Schwarzer Rand */
+    border-left: none; /* Kein linker Rand */
+    border-bottom: none; /* Kein unterer Rand */
+    border-right: none; /* Kein rechter Rand */
+}
+
+/* Stil für fettgedruckte Wörter */
+b {
+    color: black; /* Schwarze Farbe */
+    font-weight: normal; /* Normales Gewicht */
+    font-size: 22px; /* Schriftgröße 22px */
+    margin-left: 3px; /* Abstand nach links */
+    margin-right: 3px; /* Abstand nach rechts */
+    font-family: sans-serif; /* Sans-Serif Schriftart */
+}
+
+/* Links im Text */
+a {
+    color: white; /* Weiße Farbe für Links */
+}
+
+/* Stil für große Überschriften (h2) */
+h2 {
+    font-size: 4rem; /* Sehr große Schriftgröße */
+}
+
+/* Stil für unsichtbare Texte für Screenreader */
+.sr-only {
+    color:#333; /* Dunkelgrau für Text */
+}
+
+/* Pop-up Container für modale Fenster */
+.popup {
+    display: none; /* Pop-up ist zunächst unsichtbar */
+    position: fixed; /* Feste Position auf dem Bildschirm */
+    top: 50%; /* Zentriert das Pop-up vertikal */
+    left: 50%; /* Zentriert das Pop-up horizontal */
+    transform: translate(-50%, -50%); /* Verschiebt das Pop-up um die Hälfte seiner Größe */
+    width: 400px; /* Breite des Pop-ups */
+    padding: 20px; /* Innenabstand */
+    background-color: white; /* Weißer Hintergrund */
+    border-radius: 10px; /* Abgerundete Ecken */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Schatteneffekt */
+    z-index: 1000; /* Stellt sicher, dass das Pop-up über anderem Inhalt erscheint */
+}
+
+/* Stil für die Überschrift im Pop-up */
+.popup h4 {
+    margin-top: 0; /* Kein Abstand oben */
+}
+
+/* Stil für den Schließen-Button im Pop-up */
+.popup button {
+    display: block; /* Button als Block-Element */
+    margin: 20px auto 0; /* Zentriert den Button */
+    padding: 10px 20px; /* Innenabstand */
+    border: none; /* Kein Rand */
+    background-color: #4CAF50; /* Grüner Hintergrund */
+    color: white; /* Weißer Text */
+    border-radius: 5px; /* Abgerundete Ecken */
+    cursor: pointer; /* Hand-Cursor */
+}
+
+/* Hover-Effekt für den Button im Pop-up */
+.popup button:hover {
+    background-color: #45a049; /* Dunklerer Grünton bei Hover */
+}
+
+/* Styling für Bilder in der Galerie */
+.gallery img {
+    cursor: pointer; /* Zeigt die Hand beim Hovern */
+    margin: 10px; /* Abstand rund um das Bild */
+    border: 3px solid #ddd; /* Grauer Rand um das Bild */
+    border-radius: 8px; /* Abgerundete Ecken */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Sanfte Animationen für Transformation und Schatten */
+}
+
+/* Hover-Effekt für die Bilder in der Galerie */
+.gallery img:hover {
+    transform: scale(1.05); /* Bild wird beim Hovern leicht vergrößert */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Schlagschatten beim Hovern */
+}
+
+/* Modal-Container für die Bilderansicht */
+#myModalImage {
+    display: none; /* Modal ist zunächst unsichtbar */
+    position: fixed; /* Feste Position auf dem Bildschirm */
+    z-index: 1000; /* Modal wird über allem anderen angezeigt */
+    left: 0; /* Ganz links */
+    top: 0; /* Ganz oben */
+    width: 100%; /* Modal nimmt die volle Breite ein */
+    height: 100%; /* Modal nimmt die volle Höhe ein */
+    background-color: rgba(0, 0, 0, 0.9); /* Dunkler Hintergrund */
+    justify-content: center; /* Zentriert den Inhalt */
+    align-items: center; /* Zentriert den Inhalt vertikal */
+}
+
+/* Modal-Inhalt für das Bild */
+.modal-content-image {
+    max-width: 90vw; /* Bild nimmt 90% der Bildschirmbreite */
+    max-height: 90vh; /* Bild nimmt 90% der Bildschirmhöhe */
+    object-fit: contain; /* Bild bleibt proportional */
+    border-radius: 10px; /* Abgerundete Ecken */
+    box-shadow: 0px 4px 15px rgba(255, 255, 255, 0.3); /* Weißer Schatten */
+    transition: transform 0.3s ease-in-out; /* Sanfte Übergänge */
+}
+
+/* Schließen-Button im Bild-Modus */
+.closeBtnImage {
+    position: absolute; /* Absolute Positionierung */
+    top: 20px; /* Abstand vom oberen Rand */
+    right: 30px; /* Abstand vom rechten Rand */
+    font-size: 40px; /* Große Schriftgröße */
+    color: white; /* Weißer Text */
+    cursor: pointer; /* Zeigt Hand-Cursor */
+    transition: transform 0.2s ease-in-out; /* Sanfter Übergang */
+}
+
+/* Hover-Effekt für den Schließen-Button */
+.closeBtnImage:hover {
+    transform: scale(1.2); /* Button wird größer bei Hover */
+    color: red; /* Rote Farbe beim Hovern */
+}
+
+/* Der Modal-Container für den Text */
+.modal-text {
+    display: none; /* Modal ist zunächst unsichtbar */
+    position: fixed; /* Feste Position */
+    z-index: 1; /* Über anderen Inhalten */
+    left: 0; /* Ganz links */
+    top: 0; /* Ganz oben */
+    width: 100%; /* Modal nimmt die volle Breite ein */
+    height: 100%; /* Modal nimmt die volle Höhe ein */
+    background-color: rgba(0, 0, 0, 0.7); /* Dunkler Hintergrund */
+    overflow: auto; /* Ermöglicht Scrollen, wenn der Inhalt zu groß ist */
+}
+
+/* Inhalt des Text-Modals */
+.modal-content-text {
+    background-color: white; /* Weißer Hintergrund */
+    margin: 15% auto; /* Zentriert das Modal */
+    padding: 20px; /* Innenabstand */
+    width: 80%; /* Breite 80% */
+    max-width: 600px; /* Maximale Breite */
+    border-radius: 8px; /* Abgerundete Ecken */
+}
+
+/* Responsives Design für kleinere Bildschirme */
+@media(max-width: 1000px) {
+    .list-container{
+        display: none; /* Versteckt die Liste auf kleinen Bildschirmen */
+        width: 100%; /* Breite 100% */
+    }
+    .toggle-button{
+        display:flex; /* Zeigt den Toggle-Button */
+    }
+    nav{
+        flex-direction: column; /* Anordnung der Navigation in einer Spalte */
+        align-items: flex-start; /* Links ausrichten */
+    }
+    .list-container ul{
+        flex-direction: column; /* Liste wird in einer Spalte angeordnet */
+        width: 100%; /* Breite 100% */
+    }
+    .list-container li{
+        text-align: center; /* Text wird zentriert */
+    }
+
+    .list-container.active{
+        display: flex; /* Zeigt die Liste, wenn sie aktiv ist */
+    }
+    .product-section {
+        flex-direction: column; /* Anordnung der Produktbilder untereinander */
+    }
+
+    .product-image {
+        margin-top: 20px; /* Abstand oben */
+        width: 100%; /* Breite 100% */
+    }
+
+    .product-image img {
+        border-radius: 15px; /* Abgerundete Ecken für das Bild */
+        object-fit: cover; /* Bild bleibt proportional */
+    }
+
+    .image-box {
+        grid-template-columns: 1fr; /* Eine Spalte */
+        flex-direction: column; /* Stapelelemente untereinander */
+    }
+    .app-section{
+        flex-direction: column; /* Stapelelemente untereinander */
+    }
+
+    .support-box-list {
+        grid-template-columns: 1fr; /* Eine Spalte */
+        max-width: 100%; /* Maximale Breite */
+        padding: 10px; /* Innenabstand */
+    }
+
+    .bottom-row {
+        flex-direction: column; /* Stapelelemente untereinander */
+        gap: 10px; /* Abstand zwischen den Elementen */
+        -ms-grid-column-span: 0;
+    }
+
+    @media screen and (max-width: 600px) {
+        .modal-content-image {
+            width: 90%; /* Bild nimmt 90% der Breite */
+            max-height: 70%; /* Maximale Höhe des Bildes */
+        }
+    }
+}
