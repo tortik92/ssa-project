@@ -1,0 +1,35 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/popupElementLayout"
+    android:layout_marginHorizontal="40dp">
+
+    <TextView
+        style="@style/largeTextStyle"
+        android:text="@string/header_quit"
+        android:fontFamily="@font/rubik_bold" />
+
+    <TextView
+        android:id="@+id/popup_text"
+        style="@style/regularTextStyle"
+        android:textAlignment="center"
+        android:text="@string/question_quit" />
+
+    <LinearLayout
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:background="@android:color/transparent"
+        android:layout_marginTop="25dp">
+
+        <Button
+            android:id="@+id/popup_cancel_button"
+            android:text="@string/btn_text_cancel"
+            style="@style/popupBtnLayout"
+            android:layout_marginEnd="40dp"/>
+
+        <Button
+            android:id="@+id/popup_confirmation_button"
+            android:text="@string/btn_text_quit"
+            style="@style/popupBtnLayout"
+            />
+    </LinearLayout>
+</LinearLayout>

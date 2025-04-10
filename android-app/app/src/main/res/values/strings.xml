@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">SoundLeap</string>
+    <string name="code_input_hint">Enter the 6-Digit-Code</string>
+
+    <string name="header_pads_config">Locate pads</string>
+    <string name="header_game_selection">Select a game</string>
+    <string name="header_game_config">Configure game</string>
+    <string name="header_quit">Quit game?</string>
+    <string name="header_info">Information</string>
+
+    <string name="question_quit">Are you sure you want to quit the game?</string>
+
+    <string name="info_game_config">The selected game offers various settings, such as difficulty level and number of players. Adjust these settings according to your preferences before proceeding to the pad configuration. Click \"OK\" to continue, or click \"Back\" to return to the game selection screen.</string>
+    <string name="info_game_selection">Choose a game you’d like to play by selecting one from the displayed list. If you click \"Back\", you will return to the previous login screen. Clicking \"OK\" will take you to the games settings configuration.</string>
+    <string name="info_game_stats">Your game is now running! To pause or quit the game at any time, use the corresponding buttons.</string>
+    <string name="info_login">Enter the 6-digit code found on the pads into the search field to connect the app with the pads. After clicking the \"Connect\" button below the input field, you will be automatically directed to a new screen where you can select the game you want to play.</string>
+    <string name="info_pads_config">To prepare the pads required for the game, click on each pad displayed on the screen. Once all pads are selected and physically ready, click \"Start\" to start the game. If needed, click \"Back\" to return to the game configuration screen.</string>
+
+    <string name="default_selected_text">Selected game: </string>
+
+    <string name="btn_text_back">Back</string>
+    <string name="btn_text_quit">Quit</string>
+    <string name="btn_text_resume">Resume</string>
+    <string name="btn_text_ok">OK</string>
+    <string name="btn_text_pause">Pause</string>
+    <string name="btn_text_stop">Stop</string>
+    <string name="btn_text_start">Start</string>
+    <string name="btn_text_question_mark">\?</string>
+    <string name="btn_text_cancel">Cancel</string>
+    <string name="btn_text_connect">Connect</string>
+
+    <string name="btn_desc_help">Help</string>
+
+    <string name="game_stat_finished">THE GAME HAS ENDED!</string>
+</resources>

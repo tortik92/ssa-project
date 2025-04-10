@@ -1,0 +1,36 @@
+const padsCount = 3;
+const maxRounds = 4;
+const soundsArray = [880, 1760, 3520];
+let soundSeq = [255, 255, 255, 255];
+
+let currentRound = 0;
+while (currentRound < maxRounds) {
+  soundSeq[currentRound] = random(padsCount);
+  
+  let j = 0;
+  while (j < currentRound) {
+    let padIndex = soundSeq[j];
+	
+	playSound(soundsArray[padIndex], 1000, padIndex);
+	delay(500);
+	
+	j = j + 1;
+  }
+  
+  j = 0;
+  while (j < currentRound) {
+    waitForPlayerOnAnyPad();
+
+	if (isPadOccupied(soundSeq[j])) {
+	  playCorrectActionJingle();
+	  delay(1000);
+	} else {
+	  playLoserJingle();
+	  currentRound = maxRounds;
+	  break;
+	}
+	j = j + 1;
+  }
+
+  currentRound = currentRound + 1;
+}

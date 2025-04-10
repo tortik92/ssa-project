@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="CustomButtonStyle" parent="Widget.AppCompat.Button">
+        <!-- Background and text styles -->
+        <item name="android:backgroundTint">@color/white</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:fontFamily">@font/rubik_bold</item>
+
+        <!-- Padding and elevation -->
+        <item name="android:padding">16dp</item>
+        <item name="android:elevation">4dp</item>
+
+        <!-- Size and radius -->
+        <item name="android:layout_width">200dp</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+</resources>
