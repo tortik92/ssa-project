@@ -1,0 +1,21 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/popupElementLayout"
+    android:layout_marginHorizontal="40dp">
+
+    <TextView
+        android:id="@+id/popup_title"
+        style="@style/largeTextStyle"
+        android:text="@string/header_info"
+        android:fontFamily="@font/rubik_bold" />
+
+    <TextView
+        android:id="@+id/popup_text"
+        style="@style/regularTextStyle"
+        android:background="@android:color/transparent" />
+
+    <Button
+        android:id="@+id/popup_close_button"
+        style="@style/popupBtnLayout"
+        android:layout_marginTop="25dp"
+        android:text="@string/btn_text_ok" />
+</LinearLayout>

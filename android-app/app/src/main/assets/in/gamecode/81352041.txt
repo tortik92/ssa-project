@@ -1,0 +1,25 @@
+const countdownCount = 4;
+const countdownTones = [880, 880, 880, 1760];
+const countdownLen = [500, 500, 500, 750];
+
+while (true) {
+  let i = 0;
+  while (i < countdownCount) {
+    playSound(countdownTones[i], countdownLen[i]);
+	i = i + 1;
+  }
+  
+  delay(random(2000, 5000));
+  
+  playSound(880, 250);
+  
+  let padIndex = waitForPlayerOnAnyPad();
+  
+  if (padIndex == -1) {
+  	playLoserJingle();
+	break;
+  } else {
+    playCorrectActionJingle(padIndex);
+	delay(1000);
+  }
+}
